@@ -94,3 +94,46 @@ async def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     Returns the data of the currently authenticated user.
     """
     return current_user
+
+@auth_router.put("/me", response_model=schemas.User)
+async def update_user_me(
+    user_update: schemas.UserUpdate, 
+    current_user: schemas.User = Depends(get_current_user)
+):
+    """
+    Updates the current user's profile information.
+    """
+    update_data = user_update.model_dump(exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No update data provided")
+
+    updated_user = await prisma.user.update(
+        where={"id": current_user.id},
+        data=update_data,
+        include={"role": True}
+    )
+    return updated_user
+
+@auth_router.put("/me/password")
+async def update_password_me(
+    password_update: schemas.PasswordUpdate,
+    current_user: schemas.User = Depends(get_current_user)
+):
+    """
+    Updates the current user's password.
+    """
+    if not verify_password(password_update.current_password, current_user.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect current password")
+    
+    if not password_update.new_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="New password cannot be empty")
+
+    hashed_password = get_password_hash(password_update.new_password)
+    
+    await prisma.user.update(
+        where={"id": current_user.id},
+        data={"password": hashed_password}
+    )
+    
+    return {"message": "Password updated successfully"}
