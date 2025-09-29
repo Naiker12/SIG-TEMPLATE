@@ -4,11 +4,16 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+type UserRole = {
+  name: string;
+};
+
 type User = {
   id: string;
   name: string;
   email: string;
-  role: string;
+  bio: string | null;
+  role: UserRole;
 };
 
 interface AuthState {

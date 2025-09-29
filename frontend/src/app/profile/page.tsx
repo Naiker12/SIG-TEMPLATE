@@ -1,6 +1,11 @@
 
 'use client';
 
+import { useState, useEffect } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,14 +15,41 @@ import { Textarea } from "@/components/ui/textarea";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, LogOut } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import { updateUserProfile, updateUserPassword } from "@/services/userService";
+
+const profileSchema = z.object({
+  name: z.string().min(1, "El nombre no puede estar vacío."),
+  bio: z.string().optional(),
+});
+
+const passwordSchema = z.object({
+    currentPassword: z.string().min(1, "Debes ingresar tu contraseña actual."),
+    newPassword: z.string().min(6, "La nueva contraseña debe tener al menos 6 caracteres."),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export default function ProfilePage() {
-    const { isLoggedIn, user, clearSession } = useAuthStore();
+    const { isLoggedIn, user, clearSession, setSession } = useAuthStore();
     const router = useRouter();
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const { register: registerProfile, handleSubmit: handleProfileSubmit, formState: { errors: profileErrors } } = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema),
+        defaultValues: {
+            name: user?.name || '',
+            bio: user?.bio || '',
+        },
+    });
+    
+    const { register: registerPassword, handleSubmit: handlePasswordSubmit, formState: { errors: passwordErrors }, reset: resetPasswordForm } = useForm<PasswordFormValues>({
+        resolver: zodResolver(passwordSchema),
+    });
 
     useEffect(() => {
         if (!isLoggedIn) {
@@ -25,12 +57,46 @@ export default function ProfilePage() {
         }
     }, [isLoggedIn, router]);
 
-    if (!user) {
+    const onProfileSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
+        setIsLoading(true);
+        try {
+            const updatedUser = await updateUserProfile(data);
+            const currentToken = useAuthStore.getState().token;
+            if (currentToken) {
+                setSession(currentToken, updatedUser);
+            }
+            toast({ title: "Éxito", description: "Tu perfil ha sido actualizado." });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: error instanceof Error ? error.message : "No se pudo actualizar el perfil." });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const onPasswordSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
+        setIsLoading(true);
+        try {
+            await updateUserPassword({ current_password: data.currentPassword, new_password: data.newPassword });
+            toast({ title: "Éxito", description: "Tu contraseña ha sido actualizada." });
+            resetPasswordForm();
+        } catch (error) {
+             toast({ variant: "destructive", title: "Error", description: error instanceof Error ? error.message : "No se pudo actualizar la contraseña." });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    if (!isLoggedIn || !user) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <Loader2 className="h-12 w-12 animate-spin" />
             </div>
         );
+    }
+    
+    const handleLogout = () => {
+        clearSession();
+        router.push('/');
     }
 
   return (
@@ -49,8 +115,7 @@ export default function ProfilePage() {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 
-                {/* Profile Information Card */}
-                <div className="lg:col-span-1 lg:sticky lg:top-24">
+                <div className="lg:col-span-1 lg:sticky lg:top-24 space-y-6">
                    <Card className="shadow-lg border-2 border-accent">
                     <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
@@ -65,62 +130,70 @@ export default function ProfilePage() {
                             </div>
                             <h2 className="text-2xl font-bold">{user.name}</h2>
                             <p className="text-muted-foreground">{user.email}</p>
-                            <p className="text-xs text-muted-foreground mt-2">Rol: {user.role}</p>
+                            <p className="text-xs text-muted-foreground mt-2">Rol: {user.role.name}</p>
                         </div>
                     </CardContent>
                   </Card>
+                   <Card className="shadow-lg border-2 border-accent">
+                        <CardHeader>
+                            <CardTitle>Zona de Peligro</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                           <Button variant="destructive" className="w-full" onClick={handleLogout}>
+                             <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
+                           </Button>
+                        </CardContent>
+                   </Card>
                 </div>
 
-                {/* Profile Edit Form */}
-                <div className="lg:col-span-2">
+                <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="lg:col-span-2 space-y-8">
                    <Card className="shadow-lg border-2 border-accent">
                      <CardHeader>
-                        <CardTitle>Configuración del Perfil</CardTitle>
-                        <CardDescription>
-                        Actualiza tu foto y tus datos personales aquí.
-                        </CardDescription>
+                        <CardTitle>Datos Personales</CardTitle>
+                        <CardDescription>Actualiza tu foto y tus datos personales aquí.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-8">
-                        <div className="space-y-4">
-                            <h3 className="text-lg font-medium text-muted-foreground border-b pb-2">Datos Personales</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="fullName">Nombre Completo</Label>
-                                <Input id="fullName" defaultValue={user.name} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Correo Electrónico</Label>
-                                <Input id="email" type="email" defaultValue={user.email} disabled />
-                            </div>
-                            </div>
-                            <div className="space-y-2">
-                            <Label htmlFor="bio">Biografía</Label>
-                            <Textarea id="bio" placeholder="Cuéntanos un poco sobre ti." defaultValue="Soy un usuario apasionado por la tecnología y la inteligencia artificial." />
-                            </div>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Nombre Completo</Label>
+                            <Input id="name" {...registerProfile("name")} />
+                            {profileErrors.name && <p className="text-sm text-destructive">{profileErrors.name.message}</p>}
                         </div>
-                        <div className="space-y-4">
-                            <h3 className="text-lg font-medium text-muted-foreground border-b pb-2">Seguridad</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="currentPassword">Contraseña Actual</Label>
-                                <Input id="currentPassword" type="password" placeholder="••••••••"/>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="newPassword">Nueva Contraseña</Label>
-                                <Input id="newPassword" type="password" placeholder="••••••••"/>
-                            </div>
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Correo Electrónico</Label>
+                            <Input id="email" type="email" defaultValue={user.email} disabled />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="bio">Biografía</Label>
+                            <Textarea id="bio" placeholder="Cuéntanos un poco sobre ti." {...registerProfile("bio")} />
                         </div>
                     </CardContent>
-                    <CardFooter className="border-t pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <p className="text-sm text-muted-foreground">Última actualización: hace 2 horas</p>
-                        <div className="flex gap-2">
-                            <Button variant="destructive" onClick={() => { clearSession(); router.push('/'); }}>Eliminar Cuenta</Button>
-                            <Button>Guardar Cambios</Button>
-                        </div>
-                    </CardFooter>
                   </Card>
-                </div>
+                  
+                  <Card className="shadow-lg border-2 border-accent">
+                      <CardHeader>
+                         <CardTitle>Seguridad</CardTitle>
+                         <CardDescription>Gestiona la seguridad de tu cuenta.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                           <Label htmlFor="currentPassword">Contraseña Actual</Label>
+                           <Input id="currentPassword" type="password" placeholder="••••••••" {...registerPassword("currentPassword")} />
+                           {passwordErrors.currentPassword && <p className="text-sm text-destructive">{passwordErrors.currentPassword.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                           <Label htmlFor="newPassword">Nueva Contraseña</Label>
+                           <Input id="newPassword" type="password" placeholder="••••••••" {...registerPassword("newPassword")} />
+                           {passwordErrors.newPassword && <p className="text-sm text-destructive">{passwordErrors.newPassword.message}</p>}
+                        </div>
+                      </CardContent>
+                  </Card>
+
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={isLoading}>
+                           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>} Guardar Cambios
+                        </Button>
+                    </div>
+                </form>
               </div>
             </div>
           </div>

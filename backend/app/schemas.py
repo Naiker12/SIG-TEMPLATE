@@ -18,9 +18,18 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: str
     role: Role
+    bio: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+    
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    bio: Optional[str] = None
 
+# --- Password Schemas ---
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
 
 # --- Token Schemas ---
 class Token(BaseModel):
