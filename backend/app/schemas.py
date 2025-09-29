@@ -1,6 +1,13 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
+# --- Role Schemas ---
+class Role(BaseModel):
+    name: str
+    
+    class Config:
+        orm_mode = True
+
 # --- User Schemas ---
 class UserBase(BaseModel):
     email: EmailStr
@@ -11,7 +18,7 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: str
-    role: str
+    role: Role
 
     class Config:
         orm_mode = True

@@ -18,7 +18,7 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def register_user(user: schemas.UserCreate):
     """
     Registers a new user in the system.
-    Hashes the password before storing it.
+    Hashes the password before storing it and assigns a default role.
     """
     db_user = await prisma.user.find_unique(where={"email": user.email})
     if db_user:
@@ -27,16 +27,32 @@ async def register_user(user: schemas.UserCreate):
             detail="Email already registered"
         )
     
+    # Find the default 'USER' role
+    user_role = await prisma.role.find_unique(where={"name": "USER"})
+    if not user_role:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Default user role not found. Please create a 'USER' role."
+        )
+
     hashed_password = get_password_hash(user.password)
     
-    new_user = await prisma.user.create(
-        data={
-            "name": user.name,
-            "email": user.email,
-            "password": hashed_password
-        }
+    new_user_data = {
+        "name": user.name,
+        "email": user.email,
+        "password": hashed_password,
+        "roleId": user_role.id
+    }
+
+    new_user = await prisma.user.create(data=new_user_data)
+    
+    # To match the response model, we fetch the created user with its role
+    created_user_with_role = await prisma.user.find_unique(
+        where={"id": new_user.id},
+        include={"role": True}
     )
-    return schemas.User.from_orm(new_user)
+
+    return schemas.User.from_orm(created_user_with_role)
 
 
 @auth_router.post("/login", response_model=schemas.Token)
