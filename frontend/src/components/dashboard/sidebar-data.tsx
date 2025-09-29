@@ -21,6 +21,7 @@ import {
     AreaChart,
     File,
     DatabaseZap,
+    FileSignature,
 } from "lucide-react";
 
 export type AdminMenuItem = {
@@ -57,7 +58,7 @@ export const adminMenuItems: AdminMenuItem[] = [
         ]
     },
     {
-        icon: File,
+        icon: FileSignature,
         label: "Gestión de Word",
         href: "#",
         isCollapsible: true,
