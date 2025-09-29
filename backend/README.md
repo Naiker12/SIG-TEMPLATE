@@ -34,7 +34,8 @@ Este directorio contiene toda la lógica del servidor de la aplicación, constru
    ```bash
    npx prisma migrate deploy
    ```
-6. Inicia el servidor:
+6. Inicia el servidor (escuchando en todas las interfaces de red):
    ```bash
-   uvicorn app.main:app --reload --port 8000
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
+   La API estará disponible en `http://<tu_ip_local>:8000/docs`.
