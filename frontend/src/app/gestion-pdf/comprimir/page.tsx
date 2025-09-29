@@ -14,6 +14,8 @@ import { saveAs } from 'file-saver';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 
 type CompressedInfo = {
   blob: Blob;
@@ -39,7 +41,7 @@ export default function OptimizeFilePage() {
   }, [compressionLevel, toast]);
   
   const handleFilesSelected = (newFiles: File[]) => {
-    setFiles(newFiles);
+    setFiles(prev => [...prev, ...newFiles]);
     setCompressedInfo(null);
     if (newFiles.length > 0) {
       toast({
@@ -51,7 +53,9 @@ export default function OptimizeFilePage() {
   
   const handleRemoveFile = (fileToRemove: File) => {
     setFiles(files.filter(f => f !== fileToRemove));
-    setCompressedInfo(null);
+    if (files.length === 1) {
+        setCompressedInfo(null);
+    }
   };
 
   const handleOptimize = async () => {
@@ -119,6 +123,12 @@ export default function OptimizeFilePage() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
+  
+  const getCompressionLabel = (value: number) => {
+    if (value === 0) return "Baja compresión (Alta calidad)";
+    if (value === 2) return "Alta compresión (Calidad optimizada)";
+    return "Compresión recomendada";
+  }
 
   const reductionPercentage = compressedInfo ? 
     Math.round(((compressedInfo.originalSize - compressedInfo.size) / compressedInfo.originalSize) * 100)
@@ -146,9 +156,7 @@ export default function OptimizeFilePage() {
                   <CardContent className='p-6'>
                     {!compressedInfo && (
                         <FileUploadForm 
-                          action="compress" 
                           onFilesSelected={handleFilesSelected}
-                          files={files}
                           allowMultiple={true}
                           acceptedFileTypes={{
                             'application/pdf': ['.pdf'],
@@ -157,14 +165,33 @@ export default function OptimizeFilePage() {
                             'image/png': ['.png'],
                           }}
                           uploadHelpText="Sube archivos PDF, DOCX, JPG o PNG de hasta 50MB."
-                          compressionLevel={compressionLevel}
-                          onCompressionChange={setCompressionLevel}
                         />
                     )}
 
                     {files.length > 0 && !compressedInfo && (
                       <div className='mt-6 space-y-3'>
-                        <h3 className='text-lg font-medium text-muted-foreground'>Archivos para optimizar:</h3>
+                        
+                         <div className="space-y-4 pt-4 border-t mt-6">
+                            <div className="flex justify-between items-center">
+                                <Label htmlFor="compression" className="text-lg font-medium">Nivel de Compresión</Label>
+                                <span className="text-muted-foreground font-medium">{getCompressionLabel(compressionLevel[0])}</span>
+                            </div>
+                            <Slider
+                                id="compression"
+                                min={0}
+                                max={2}
+                                step={1}
+                                value={compressionLevel}
+                                onValueChange={setCompressionLevel}
+                            />
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>Menos</span>
+                                <span>Recomendado</span>
+                                <span>Más</span>
+                            </div>
+                        </div>
+
+                        <h3 className='text-lg font-medium text-muted-foreground pt-6 border-t mt-6'>Archivos para optimizar:</h3>
                          {files.map((file, index) => (
                           <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
                             <div className="flex items-center gap-4 min-w-0">
