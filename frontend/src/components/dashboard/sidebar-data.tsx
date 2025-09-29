@@ -22,6 +22,7 @@ import {
     File,
     DatabaseZap,
     FileSignature,
+    FilePen,
 } from "lucide-react";
 
 export type AdminMenuItem = {
@@ -53,7 +54,7 @@ export const adminMenuItems: AdminMenuItem[] = [
         isCollapsible: true,
         submenu: [
             { icon: Minimize, label: "Optimizar Archivos", href: "/gestion-pdf/comprimir" },
-            { icon: FileSymlink, label: "Convertir a PDF", href: "/gestion-pdf/convertir" },
+            { icon: FilePen, label: "Convertir a Word", href: "/gestion-pdf/convertir" },
             { icon: Merge, label: "Dividir / Unir PDF", href: "/gestion-pdf/dividir-unir" },
         ]
     },

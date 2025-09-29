@@ -7,33 +7,41 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, X, Download, CheckCircle } from 'lucide-react';
+import { FileText, X, Download, CheckCircle, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { convertFilesToPdf, type ConversionResult } from '@/services/conversionService';
+import { convertPdfToWord, type ConversionResult } from '@/services/conversionService';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { saveAs } from 'file-saver';
 
-
-export default function ConvertToPdfPage() {
+export default function ConvertPdfToWordPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [convertedInfo, setConvertedInfo] = useState<ConversionResult | null>(null);
   const [conversionProgress, setConversionProgress] = useState<number | null>(null);
   const { toast } = useToast();
 
   const handleFilesSelected = (newFiles: File[]) => {
-    const combinedFiles = [...files, ...newFiles];
+    const pdfFiles = newFiles.filter(file => file.type === 'application/pdf');
+    if (pdfFiles.length !== newFiles.length) {
+      toast({
+        variant: "destructive",
+        title: "Archivos no válidos",
+        description: "Solo se pueden seleccionar archivos PDF para esta conversión.",
+      });
+    }
+
+    const combinedFiles = [...files, ...pdfFiles];
     const uniqueFiles = Array.from(new Set(combinedFiles.map(f => f.name))).map(name => {
         return combinedFiles.find(f => f.name === name)!
     });
 
     setFiles(uniqueFiles);
     setConvertedInfo(null);
-    if (newFiles.length > 0) {
+    if (pdfFiles.length > 0) {
       toast({
         title: "Archivos Listos",
-        description: `Se han cargado ${newFiles.length} nuevo(s) archivo(s) para convertir.`,
+        description: `Se han cargado ${pdfFiles.length} nuevo(s) archivo(s) para convertir.`,
       });
     }
   };
@@ -55,7 +63,7 @@ export default function ConvertToPdfPage() {
     }, 400);
 
     try {
-      const result = await convertFilesToPdf(files);
+      const result = await convertPdfToWord(files);
       clearInterval(progressInterval);
       setConversionProgress(100);
 
@@ -63,7 +71,7 @@ export default function ConvertToPdfPage() {
         setConvertedInfo(result);
         toast({
           title: "Conversión Completa",
-          description: "Tus archivos han sido convertidos a PDF y están listos para descargar.",
+          description: "Tus archivos han sido convertidos a Word y están listos para descargar.",
         });
         setConversionProgress(null);
       }, 500);
@@ -75,7 +83,7 @@ export default function ConvertToPdfPage() {
       toast({
         variant: "destructive",
         title: "Error de Conversión",
-        description: "Hubo un problema al convertir los archivos. Inténtalo de nuevo.",
+        description: error instanceof Error ? error.message : "Hubo un problema al convertir los archivos. Inténtalo de nuevo.",
       });
     }
   };
@@ -115,9 +123,9 @@ export default function ConvertToPdfPage() {
             <div className="p-4 sm:p-6 lg:p-8">
               <div className="max-w-4xl mx-auto">
                 <header className="mb-8 text-center">
-                  <h1 className="text-4xl font-bold tracking-tight">Convertir a PDF</h1>
+                  <h1 className="text-4xl font-bold tracking-tight">Convertir PDF a Word</h1>
                   <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-                    Sube tus archivos de Word, JPG, PNG y más para convertirlos a formato PDF de alta calidad.
+                    Sube tus archivos PDF para convertirlos a formato Word (.docx) editable.
                   </p>
                 </header>
 
@@ -127,12 +135,8 @@ export default function ConvertToPdfPage() {
                       <FileUploadForm 
                         onFilesSelected={handleFilesSelected}
                         allowMultiple={true}
-                        acceptedFileTypes={{
-                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                          'image/jpeg': ['.jpg', '.jpeg'],
-                          'image/png': ['.png'],
-                        }}
-                        uploadHelpText="Sube archivos DOCX, JPG o PNG de hasta 20MB."
+                        acceptedFileTypes={{ 'application/pdf': ['.pdf'] }}
+                        uploadHelpText="Sube archivos PDF de hasta 20MB."
                       />
                     )}
 
@@ -142,11 +146,7 @@ export default function ConvertToPdfPage() {
                              <FileUploadForm 
                                 onFilesSelected={handleFilesSelected}
                                 allowMultiple={true}
-                                acceptedFileTypes={{
-                                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                                  'image/jpeg': ['.jpg', '.jpeg'],
-                                  'image/png': ['.png'],
-                                }}
+                                acceptedFileTypes={{ 'application/pdf': ['.pdf'] }}
                                 isButton={true}
                              />
                           </div>
@@ -190,7 +190,7 @@ export default function ConvertToPdfPage() {
                         <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
                         <h2 className="text-2xl font-bold mb-2">Conversión Completa</h2>
                         <CardDescription className="mb-6">
-                          Tus archivos se han convertido a PDF con éxito.
+                          Tus archivos se han convertido a Word con éxito.
                         </CardDescription>
 
                          <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
@@ -218,7 +218,7 @@ export default function ConvertToPdfPage() {
                               onClick={handleDownload}
                             >
                               <Download className="mr-2" /> 
-                              {isZip ? 'Descargar ZIP' : 'Descargar PDF'}
+                              {isZip ? 'Descargar ZIP' : 'Descargar DOCX'}
                             </Button>
                           </div>
                       </div>
@@ -241,7 +241,7 @@ export default function ConvertToPdfPage() {
             >
                 <CircularProgressBar 
                     progress={conversionProgress}
-                    message={conversionProgress < 100 ? "Convirtiendo archivos..." : "Finalizando..."}
+                    message={conversionProgress < 100 ? "Convirtiendo a Word..." : "Finalizando..."}
                 />
             </motion.div>
         )}
