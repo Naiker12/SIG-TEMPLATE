@@ -1,21 +1,30 @@
+import { API_BASE_URL } from '@/lib/api-config';
 
 export async function compressFiles(files: File[]): Promise<Blob> {
   const formData = new FormData();
   files.forEach(file => formData.append("files", file));
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   
-  const res = await fetch(`${apiUrl}/files/compress-files`, {
-    method: "POST",
-    body: formData,
-  });
+  const endpoint = `${API_BASE_URL}/files/compress-files`;
 
-  if (!res.ok) {
-    // Intentar leer el error del backend para dar más contexto
-    const errorBody = await res.text();
-    console.error("Error del backend:", errorBody);
-    throw new Error(`Error al optimizar archivos: ${res.statusText}`);
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      // Intenta leer el error del backend para dar más contexto
+      const errorBody = await res.text();
+      console.error("Error response from backend:", errorBody);
+      throw new Error(`API Error: ${res.status} ${res.statusText}`);
+    }
+
+    return await res.blob();
+  } catch (error) {
+    console.error("Failed to fetch from compression service:", error);
+    if (error instanceof Error) {
+       throw new Error(`Error al conectar con el servicio de compresión: ${error.message}`);
+    }
+    throw new Error("Ocurrió un error desconocido al comprimir los archivos.");
   }
-
-  return await res.blob();
 }
