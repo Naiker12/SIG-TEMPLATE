@@ -9,20 +9,16 @@ import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, X, Download, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { convertFilesToPdf } from '@/services/conversionService';
+import { convertFilesToPdf, type ConversionResult } from '@/services/conversionService';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { saveAs } from 'file-saver';
 
-type ConvertedInfo = {
-  blob: Blob;
-  size: number;
-};
 
 export default function ConvertToPdfPage() {
   const [files, setFiles] = useState<File[]>([]);
-  const [convertedInfo, setConvertedInfo] = useState<ConvertedInfo | null>(null);
+  const [convertedInfo, setConvertedInfo] = useState<ConversionResult | null>(null);
   const [conversionProgress, setConversionProgress] = useState<number | null>(null);
   const { toast } = useToast();
 
@@ -59,15 +55,12 @@ export default function ConvertToPdfPage() {
     }, 400);
 
     try {
-      const zipBlob = await convertFilesToPdf(files);
+      const result = await convertFilesToPdf(files);
       clearInterval(progressInterval);
       setConversionProgress(100);
 
       setTimeout(() => {
-        setConvertedInfo({
-          blob: zipBlob,
-          size: zipBlob.size,
-        });
+        setConvertedInfo(result);
         toast({
           title: "Conversión Completa",
           description: "Tus archivos han sido convertidos a PDF y están listos para descargar.",
@@ -89,10 +82,10 @@ export default function ConvertToPdfPage() {
   
   const handleDownload = () => {
     if (convertedInfo) {
-      saveAs(convertedInfo.blob, "archivos_convertidos_a_pdf.zip");
+      saveAs(convertedInfo.blob, convertedInfo.filename);
       toast({
         title: "Descarga Iniciada",
-        description: "Tu archivo ZIP se está descargando.",
+        description: `Tu archivo ${convertedInfo.filename} se está descargando.`,
       });
       setConvertedInfo(null); 
       setFiles([]); 
@@ -107,6 +100,8 @@ export default function ConvertToPdfPage() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   };
+
+  const isZip = convertedInfo?.contentType === 'application/zip';
 
   return (
     <>
@@ -199,8 +194,10 @@ export default function ConvertToPdfPage() {
                         </CardDescription>
 
                          <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
-                            <p className="text-sm text-muted-foreground">Tamaño del archivo ZIP</p>
-                            <p className="text-xl font-bold">{formatBytes(convertedInfo.size)}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {isZip ? 'Tamaño del archivo ZIP' : 'Tamaño del archivo'}
+                            </p>
+                            <p className="text-xl font-bold">{formatBytes(convertedInfo.blob.size)}</p>
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
@@ -220,7 +217,8 @@ export default function ConvertToPdfPage() {
                               className="w-full sm:w-auto" 
                               onClick={handleDownload}
                             >
-                              <Download className="mr-2" /> Descargar ZIP
+                              <Download className="mr-2" /> 
+                              {isZip ? 'Descargar ZIP' : 'Descargar PDF'}
                             </Button>
                           </div>
                       </div>
