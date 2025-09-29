@@ -5,7 +5,7 @@ import { useState } from "react";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Button } from "@/components/ui/button";
@@ -13,47 +13,140 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DraggableFileItem } from "@/components/gestion-pdf/draggable-file-item";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, X } from "lucide-react";
+import { FileText, X, Download, CheckCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { AnimatePresence, motion } from "framer-motion";
+import { CircularProgressBar } from "@/components/ui/circular-progress-bar";
+import { splitPdf, mergePdfs } from "@/services/pdfManipulationService";
+import { saveAs } from "file-saver";
+
+type ProcessResult = {
+  blob: Blob;
+  size: number;
+  fileName: string;
+};
 
 export default function SplitMergePdfPage() {
-  const [splitFile, setSplitFile] = useState<File[]>([]);
-  const [mergeFiles, setMergeFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState('split');
+  const { toast } = useToast();
+  
+  // State for Split
+  const [splitFile, setSplitFile] = useState<File[]>([]);
+  const [pageRanges, setPageRanges] = useState("");
+
+  // State for Merge
+  const [mergeFiles, setMergeFiles] = useState<File[]>([]);
+  
+  // Shared state for processing
+  const [processResult, setProcessResult] = useState<ProcessResult | null>(null);
+  const [processProgress, setProcessProgress] = useState<number | null>(null);
 
   const handleFileRemove = (fileToRemove: File, type: 'split' | 'merge') => {
     if (type === 'split') {
         setSplitFile([]);
     } else {
-        setMergeFiles(files => files.filter(f => f !== fileToRemove));
+        setMergeFiles(files => files.filter(f => f.name !== fileToRemove.name));
     }
+  }
+
+  const handleFilesSelected = (newFiles: File[], type: 'split' | 'merge') => {
+      setProcessResult(null);
+      if (type === 'split') {
+        setSplitFile(newFiles.slice(0, 1));
+      } else {
+         const combined = [...mergeFiles, ...newFiles];
+         const unique = Array.from(new Map(combined.map(f => [f.name, f])).values());
+         setMergeFiles(unique);
+      }
+      if (newFiles.length > 0) {
+        toast({ title: "Archivos listos", description: `${newFiles.length} archivo(s) cargado(s).`});
+      }
   }
 
   const handleDragEnd = (result: File[]) => {
     setMergeFiles(result);
   };
+  
+  const handleProcess = async () => {
+    setProcessResult(null);
+    setProcessProgress(0);
 
-  const SplitFilePreview = () => (
-    <div className="mt-6 space-y-3">
-        <h3 className='text-lg font-medium text-muted-foreground'>Archivo para dividir:</h3>
-        <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
-            <div className="flex items-center gap-4 min-w-0">
-                <FileText className="w-6 h-6 text-primary flex-shrink-0" />
-                <div className="min-w-0">
-                    <p className="font-semibold truncate">{splitFile[0].name}</p>
-                    <p className="text-sm text-muted-foreground">
-                        {(splitFile[0].size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                </div>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => handleFileRemove(splitFile[0], 'split')}>
-                <X className="w-5 h-5 text-destructive" />
-                <span className="sr-only">Remove file</span>
-            </Button>
-        </div>
-    </div>
-  );
+    const progressInterval = setInterval(() => {
+        setProcessProgress(prev => {
+            if (prev === null) return 0;
+            if (prev >= 95) return 95;
+            return prev + 5;
+        });
+    }, 400);
+    
+    try {
+        let blob: Blob;
+        let fileName: string;
+
+        if (activeTab === 'split') {
+            if (splitFile.length === 0 || !pageRanges) {
+                throw new Error("Por favor, sube un archivo y especifica los rangos de páginas.");
+            }
+            blob = await splitPdf(splitFile[0], pageRanges);
+            fileName = "pdf_dividido.pdf";
+        } else {
+            if (mergeFiles.length < 2) {
+                throw new Error("Por favor, sube al menos dos archivos para unir.");
+            }
+            blob = await mergePdfs(mergeFiles);
+            fileName = "pdf_unido.pdf";
+        }
+
+        clearInterval(progressInterval);
+        setProcessProgress(100);
+
+        setTimeout(() => {
+            setProcessResult({ blob, size: blob.size, fileName });
+            toast({ title: "Proceso Completo", description: "Tu archivo está listo para descargar." });
+            setProcessProgress(null);
+        }, 500);
+
+    } catch (error) {
+        clearInterval(progressInterval);
+        setProcessProgress(null);
+        console.error(error);
+        toast({
+            variant: "destructive",
+            title: "Error en el Proceso",
+            description: error instanceof Error ? error.message : "Ocurrió un problema. Inténtalo de nuevo.",
+        });
+    }
+  }
+
+  const handleDownload = () => {
+    if (processResult) {
+      saveAs(processResult.blob, processResult.fileName);
+      toast({ title: "Descarga Iniciada" });
+      resetState();
+    }
+  };
+
+  const resetState = () => {
+    setSplitFile([]);
+    setMergeFiles([]);
+    setPageRanges("");
+    setProcessResult(null);
+  }
+  
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
+
+  const isSplitButtonDisabled = splitFile.length === 0 || !pageRanges.trim();
+  const isMergeButtonDisabled = mergeFiles.length < 2;
 
   return (
+    <>
     <SidebarProvider>
       <Sidebar variant="sidebar" collapsible="icon">
         <DashboardSidebar />
@@ -62,7 +155,7 @@ export default function SplitMergePdfPage() {
         <main className="min-h-screen bg-background">
           <TopBar />
           <div className="p-4 sm:p-6 lg:p-8">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <header className="mb-8 text-center">
                 <h1 className="text-4xl font-bold tracking-tight">Dividir y Unir PDF</h1>
                 <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
@@ -70,103 +163,134 @@ export default function SplitMergePdfPage() {
                 </p>
               </header>
 
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="split">Dividir PDF</TabsTrigger>
-                  <TabsTrigger value="merge">Unir PDF</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="split">
-                  <Card className="shadow-lg rounded-2xl mt-6 border-2 border-accent">
-                    <CardContent className="p-6">
-                      <FileUploadForm 
-                        action="split" 
-                        files={splitFile}
-                        onFilesSelected={setSplitFile}
-                        acceptedFileTypes={{'application/pdf': ['.pdf']}}
-                        uploadHelpText="Sube un archivo PDF para dividir."
-                      />
-                      {splitFile.length > 0 && <SplitFilePreview />}
-                       <div className="mt-6 space-y-4">
-                        <Label htmlFor="ranges" className="text-lg font-medium">Rangos de Páginas</Label>
-                        <Input id="ranges" placeholder="Ej: 1-3, 5, 8-10" disabled={splitFile.length === 0} />
-                        <p className="text-sm text-muted-foreground">
-                          Define las páginas o rangos que quieres extraer. Separa los números o rangos con comas.
-                        </p>
-                      </div>
-                      <div className="flex justify-end pt-6 border-t mt-6">
-                        <Button size="lg" disabled={splitFile.length === 0}>Dividir PDF</Button>
-                      </div>
+              {processResult ? (
+                 <Card className="shadow-lg border-2 border-accent text-center">
+                    <CardContent className="p-8">
+                        <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">Proceso Completado</h2>
+                        <p className="text-muted-foreground mb-6">Tu archivo ha sido procesado con éxito.</p>
+                         <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
+                            <p className="text-sm text-muted-foreground">Tamaño del archivo final</p>
+                            <p className="text-xl font-bold">{formatBytes(processResult.size)}</p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
+                           <Button size="lg" variant="outline" onClick={resetState}>Empezar de Nuevo</Button>
+                           <Button size="lg" onClick={handleDownload}><Download className="mr-2"/>Descargar Archivo</Button>
+                        </div>
                     </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="merge">
-                  <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-6">
-                      <Card className="shadow-lg rounded-2xl border-2 border-accent">
-                        <CardContent className="p-6">
+                 </Card>
+              ) : (
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="split">Dividir PDF</TabsTrigger>
+                    <TabsTrigger value="merge">Unir PDF</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="split">
+                    <Card className="shadow-lg mt-6 border-2 border-accent">
+                      <CardContent className="p-6">
+                        {splitFile.length === 0 ? (
                            <FileUploadForm 
-                             action="merge" 
-                             allowMultiple 
-                             files={mergeFiles}
-                             onFilesSelected={setMergeFiles}
-                             acceptedFileTypes={{'application/pdf': ['.pdf']}}
-                             uploadHelpText="Sube o arrastra archivos PDF para unirlos."
-                           />
+                              onFilesSelected={(files) => handleFilesSelected(files, 'split')}
+                              acceptedFileTypes={{'application/pdf': ['.pdf']}}
+                              uploadHelpText="Sube un archivo PDF para dividir."
+                            />
+                        ) : (
+                          <div className='space-y-6'>
+                            <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                                <div className="flex items-center gap-4 min-w-0">
+                                    <FileText className="w-6 h-6 text-primary flex-shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="font-semibold truncate">{splitFile[0].name}</p>
+                                        <p className="text-sm text-muted-foreground">{formatBytes(splitFile[0].size)}</p>
+                                    </div>
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => handleFileRemove(splitFile[0], 'split')}>
+                                    <X className="w-5 h-5 text-destructive" /><span className="sr-only">Quitar</span>
+                                </Button>
+                            </div>
+                           <div className="space-y-2 pt-6 border-t">
+                              <Label htmlFor="ranges" className="text-lg font-medium">Rangos de Páginas</Label>
+                              <Input id="ranges" placeholder="Ej: 1-3, 5, 8-10" value={pageRanges} onChange={(e) => setPageRanges(e.target.value)} />
+                              <p className="text-sm text-muted-foreground">
+                                Define las páginas o rangos a extraer. Sepáralos con comas.
+                              </p>
+                            </div>
+                            <div className="flex justify-end pt-6 border-t">
+                              <Button size="lg" onClick={handleProcess} disabled={isSplitButtonDisabled}>Dividir PDF</Button>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="merge">
+                     <Card className="shadow-lg mt-6 border-2 border-accent">
+                        <CardContent className="p-6">
+                             <FileUploadForm 
+                               allowMultiple
+                               onFilesSelected={(files) => handleFilesSelected(files, 'merge')}
+                               acceptedFileTypes={{'application/pdf': ['.pdf']}}
+                               uploadHelpText="Sube o arrastra archivos PDF para unirlos."
+                               isButton={mergeFiles.length > 0}
+                             />
+                           {mergeFiles.length > 0 && (
+                             <div className='space-y-6 mt-6'>
+                               <Card>
+                                  <CardHeader>
+                                    <CardTitle className="text-xl">Ordenar Archivos</CardTitle>
+                                    <CardDescription>Arrastra los archivos para establecer el orden final.</CardDescription>
+                                  </CardHeader>
+                                  <CardContent>
+                                     <ScrollArea className="h-72">
+                                        <div className="space-y-3 pr-4">
+                                          {mergeFiles.map((file, index) => (
+                                            <DraggableFileItem 
+                                              key={file.name}
+                                              file={file}
+                                              index={index}
+                                              files={mergeFiles}
+                                              onRemove={(f) => handleFileRemove(f, 'merge')}
+                                              onDragEnd={handleDragEnd}
+                                            />
+                                          ))}
+                                        </div>
+                                      </ScrollArea>
+                                  </CardContent>
+                                </Card>
+                                <div className="flex justify-end pt-6 border-t">
+                                   <Button size="lg" onClick={handleProcess} disabled={isMergeButtonDisabled}>Unir {mergeFiles.length} PDFs</Button>
+                                </div>
+                             </div>
+                           )}
                         </CardContent>
                       </Card>
-                      {mergeFiles.length > 0 && (
-                        <Card className="shadow-lg rounded-2xl border-2 border-accent">
-                          <CardContent className="p-6">
-                             <h3 className="text-lg font-medium mb-4">Arrastra para ordenar los archivos</h3>
-                             <ScrollArea className="h-72">
-                                <div className="space-y-3 pr-4">
-                                  {mergeFiles.map((file, index) => (
-                                    <DraggableFileItem 
-                                      key={file.name + index}
-                                      file={file}
-                                      index={index}
-                                      files={mergeFiles}
-                                      onRemove={(f) => handleFileRemove(f, 'merge')}
-                                      onDragEnd={handleDragEnd}
-                                    />
-                                  ))}
-                                </div>
-                              </ScrollArea>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                    <div className="lg:col-span-1">
-                       <Card className="shadow-lg rounded-2xl sticky top-24 border-2 border-accent">
-                          <CardHeader>
-                            <h3 className="text-xl font-semibold">Vista Previa</h3>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="aspect-[3/4] w-full bg-muted rounded-lg flex items-center justify-center border border-dashed">
-                              <div className="text-center text-muted-foreground p-4">
-                                <FileText className="mx-auto h-12 w-12" />
-                                <p className="mt-2 text-sm">
-                                  {mergeFiles.length > 0 ? `Primera página de '${mergeFiles[0].name}'` : "La vista previa aparecerá aquí."}
-                                </p>
-                              </div>
-                            </div>
-                             <Button size="lg" className="w-full mt-6" disabled={mergeFiles.length < 2}>
-                                Unir {mergeFiles.length > 0 ? mergeFiles.length : ''} PDFs
-                             </Button>
-                          </CardContent>
-                       </Card>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  </TabsContent>
+                </Tabs>
+              )}
+
             </div>
           </div>
         </main>
       </SidebarInset>
     </SidebarProvider>
+
+    <AnimatePresence>
+        {processProgress !== null && (
+            <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+            >
+                <CircularProgressBar 
+                    progress={processProgress}
+                    message={processProgress < 100 ? "Procesando..." : "Finalizando..."}
+                />
+            </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
-
-    
