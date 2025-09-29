@@ -3,14 +3,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 
 from app import schemas
-from app.database import prisma
+from db.database import prisma
 from app.services.auth_service import (
     verify_password, 
     create_access_token, 
     get_password_hash,
-    get_current_user,
-    settings
+    get_current_user
 )
+from app.core.config import settings
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
