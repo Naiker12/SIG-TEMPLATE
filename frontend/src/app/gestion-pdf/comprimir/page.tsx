@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,17 +9,26 @@ import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { compressFiles } from '@/lib/api';
-import { saveAs } from 'file-saver'; 
+import { compressFiles } from '@/services/compressionService';
+import { saveAs } from 'file-saver';
+import { useLoadingStore } from '@/hooks/use-loading-store';
+import { useToast } from '@/hooks/use-toast';
 
 export default function OptimizeFilePage() {
   const [files, setFiles] = useState<File[]>([]);
-  const [loading, setLoading] = useState(false);
   const [compressedZipBlob, setCompressedZipBlob] = useState<Blob | null>(null);
+  const { setIsLoading } = useLoadingStore();
+  const { toast } = useToast();
 
   const handleFilesSelected = (newFiles: File[]) => {
     setFiles(newFiles);
     setCompressedZipBlob(null);
+    if (newFiles.length > 0) {
+      toast({
+        title: "Archivos Listos",
+        description: `Se han cargado ${newFiles.length} archivo(s) para optimizar.`,
+      });
+    }
   };
   
   const handleRemoveFile = (fileToRemove: File) => {
@@ -27,22 +37,34 @@ export default function OptimizeFilePage() {
   };
 
   const handleOptimize = async () => {
-    setLoading(true);
+    setIsLoading(true);
     setCompressedZipBlob(null); 
     try {
       const zipBlob = await compressFiles(files);
       setCompressedZipBlob(zipBlob);
+      toast({
+        title: "Optimización Completa",
+        description: "Tus archivos han sido comprimidos y están listos para descargar.",
+      });
     } catch (error) {
       console.error(error);
-      alert("Hubo un error al optimizar los archivos");
+      toast({
+        variant: "destructive",
+        title: "Error de Optimización",
+        description: "Hubo un problema al comprimir los archivos. Inténtalo de nuevo.",
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleDownload = () => {
     if (compressedZipBlob) {
       saveAs(compressedZipBlob, "archivos_comprimidos.zip");
+      toast({
+        title: "Descarga Iniciada",
+        description: "Tu archivo ZIP se está descargando.",
+      });
       setCompressedZipBlob(null); 
       setFiles([]); 
     }
@@ -97,7 +119,6 @@ export default function OptimizeFilePage() {
                           </div>
                           <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
                             <X className="w-5 h-5 text-destructive" />
-
                             <span className="sr-only">Remove file</span>
                           </Button>
                         </div>
@@ -107,10 +128,10 @@ export default function OptimizeFilePage() {
                         <Button 
                           size="lg" 
                           className="w-full sm:w-auto" 
-                          disabled={files.length === 0 || loading}
+                          disabled={files.length === 0}
                           onClick={handleOptimize}
                         >
-                          {loading ? "Optimizando..." : `Optimizar ${files.length} Archivos`}
+                          Optimizar {files.length} Archivos
                         </Button>
                       </div>
                     </div>
@@ -120,10 +141,11 @@ export default function OptimizeFilePage() {
                     <div className='mt-6 space-y-3'>
                       <h3 className='text-lg font-medium text-muted-foreground'>Archivos Comprimidos Listos:</h3>
                       <div className="flex justify-end pt-6 border-t mt-6">
-                        <div className="flex gap-4">
+                        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                             <Button 
                               size="lg" 
                               variant="outline"
+                              className="w-full sm:w-auto"
                               onClick={() => {
                                 setFiles([]);
                                 setCompressedZipBlob(null);
