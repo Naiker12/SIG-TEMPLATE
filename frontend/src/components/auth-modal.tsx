@@ -1,13 +1,19 @@
 
 'use client';
 
+import { useState } from 'react';
 import { useAuthModal } from '@/hooks/use-auth-modal';
+import { useAuthStore } from '@/hooks/useAuthStore';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { loginUser, registerUser } from '@/services/authService';
+import { Loader2 } from 'lucide-react';
+
 
 // SVG Icons for social buttons
 const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -25,9 +31,53 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-// The Modal Component itself
 const AuthModal = () => {
     const { isOpen, onClose } = useAuthModal();
+    const { setSession } = useAuthStore();
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setIsLoading(true);
+        const formData = new FormData(event.currentTarget);
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+
+        try {
+            const { token, user } = await loginUser({ email, password });
+            setSession(token, user);
+            toast({ title: "Inicio de sesión exitoso", description: `¡Bienvenido de nuevo, ${user.name}!` });
+            onClose();
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error al iniciar sesión", description: error instanceof Error ? error.message : "Ocurrió un error." });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setIsLoading(true);
+        const formData = new FormData(event.currentTarget);
+        const name = formData.get('name') as string;
+        const email = formData.get('email-register') as string;
+        const password = formData.get('password-register') as string;
+
+        try {
+            await registerUser({ name, email, password });
+            toast({ title: "Registro exitoso", description: "Ahora puedes iniciar sesión con tu nueva cuenta." });
+            // For now, we just show success and let them log in.
+            // You could automatically log them in here as well.
+            // Switch to login tab
+            document.querySelector<HTMLButtonElement>('[data-state="inactive"][value="login"]')?.click();
+        } catch (error) {
+             toast({ variant: "destructive", title: "Error en el registro", description: error instanceof Error ? error.message : "Ocurrió un error." });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -42,69 +92,75 @@ const AuthModal = () => {
                             <DialogTitle>Iniciar Sesión</DialogTitle>
                             <DialogDescription>Ingresa a tu cuenta para continuar.</DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Correo Electrónico</Label>
-                                <Input id="email" type="email" placeholder="tu@email.com" required />
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">Contraseña</Label>
-                                    <a href="#" className="ml-auto inline-block text-sm underline">
-                                        ¿Olvidaste tu contraseña?
-                                    </a>
-                                </div>
-                                <Input id="password" type="password" required />
-                            </div>
-                            <Button type="submit" className="w-full">
-                                Iniciar Sesión
-                            </Button>
-                            <Separator className="my-4" />
-                            <div className="grid grid-cols-2 gap-4">
-                                <Button variant="outline">
-                                <GithubIcon className="mr-2 h-4 w-4" />
-                                GitHub
-                                </Button>
-                                <Button variant="outline">
-                                <GoogleIcon className="mr-2 h-4 w-4" />
-                                Google
-                                </Button>
-                            </div>
-                        </div>
+                        <form onSubmit={handleLogin}>
+                          <div className="space-y-4">
+                              <div className="space-y-2">
+                                  <Label htmlFor="email">Correo Electrónico</Label>
+                                  <Input id="email" name="email" type="email" placeholder="tu@email.com" required disabled={isLoading} />
+                              </div>
+                              <div className="space-y-2">
+                                  <div className="flex items-center">
+                                      <Label htmlFor="password">Contraseña</Label>
+                                      <a href="#" className="ml-auto inline-block text-sm underline">
+                                          ¿Olvidaste tu contraseña?
+                                      </a>
+                                  </div>
+                                  <Input id="password" name="password" type="password" required disabled={isLoading} />
+                              </div>
+                              <Button type="submit" className="w-full" disabled={isLoading}>
+                                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Iniciar Sesión
+                              </Button>
+                              <Separator className="my-4" />
+                              <div className="grid grid-cols-2 gap-4">
+                                  <Button variant="outline" type="button" disabled={isLoading}>
+                                  <GithubIcon className="mr-2 h-4 w-4" />
+                                  GitHub
+                                  </Button>
+                                  <Button variant="outline" type="button" disabled={isLoading}>
+                                  <GoogleIcon className="mr-2 h-4 w-4" />
+                                  Google
+                                  </Button>
+                              </div>
+                          </div>
+                        </form>
                     </TabsContent>
                     <TabsContent value="register" className="p-6">
                         <DialogHeader className="mb-4">
                             <DialogTitle>Registrarse</DialogTitle>
                             <DialogDescription>Crea una cuenta para empezar a usar la aplicación.</DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4">
-                             <div className="space-y-2">
-                                <Label htmlFor="name">Nombre</Label>
-                                <Input id="name" placeholder="Tu Nombre" required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email-register">Correo Electrónico</Label>
-                                <Input id="email-register" type="email" placeholder="tu@email.com" required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="password-register">Contraseña</Label>
-                                <Input id="password-register" type="password" required />
-                            </div>
-                            <Button type="submit" className="w-full">
-                                Crear Cuenta
-                            </Button>
-                            <Separator className="my-4" />
-                            <div className="grid grid-cols-2 gap-4">
-                                <Button variant="outline">
-                                    <GithubIcon className="mr-2 h-4 w-4" />
-                                    GitHub
-                                </Button>
-                                <Button variant="outline">
-                                    <GoogleIcon className="mr-2 h-4 w-4" />
-                                    Google
-                                </Button>
-                            </div>
-                        </div>
+                        <form onSubmit={handleRegister}>
+                          <div className="space-y-4">
+                              <div className="space-y-2">
+                                  <Label htmlFor="name">Nombre</Label>
+                                  <Input id="name" name="name" placeholder="Tu Nombre" required disabled={isLoading}/>
+                              </div>
+                              <div className="space-y-2">
+                                  <Label htmlFor="email-register">Correo Electrónico</Label>
+                                  <Input id="email-register" name="email-register" type="email" placeholder="tu@email.com" required disabled={isLoading}/>
+                              </div>
+                              <div className="space-y-2">
+                                  <Label htmlFor="password-register">Contraseña</Label>
+                                  <Input id="password-register" name="password-register" type="password" required disabled={isLoading}/>
+                              </div>
+                              <Button type="submit" className="w-full" disabled={isLoading}>
+                                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Crear Cuenta
+                              </Button>
+                              <Separator className="my-4" />
+                              <div className="grid grid-cols-2 gap-4">
+                                  <Button variant="outline" type="button" disabled={isLoading}>
+                                      <GithubIcon className="mr-2 h-4 w-4" />
+                                      GitHub
+                                  </Button>
+                                  <Button variant="outline" type="button" disabled={isLoading}>
+                                      <GoogleIcon className="mr-2 h-4 w-4" />
+                                      Google
+                                  </Button>
+                              </div>
+                          </div>
+                        </form>
                     </TabsContent>
                 </Tabs>
             </DialogContent>
@@ -112,7 +168,6 @@ const AuthModal = () => {
     );
 };
 
-// Provider component to be used in the layout
 export const AuthModalProvider = () => {
     return <AuthModal />;
 };

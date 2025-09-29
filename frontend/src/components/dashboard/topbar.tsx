@@ -6,21 +6,19 @@ import { usePathname } from 'next/navigation';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Bell, Menu } from "lucide-react";
+import { Search, Bell, Menu, LogIn, User } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuthModal } from "@/hooks/use-auth-modal";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import Link from "next/link";
 
 export function TopBar() {
   const [date, setDate] = useState("");
   const { toggleSidebar, state } = useSidebar();
   const [isClient, setIsClient] = useState(false);
   const authModal = useAuthModal();
-  const pathname = usePathname();
+  const { isLoggedIn, user } = useAuthStore();
   
-  // For now, we'll simulate a logged-out state.
-  // In a real app, this would come from an auth context.
-  const isLoggedIn = false;
-
   useEffect(() => {
     setIsClient(true);
     const now = new Date();
@@ -57,16 +55,28 @@ export function TopBar() {
             <Search className="h-5 w-5" />
             <span className="sr-only">Buscar</span>
         </Button>
-        <Button variant="ghost" size="icon">
-          <Bell className="h-5 w-5" />
-          <span className="sr-only">Notificaciones</span>
-        </Button>
-        <button onClick={isLoggedIn ? undefined : authModal.onOpen}>
-          <Avatar className="h-9 w-9 border-2 border-muted">
-              <AvatarImage src={isLoggedIn ? "https://placehold.co/80x80.png" : ""} alt="Avatar" data-ai-hint="avatar persona" />
-              <AvatarFallback>{isLoggedIn ? "N" : "?"}</AvatarFallback>
-          </Avatar>
-        </button>
+        {isClient && isLoggedIn && (
+            <Button variant="ghost" size="icon">
+                <Bell className="h-5 w-5" />
+                <span className="sr-only">Notificaciones</span>
+            </Button>
+        )}
+
+        {isClient && isLoggedIn && user ? (
+            <Link href="/profile">
+                <Avatar className="h-9 w-9 border-2 border-muted cursor-pointer">
+                    <AvatarImage src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={`Avatar de ${user.name}`} />
+                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+            </Link>
+        ) : (
+            isClient && (
+                <Button variant="outline" onClick={authModal.onOpen}>
+                    <LogIn className="mr-2 h-4 w-4"/>
+                    Iniciar Sesión
+                </Button>
+            )
+        )}
       </div>
     </header>
   );

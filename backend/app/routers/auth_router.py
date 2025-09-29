@@ -1,0 +1,68 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from datetime import timedelta
+
+from app import schemas
+from app.database import prisma
+from app.services.auth_service import (
+    verify_password, 
+    create_access_token, 
+    get_password_hash,
+    get_current_user,
+    settings
+)
+
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+@auth_router.post("/register", response_model=schemas.User)
+async def register_user(user: schemas.UserCreate):
+    """
+    Registers a new user in the system.
+    Hashes the password before storing it.
+    """
+    db_user = await prisma.user.find_unique(where={"email": user.email})
+    if db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    hashed_password = get_password_hash(user.password)
+    
+    new_user = await prisma.user.create(
+        data={
+            "name": user.name,
+            "email": user.email,
+            "password": hashed_password
+        }
+    )
+    return schemas.User.from_orm(new_user)
+
+
+@auth_router.post("/login", response_model=schemas.Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    Authenticates a user and returns a JWT access token.
+    """
+    user = await prisma.user.find_unique(where={"email": form_data.username})
+    if not user or not verify_password(form_data.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@auth_router.get("/me", response_model=schemas.User)
+async def read_users_me(current_user: schemas.User = Depends(get_current_user)):
+    """
+    Returns the data of the currently authenticated user.
+    """
+    return current_user

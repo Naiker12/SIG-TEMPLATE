@@ -10,9 +10,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
-import { Camera } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+    const { isLoggedIn, user, clearSession } = useAuthStore();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            router.push('/');
+        }
+    }, [isLoggedIn, router]);
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Loader2 className="h-12 w-12 animate-spin" />
+            </div>
+        );
+    }
+
   return (
     <SidebarProvider>
       <Sidebar variant="sidebar" collapsible="icon">
@@ -36,16 +56,16 @@ export default function ProfilePage() {
                         <div className="flex flex-col items-center text-center">
                             <div className="relative mb-4">
                                 <Avatar className="h-28 w-28 border-4 border-card shadow-md">
-                                    <AvatarImage src="https://placehold.co/112x112.png" alt="Avatar de Naiker" data-ai-hint="avatar persona" />
-                                    <AvatarFallback>N</AvatarFallback>
+                                    <AvatarImage src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={`Avatar de ${user.name}`} />
+                                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <Button size="icon" variant="outline" className="absolute -bottom-2 -right-2 rounded-full h-8 w-8">
                                     <Camera className="h-4 w-4"/>
                                 </Button>
                             </div>
-                            <h2 className="text-2xl font-bold">Naiker</h2>
-                            <p className="text-muted-foreground">naiker@gomail.com</p>
-                            <p className="text-xs text-muted-foreground mt-2">Miembro desde: 15 Enero, 2024</p>
+                            <h2 className="text-2xl font-bold">{user.name}</h2>
+                            <p className="text-muted-foreground">{user.email}</p>
+                            <p className="text-xs text-muted-foreground mt-2">Rol: {user.role}</p>
                         </div>
                     </CardContent>
                   </Card>
@@ -66,16 +86,16 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="fullName">Nombre Completo</Label>
-                                <Input id="fullName" defaultValue="Naiker" />
+                                <Input id="fullName" defaultValue={user.name} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="email">Correo Electrónico</Label>
-                                <Input id="email" type="email" defaultValue="naiker@gomail.com" disabled />
+                                <Input id="email" type="email" defaultValue={user.email} disabled />
                             </div>
                             </div>
                             <div className="space-y-2">
                             <Label htmlFor="bio">Biografía</Label>
-                            <Textarea id="bio" placeholder="Cuéntanos un poco sobre ti." defaultValue="Soy una desarrolladora apasionada por la tecnología y la inteligencia artificial." />
+                            <Textarea id="bio" placeholder="Cuéntanos un poco sobre ti." defaultValue="Soy un usuario apasionado por la tecnología y la inteligencia artificial." />
                             </div>
                         </div>
                         <div className="space-y-4">
@@ -95,7 +115,7 @@ export default function ProfilePage() {
                     <CardFooter className="border-t pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                         <p className="text-sm text-muted-foreground">Última actualización: hace 2 horas</p>
                         <div className="flex gap-2">
-                            <Button variant="destructive">Eliminar Cuenta</Button>
+                            <Button variant="destructive" onClick={() => { clearSession(); router.push('/'); }}>Eliminar Cuenta</Button>
                             <Button>Guardar Cambios</Button>
                         </div>
                     </CardFooter>

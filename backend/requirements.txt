@@ -3,16 +3,16 @@ fastapi==0.111.0
 uvicorn[standard]==0.30.0
 
 # ORM Prisma
-prisma==0.12.0
+prisma==0.14.0
 
 # Variables de entorno
 python-dotenv==1.0.1
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
-# Seguridad
+# Seguridad y Autenticación
 passlib[bcrypt]==1.7.4
-python-jose==3.3.0
+python-jose[cryptography]==3.3.0
 
 # Cliente HTTP
 httpx==0.23.3
