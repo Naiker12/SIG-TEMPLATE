@@ -15,6 +15,8 @@ type FileUploadFormProps = {
   uploadHelpText?: string;
   files: File[];
   onFilesSelected: (files: File[]) => void;
+  compressionLevel?: number[];
+  onCompressionChange?: (value: number[]) => void;
 };
 
 const defaultAcceptedFileTypes = {
@@ -38,9 +40,10 @@ export function FileUploadForm({
   allowMultiple = false,
   uploadHelpText = "Solo se permiten archivos PDF de hasta 50MB.",
   files,
-  onFilesSelected
+  onFilesSelected,
+  compressionLevel = [1],
+  onCompressionChange = () => {},
 }: FileUploadFormProps) {
-  const [compressionLevel, setCompressionLevel] = useState([1]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -126,7 +129,7 @@ export function FileUploadForm({
               max={2}
               step={1}
               value={compressionLevel}
-              onValueChange={setCompressionLevel}
+              onValueChange={onCompressionChange}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Menos</span>
@@ -179,7 +182,7 @@ export function FileUploadForm({
                 max={2}
                 step={1}
                 value={compressionLevel}
-                onValueChange={setCompressionLevel}
+                onValueChange={onCompressionChange}
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Menos</span>

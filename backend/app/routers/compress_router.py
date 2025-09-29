@@ -8,12 +8,14 @@ compress_router = APIRouter(prefix="/files", tags=["Compress"])
 @compress_router.post("/compress-files")
 async def upload(
     files: List[UploadFile] = File(...),
-    compression_level: int = Form(5)
+    compression_level: int = Form(1) # Valor por defecto 1 (Recomendado)
 ):
     """
-    Recibe archivos subidos, los comprime en un ZIP y devuelve el archivo ZIP.
+    Recibe archivos subidos, los comprime en un ZIP con un nivel de compresión
+    específico y devuelve el archivo ZIP.
+    - compression_level: 0 (Baja), 1 (Recomendada), 2 (Alta)
     """
-    zip_path = await compress_files(files)
+    zip_path = await compress_files(files, compression_level)
     return FileResponse(
         path=zip_path,
         filename="archivos_comprimidos.zip",

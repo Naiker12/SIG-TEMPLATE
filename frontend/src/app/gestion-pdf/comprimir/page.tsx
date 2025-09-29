@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
@@ -23,9 +23,20 @@ type CompressedInfo = {
 
 export default function OptimizeFilePage() {
   const [files, setFiles] = useState<File[]>([]);
+  const [compressionLevel, setCompressionLevel] = useState([1]);
   const [compressedInfo, setCompressedInfo] = useState<CompressedInfo | null>(null);
   const [optimizationProgress, setOptimizationProgress] = useState<number | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (compressionLevel[0] === 2) {
+      toast({
+        title: "Advertencia de Calidad",
+        description: "La alta compresión puede reducir la calidad de las imágenes.",
+        variant: "default",
+      });
+    }
+  }, [compressionLevel, toast]);
   
   const handleFilesSelected = (newFiles: File[]) => {
     setFiles(newFiles);
@@ -58,7 +69,7 @@ export default function OptimizeFilePage() {
 
     try {
       const originalSize = files.reduce((acc, file) => acc + file.size, 0);
-      const zipBlob = await compressFiles(files);
+      const zipBlob = await compressFiles(files, compressionLevel[0]);
       
       clearInterval(progressInterval);
       setOptimizationProgress(100);
@@ -146,6 +157,8 @@ export default function OptimizeFilePage() {
                             'image/png': ['.png'],
                           }}
                           uploadHelpText="Sube archivos PDF, DOCX, JPG o PNG de hasta 50MB."
+                          compressionLevel={compressionLevel}
+                          onCompressionChange={setCompressionLevel}
                         />
                     )}
 

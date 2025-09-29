@@ -1,8 +1,9 @@
 import { API_BASE_URL } from '@/lib/api-config';
 
-export async function compressFiles(files: File[]): Promise<Blob> {
+export async function compressFiles(files: File[], compressionLevel: number): Promise<Blob> {
   const formData = new FormData();
   files.forEach(file => formData.append("files", file));
+  formData.append("compression_level", compressionLevel.toString());
   
   const endpoint = `${API_BASE_URL}/files/compress-files`;
 
