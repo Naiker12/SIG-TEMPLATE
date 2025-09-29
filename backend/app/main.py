@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from app.routers.compress_router import compress_router
+from app.routers.convert_to_pdf_router import convert_to_pdf_router
 from app.core.middleware import setup_cors 
 
-app = FastAPI(title="File Compressor API")
+app = FastAPI(title="File Processor API")
 
 # Configuramos CORS
 setup_cors(app)
 
-# Registrar router
+# Registrar routers
 app.include_router(compress_router)
+app.include_router(convert_to_pdf_router)

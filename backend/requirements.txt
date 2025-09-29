@@ -22,3 +22,7 @@ supabase==1.0.3
 
 # Emails (opcional)
 aiosmtplib==2.0.2
+
+# PDF/Word/Image Conversion
+docx2pdf==0.1.8
+Pillow==10.3.0
