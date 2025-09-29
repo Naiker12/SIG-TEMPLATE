@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     class Config:
-        env_file = "backend/.env" # Asegurarse que lee el .env correcto
+        env_file = "backend/.env" 
         extra = "ignore"   
 
 settings = Settings()
