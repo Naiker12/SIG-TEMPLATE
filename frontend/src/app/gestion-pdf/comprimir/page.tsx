@@ -54,7 +54,7 @@ export default function OptimizeFilePage() {
             if (prev >= 95) return 95; // Stop at 95% until fetch is complete
             return prev + 5;
         });
-    }, 250);
+    }, 350);
 
     try {
       const originalSize = files.reduce((acc, file) => acc + file.size, 0);
