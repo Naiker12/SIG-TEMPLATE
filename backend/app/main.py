@@ -7,16 +7,6 @@ from app.routers.pdf_to_word_router import pdf_to_word_router
 from app.routers.auth_router import auth_router
 from app.core.middleware import setup_cors 
 from app.database import prisma
-import subprocess
-
-# --- Prisma Client Generation ---
-# This ensures the Prisma client is generated before the app starts.
-try:
-    subprocess.run(["npx", "prisma", "generate"], check=True)
-except subprocess.CalledProcessError as e:
-    print(f"Error generating Prisma client: {e}")
-except FileNotFoundError:
-    print("Error: 'npx' command not found. Make sure Node.js is installed and in your PATH.")
 
 app = FastAPI(title="File Processor API")
 
