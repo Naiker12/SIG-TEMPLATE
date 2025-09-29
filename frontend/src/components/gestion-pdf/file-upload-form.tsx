@@ -100,48 +100,6 @@ export function FileUploadForm({
   }, [files, action]);
 
 
-  if (allowMultiple && files.length > 0) {
-     return (
-       <>
-        <div className="flex flex-col items-center justify-center p-6 text-center">
-            <Button type="button" size="lg" variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>
-                <FileUp className="mr-2" />
-                {getButtonText()}
-            </Button>
-            <input
-                type="file"
-                id="file-upload"
-                className="hidden"
-                onChange={handleFileChange}
-                accept={acceptString}
-                multiple={allowMultiple}
-              />
-        </div>
-        {showCompressionSlider && (
-          <div className="space-y-4 pt-4 border-t mt-6">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="compression" className="text-lg font-medium">Nivel de Compresión</Label>
-              <span className="text-muted-foreground font-medium">{getCompressionLabel(compressionLevel[0])}</span>
-            </div>
-            <Slider
-              id="compression"
-              min={0}
-              max={2}
-              step={1}
-              value={compressionLevel}
-              onValueChange={onCompressionChange}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Menos</span>
-              <span>Recomendado</span>
-              <span>Más</span>
-            </div>
-          </div>
-        )}
-       </>
-     )
-  }
-
   return (
     <div className="w-full">
       {files.length === 0 && (
@@ -168,34 +126,42 @@ export function FileUploadForm({
           <p className="text-xs text-muted-foreground mt-4">{uploadHelpText}</p>
         </div>
       )}
-       {!allowMultiple && files.length > 0 && (
-        <div className="space-y-6">
-          {showCompressionSlider && (
-            <div className="space-y-4 pt-4 border-t">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="compression" className="text-lg font-medium">Nivel de Compresión</Label>
-                <span className="text-muted-foreground font-medium">{getCompressionLabel(compressionLevel[0])}</span>
-              </div>
-              <Slider
-                id="compression"
-                min={0}
-                max={2}
-                step={1}
-                value={compressionLevel}
-                onValueChange={onCompressionChange}
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Menos</span>
-                <span>Recomendado</span>
-                <span>Más</span>
-              </div>
-            </div>
-          )}
 
-          <div className="flex justify-end pt-6 border-t mt-6">
-              <Button size="lg" className="w-full sm:w-auto" disabled={files.length === 0}>
-                Optimizar Archivo
-              </Button>
+      {allowMultiple && files.length > 0 && (
+        <div className="flex flex-col items-center justify-center p-6 text-center">
+            <Button type="button" size="lg" variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>
+                <FileUp className="mr-2" />
+                {getButtonText()}
+            </Button>
+            <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                onChange={handleFileChange}
+                accept={acceptString}
+                multiple={allowMultiple}
+              />
+        </div>
+      )}
+      
+      {showCompressionSlider && (
+        <div className="space-y-4 pt-4 border-t mt-6">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="compression" className="text-lg font-medium">Nivel de Compresión</Label>
+            <span className="text-muted-foreground font-medium">{getCompressionLabel(compressionLevel[0])}</span>
+          </div>
+          <Slider
+            id="compression"
+            min={0}
+            max={2}
+            step={1}
+            value={compressionLevel}
+            onValueChange={onCompressionChange}
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Menos</span>
+            <span>Recomendado</span>
+            <span>Más</span>
           </div>
         </div>
       )}
