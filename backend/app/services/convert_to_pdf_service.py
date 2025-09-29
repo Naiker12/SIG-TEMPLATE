@@ -16,6 +16,11 @@ OUTPUT_DIR = Path("outputs")
 TEMP_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
 
+def cleanup_temp_folder(path: str):
+    """Elimina un directorio de forma segura."""
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+
 async def save_uploaded_file(file: UploadFile, directory: Path) -> Path:
     """Guarda un archivo subido en un directorio específico."""
     file_path = directory / file.filename

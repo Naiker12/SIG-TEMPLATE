@@ -1,8 +1,9 @@
 from fastapi import APIRouter, File, UploadFile, BackgroundTasks
 from typing import List
 from fastapi.responses import FileResponse
-from app.services.convert_to_pdf_service import convert_files_to_pdf_service
+from app.services.convert_to_pdf_service import convert_files_to_pdf_service, cleanup_temp_folder
 import os
+import shutil
 
 convert_to_pdf_router = APIRouter(prefix="/files", tags=["Convert"])
 
@@ -19,7 +20,7 @@ async def convert_to_pdf(
     
     # Programar la eliminación del archivo ZIP y la carpeta temporal
     background_tasks.add_task(os.remove, zip_path)
-    background_tasks.add_task(lambda: __import__('shutil').rmtree(temp_folder_path))
+    background_tasks.add_task(cleanup_temp_folder, temp_folder_path)
 
     return FileResponse(
         path=zip_path,

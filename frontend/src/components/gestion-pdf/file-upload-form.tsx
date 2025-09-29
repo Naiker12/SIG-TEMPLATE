@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { FileUp, PlusCircle } from "lucide-react";
 
@@ -48,17 +48,18 @@ export function FileUploadForm({
   
   const acceptString = useMemo(() => Object.keys(acceptedFileTypes).join(','), [acceptedFileTypes]);
 
-  const uniqueId = `file-upload-${useMemo(() => Math.random().toString(36).substr(2, 9), [])}`;
+  const uniqueId = useId();
+  const fileInputId = `file-upload-${uniqueId}`;
 
   if (isButton) {
     return (
         <div>
-            <Button type="button" variant="outline" onClick={(e) => { e.stopPropagation(); document.getElementById(uniqueId)?.click(); }}>
+            <Button type="button" variant="outline" onClick={(e) => { e.stopPropagation(); document.getElementById(fileInputId)?.click(); }}>
                 <PlusCircle className="mr-2 h-4 w-4"/> Añadir más archivos
             </Button>
             <input
                 type="file"
-                id={uniqueId}
+                id={fileInputId}
                 className="hidden"
                 onChange={handleFileChange}
                 accept={acceptString}
@@ -74,17 +75,17 @@ export function FileUploadForm({
           className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center cursor-pointer hover:border-primary transition-colors"
           onDrop={handleFileDrop}
           onDragOver={handleDragOver}
-          onClick={() => document.getElementById(uniqueId)?.click()}
+          onClick={() => document.getElementById(fileInputId)?.click()}
         >
           <FileUp className="w-16 h-16 text-muted-foreground mb-4" />
           <h3 className="text-xl font-semibold mb-2">Arrastra y suelta tus archivos aquí</h3>
           <p className="text-muted-foreground mb-4">o</p>
-          <Button type="button" onClick={(e) => { e.stopPropagation(); document.getElementById(uniqueId)?.click(); }}>
+          <Button type="button" onClick={(e) => { e.stopPropagation(); document.getElementById(fileInputId)?.click(); }}>
             Seleccionar Archivos
           </Button>
           <input
             type="file"
-            id={uniqueId}
+            id={fileInputId}
             className="hidden"
             onChange={handleFileChange}
             accept={acceptString}
