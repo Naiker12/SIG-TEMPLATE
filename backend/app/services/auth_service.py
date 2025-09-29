@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from db.database import prisma
 from app.schemas import User
-from app.core.config import settings # Importar la configuración centralizada
+from app.core.config import settings
 
 # --- Password Hashing ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -15,8 +15,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
+def get_password_hash(password: str):
+    # Bcrypt has a maximum password length of 72 bytes. Truncate if longer.
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    
+    return pwd_context.hash(password_bytes.decode('utf-8'))
 
 
 # --- JWT Token Creation ---
@@ -54,5 +59,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     if user is None:
         raise credentials_exception
     
-    # Usar ConfigDict para Pydantic v2
     return User.model_validate(user)
