@@ -4,20 +4,10 @@ from typing import Optional
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from pydantic_settings import BaseSettings
 
 from db.database import prisma
 from app.schemas import User
-
-class Settings(BaseSettings):
-    SECRET_KEY: str
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-
-    class Config:
-        env_file = ".env"
-
-settings = Settings()
+from app.core.config import settings # Importar la configuración centralizada
 
 # --- Password Hashing ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -64,4 +54,5 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     if user is None:
         raise credentials_exception
     
-    return User.from_orm(user)
+    # Usar ConfigDict para Pydantic v2
+    return User.model_validate(user)
