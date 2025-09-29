@@ -1,11 +1,9 @@
 from fastapi.middleware.cors import CORSMiddleware
 
 def setup_cors(app):
-    origins = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://192.168.1.212:3000"
-    ]
+    # Para desarrollo, permitir todos los orígenes es lo más simple.
+    # En producción, deberías restringirlo a la URL de tu frontend.
+    origins = ["*"]
 
     app.add_middleware(
         CORSMiddleware,
