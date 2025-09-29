@@ -58,8 +58,9 @@ const AuthModal = () => {
 
     const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        const form = event.currentTarget;
         setIsLoading(true);
-        const formData = new FormData(event.currentTarget);
+        const formData = new FormData(form);
         const name = formData.get('name') as string;
         const email = formData.get('email-register') as string;
         const password = formData.get('password-register') as string;
@@ -67,8 +68,7 @@ const AuthModal = () => {
         try {
             await registerUser({ name, email, password });
             toast({ title: "Registro exitoso", description: "Ahora puedes iniciar sesión con tu nueva cuenta." });
-            // For now, we just show success and let them log in.
-            // You could automatically log them in here as well.
+            form.reset(); // Limpiar el formulario
             // Switch to login tab
             document.querySelector<HTMLButtonElement>('[data-state="inactive"][value="login"]')?.click();
         } catch (error) {
