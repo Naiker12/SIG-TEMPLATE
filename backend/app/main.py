@@ -6,7 +6,7 @@ from app.routers.merge_pdf_router import merge_pdf_router
 from app.routers.pdf_to_word_router import pdf_to_word_router
 from app.routers.auth_router import auth_router
 from app.core.middleware import setup_cors 
-from app.database import prisma
+from db.database import prisma
 
 app = FastAPI(title="File Processor API")
 

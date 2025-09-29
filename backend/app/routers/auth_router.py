@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 
 from app import schemas
-from app.database import prisma
+from db.database import prisma
 from app.services.auth_service import (
     verify_password, 
     create_access_token, 

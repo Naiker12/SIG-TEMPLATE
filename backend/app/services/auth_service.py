@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic_settings import BaseSettings
 
-from app.database import prisma
+from db.database import prisma
 from app.schemas import User
 
 class Settings(BaseSettings):
