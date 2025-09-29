@@ -1,14 +1,8 @@
 
-/**
- * Llama al endpoint del backend para comprimir una lista de archivos.
- * @param files - Un array de objetos File a comprimir.
- * @returns Una promesa que se resuelve con un Blob del archivo ZIP.
- */
 export async function compressFiles(files: File[]): Promise<Blob> {
   const formData = new FormData();
   files.forEach(file => formData.append("files", file));
 
-  // Asumimos que la URL de la API está en las variables de entorno
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   
   const res = await fetch(`${apiUrl}/files/compress-files`, {
