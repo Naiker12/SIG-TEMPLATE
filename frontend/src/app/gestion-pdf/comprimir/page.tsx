@@ -7,7 +7,7 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, X, CheckCircle, Download, TrendingDown } from 'lucide-react';
+import { FileText, X, CheckCircle, Download, TrendingDown, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { compressFiles } from '@/services/compressionService';
 import { saveAs } from 'file-saver';
@@ -41,12 +41,17 @@ export default function OptimizeFilePage() {
   }, [compressionLevel, toast]);
   
   const handleFilesSelected = (newFiles: File[]) => {
-    setFiles(prev => [...prev, ...newFiles]);
+    const combinedFiles = [...files, ...newFiles];
+    const uniqueFiles = Array.from(new Set(combinedFiles.map(f => f.name))).map(name => {
+        return combinedFiles.find(f => f.name === name)!
+    });
+
+    setFiles(uniqueFiles);
     setCompressedInfo(null);
     if (newFiles.length > 0) {
       toast({
         title: "Archivos Listos",
-        description: `Se han cargado ${newFiles.length} archivo(s) para optimizar.`,
+        description: `Se han cargado ${newFiles.length} nuevo(s) archivo(s) para optimizar.`,
       });
     }
   };
@@ -59,14 +64,14 @@ export default function OptimizeFilePage() {
   };
 
   const handleOptimize = async () => {
+    if (files.length === 0) return;
     setCompressedInfo(null);
     setOptimizationProgress(0);
     
-    // Simulate a longer loading process
     const progressInterval = setInterval(() => {
         setOptimizationProgress(prev => {
             if (prev === null) return 0;
-            if (prev >= 95) return 95; // Stop at 95% until fetch is complete
+            if (prev >= 95) return 95;
             return prev + 5;
         });
     }, 350);
@@ -125,8 +130,8 @@ export default function OptimizeFilePage() {
   }
   
   const getCompressionLabel = (value: number) => {
-    if (value === 0) return "Baja compresión (Alta calidad)";
-    if (value === 2) return "Alta compresión (Calidad optimizada)";
+    if (value === 0) return "Baja compresión";
+    if (value === 2) return "Alta compresión";
     return "Compresión recomendada";
   }
 
@@ -154,7 +159,7 @@ export default function OptimizeFilePage() {
 
                 <Card className='shadow-lg border-2 border-accent'>
                   <CardContent className='p-6'>
-                    {!compressedInfo && (
+                    {files.length === 0 && !compressedInfo && (
                         <FileUploadForm 
                           onFilesSelected={handleFilesSelected}
                           allowMultiple={true}
@@ -169,9 +174,22 @@ export default function OptimizeFilePage() {
                     )}
 
                     {files.length > 0 && !compressedInfo && (
-                      <div className='mt-6 space-y-3'>
+                      <div className='space-y-6'>
+                          <div className='flex justify-end'>
+                             <FileUploadForm 
+                                onFilesSelected={handleFilesSelected}
+                                allowMultiple={true}
+                                acceptedFileTypes={{
+                                'application/pdf': ['.pdf'],
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                                'image/jpeg': ['.jpg', '.jpeg'],
+                                'image/png': ['.png'],
+                                }}
+                                isButton={true}
+                             />
+                          </div>
                         
-                         <div className="space-y-4 pt-4 border-t mt-6">
+                         <div className="space-y-4 pt-4 border-t">
                             <div className="flex justify-between items-center">
                                 <Label htmlFor="compression" className="text-lg font-medium">Nivel de Compresión</Label>
                                 <span className="text-muted-foreground font-medium">{getCompressionLabel(compressionLevel[0])}</span>
@@ -191,33 +209,35 @@ export default function OptimizeFilePage() {
                             </div>
                         </div>
 
-                        <h3 className='text-lg font-medium text-muted-foreground pt-6 border-t mt-6'>Archivos para optimizar:</h3>
-                         {files.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
-                            <div className="flex items-center gap-4 min-w-0">
-                              <FileText className="w-6 h-6 text-primary flex-shrink-0" />
-                              <div className="min-w-0">
-                                <p className="font-semibold truncate">{file.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {formatBytes(file.size)}
-                                </p>
+                        <div className="space-y-3 pt-6 border-t">
+                            <h3 className='text-lg font-medium text-muted-foreground'>Archivos para optimizar:</h3>
+                             {files.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                                <div className="flex items-center gap-4 min-w-0">
+                                  <FileText className="w-6 h-6 text-primary flex-shrink-0" />
+                                  <div className="min-w-0">
+                                    <p className="font-semibold truncate">{file.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {formatBytes(file.size)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
+                                  <X className="w-5 h-5 text-destructive" />
+                                  <span className="sr-only">Remove file</span>
+                                </Button>
                               </div>
-                            </div>
-                            <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
-                              <X className="w-5 h-5 text-destructive" />
-                              <span className="sr-only">Remove file</span>
-                            </Button>
-                          </div>
-                        ))}
+                            ))}
+                        </div>
 
-                         <div className="flex justify-end pt-6 border-t mt-6">
+                         <div className="flex justify-end pt-6 border-t">
                           <Button 
                             size="lg" 
                             className="w-full sm:w-auto" 
                             disabled={files.length === 0}
                             onClick={handleOptimize}
                           >
-                            Optimizar {files.length} Archivos
+                            Optimizar {files.length} {files.length === 1 ? 'Archivo' : 'Archivos'}
                           </Button>
                         </div>
                       </div>

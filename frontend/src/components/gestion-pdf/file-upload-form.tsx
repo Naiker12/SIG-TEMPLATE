@@ -3,13 +3,14 @@
 
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { FileUp } from "lucide-react";
+import { FileUp, PlusCircle } from "lucide-react";
 
 type FileUploadFormProps = {
   acceptedFileTypes?: { [key: string]: string[] };
   allowMultiple?: boolean;
   uploadHelpText?: string;
   onFilesSelected: (files: File[]) => void;
+  isButton?: boolean;
 };
 
 const defaultAcceptedFileTypes = {
@@ -21,6 +22,7 @@ export function FileUploadForm({
   allowMultiple = false,
   uploadHelpText = "Solo se permiten archivos PDF de hasta 50MB.",
   onFilesSelected,
+  isButton = false,
 }: FileUploadFormProps) {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +35,7 @@ export function FileUploadForm({
   const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    if (event.dataTransfer.files) {
+    if (event.dataTransfer.files && !isButton) {
        const newFiles = Array.from(event.dataTransfer.files);
        onFilesSelected(newFiles);
     }
@@ -46,23 +48,43 @@ export function FileUploadForm({
   
   const acceptString = useMemo(() => Object.keys(acceptedFileTypes).join(','), [acceptedFileTypes]);
 
+  const uniqueId = `file-upload-${useMemo(() => Math.random().toString(36).substr(2, 9), [])}`;
+
+  if (isButton) {
+    return (
+        <div>
+            <Button type="button" variant="outline" onClick={(e) => { e.stopPropagation(); document.getElementById(uniqueId)?.click(); }}>
+                <PlusCircle className="mr-2 h-4 w-4"/> Añadir más archivos
+            </Button>
+            <input
+                type="file"
+                id={uniqueId}
+                className="hidden"
+                onChange={handleFileChange}
+                accept={acceptString}
+                multiple={allowMultiple}
+            />
+        </div>
+    );
+  }
+
   return (
     <div className="w-full">
         <div
           className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center cursor-pointer hover:border-primary transition-colors"
           onDrop={handleFileDrop}
           onDragOver={handleDragOver}
-          onClick={() => document.getElementById('file-upload')?.click()}
+          onClick={() => document.getElementById(uniqueId)?.click()}
         >
           <FileUp className="w-16 h-16 text-muted-foreground mb-4" />
           <h3 className="text-xl font-semibold mb-2">Arrastra y suelta tus archivos aquí</h3>
           <p className="text-muted-foreground mb-4">o</p>
-          <Button type="button" onClick={(e) => { e.stopPropagation(); document.getElementById('file-upload')?.click(); }}>
+          <Button type="button" onClick={(e) => { e.stopPropagation(); document.getElementById(uniqueId)?.click(); }}>
             Seleccionar Archivos
           </Button>
           <input
             type="file"
-            id="file-upload"
+            id={uniqueId}
             className="hidden"
             onChange={handleFileChange}
             accept={acceptString}
