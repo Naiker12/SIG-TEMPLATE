@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
@@ -14,6 +15,7 @@ import { UploadCloud, Link as LinkIcon, Bot, User, Send, Loader2 } from "lucide-
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/hooks/useAuthStore';
 
 
 export default function SemanticSearchPage() {
@@ -22,6 +24,17 @@ export default function SemanticSearchPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [query, setQuery] = useState('');
     const [messages, setMessages] = useState<any[]>([]);
+    const { isLoggedIn } = useAuthStore();
+    const router = useRouter();
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            router.push('/');
+        } else {
+            setIsCheckingAuth(false);
+        }
+    }, [isLoggedIn, router]);
 
     const handleSourceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (sourceType === 'url') {
@@ -51,6 +64,14 @@ export default function SemanticSearchPage() {
     
     const isSourceSet = !!source;
     
+    if (isCheckingAuth) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Loader2 className="h-12 w-12 animate-spin" />
+            </div>
+        );
+    }
+
     return (
         <SidebarProvider>
             <Sidebar variant="sidebar" collapsible="icon">

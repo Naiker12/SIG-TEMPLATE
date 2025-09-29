@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
@@ -18,6 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLoadingStore } from '@/hooks/use-loading-store';
+import { useAuthStore } from '@/hooks/useAuthStore';
 
 
 export default function CustomApiPage() {
@@ -26,6 +28,17 @@ export default function CustomApiPage() {
   const [hasHeaders, setHasHeaders] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('cards');
+  const { isLoggedIn } = useAuthStore();
+  const router = useRouter();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push('/');
+    } else {
+      setIsCheckingAuth(false);
+    }
+  }, [isLoggedIn, router]);
 
   const handleExtract = () => {
     setIsLoading(true);
@@ -50,6 +63,14 @@ export default function CustomApiPage() {
 
   const tableHeaders = response && response.data.length > 0 ? Object.keys(response.data[0] || {}) : [];
   
+  if (isCheckingAuth) {
+    return (
+        <div className="flex items-center justify-center h-screen">
+            <Loader2 className="h-12 w-12 animate-spin" />
+        </div>
+    );
+  }
+
   const RequestModal = () => (
      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogTrigger asChild>

@@ -1,20 +1,22 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, AreaChart, Area, StackedBarChart } from 'recharts';
-import { FileUp, DollarSign, Users, Target, BarChartBig, LayoutDashboard, X as XIcon } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { FileUp, BarChartBig, LayoutDashboard, X as XIcon, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLoadingStore } from '@/hooks/use-loading-store';
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { ColumnDef } from '@tanstack/react-table';
+import { useAuthStore } from '@/hooks/useAuthStore';
 
 // --- MOCK DATA ---
 const initialData = [
@@ -56,6 +58,17 @@ export default function DataAnalysisPage() {
     const [data, setData] = useState<any[]>([]);
     const [filters, setFilters] = useState<{ category?: string; month?: string }>({});
     const { setIsLoading } = useLoadingStore();
+    const { isLoggedIn } = useAuthStore();
+    const router = useRouter();
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            router.push('/');
+        } else {
+            setIsCheckingAuth(false);
+        }
+    }, [isLoggedIn, router]);
 
     // --- DATA PROCESSING & MEMOIZATION ---
     const filteredData = useMemo(() => {
@@ -141,6 +154,14 @@ export default function DataAnalysisPage() {
     const clearFilters = () => setFilters({});
     
     // --- RENDER ---
+    if (isCheckingAuth) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Loader2 className="h-12 w-12 animate-spin" />
+            </div>
+        );
+    }
+
     return (
         <SidebarProvider>
             <Sidebar variant="sidebar" collapsible="icon"><DashboardSidebar /></Sidebar>

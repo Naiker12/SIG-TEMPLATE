@@ -8,7 +8,7 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Sidebar, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { AreaChart, Bot, FileText } from "lucide-react";
+import { AreaChart, Bot } from "lucide-react";
 import { ReportsModal } from "@/components/dashboard/reports-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useAuthModal } from "@/hooks/use-auth-modal";
@@ -34,7 +34,7 @@ export default function Home() {
                               </div>
                               <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Bienvenido a SIG IA</h1>
                               <p className="text-muted-foreground mt-4 mb-8">
-                                  Tu plataforma inteligente para la gestión documental. Inicia sesión para acceder a todas las herramientas y optimizar tu flujo de trabajo.
+                                  Tu plataforma inteligente para la gestión documental. Explora nuestras herramientas públicas o inicia sesión para acceder a todas las funciones y optimizar tu flujo de trabajo.
                               </p>
                               <Button size="lg" onClick={authModal.onOpen}>
                                   Comenzar Ahora

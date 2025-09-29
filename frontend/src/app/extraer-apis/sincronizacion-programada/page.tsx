@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
@@ -10,7 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MoreVertical, Play, PlusCircle, AlertCircle, CheckCircle, History } from "lucide-react";
+import { Clock, MoreVertical, Play, PlusCircle, AlertCircle, CheckCircle, History, Loader2 } from "lucide-react";
+import { useAuthStore } from '@/hooks/useAuthStore';
 
 const scheduledTasksData = [
     { name: "Sincronización Diaria de Clientes (Salesforce)", frequency: "Cada 24 horas", lastRun: "Hace 8 horas", status: "Activo" },
@@ -21,6 +23,17 @@ const scheduledTasksData = [
 
 export default function ScheduledSyncPage() {
     const [tasks, setTasks] = useState(scheduledTasksData);
+    const { isLoggedIn } = useAuthStore();
+    const router = useRouter();
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            router.push('/');
+        } else {
+            setIsCheckingAuth(false);
+        }
+    }, [isLoggedIn, router]);
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -40,6 +53,14 @@ export default function ScheduledSyncPage() {
             )
         );
     };
+
+  if (isCheckingAuth) {
+    return (
+        <div className="flex items-center justify-center h-screen">
+            <Loader2 className="h-12 w-12 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <SidebarProvider>

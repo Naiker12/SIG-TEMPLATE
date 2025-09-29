@@ -7,7 +7,7 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, X, CheckCircle, Download, TrendingDown, FileUp } from 'lucide-react';
+import { FileText, X, CheckCircle, Download, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { compressFiles } from '@/services/compressionService';
 import { saveAs } from 'file-saver';
@@ -16,6 +16,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { useAuthStore } from '@/hooks/useAuthStore';
+import { useAuthModal } from '@/hooks/use-auth-modal';
 
 type CompressedInfo = {
   blob: Blob;
@@ -23,12 +25,16 @@ type CompressedInfo = {
   originalSize: number;
 };
 
+const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
+
 export default function OptimizeFilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [compressionLevel, setCompressionLevel] = useState([1]);
   const [compressedInfo, setCompressedInfo] = useState<CompressedInfo | null>(null);
   const [optimizationProgress, setOptimizationProgress] = useState<number | null>(null);
   const { toast } = useToast();
+  const { isLoggedIn } = useAuthStore();
+  const authModal = useAuthModal();
 
   useEffect(() => {
     if (compressionLevel[0] === 2) {
@@ -41,6 +47,18 @@ export default function OptimizeFilePage() {
   }, [compressionLevel, toast]);
   
   const handleFilesSelected = (newFiles: File[]) => {
+    const totalSize = newFiles.reduce((acc, file) => acc + file.size, 0);
+    
+    if (!isLoggedIn && totalSize > FILE_SIZE_LIMIT) {
+        toast({
+            variant: "destructive",
+            title: "Límite de tamaño excedido",
+            description: "Has superado el límite de 50MB. Por favor, inicia sesión para subir archivos más grandes.",
+        });
+        authModal.onOpen();
+        return;
+    }
+
     const combinedFiles = [...files, ...newFiles];
     const uniqueFiles = Array.from(new Set(combinedFiles.map(f => f.name))).map(name => {
         return combinedFiles.find(f => f.name === name)!
@@ -169,7 +187,7 @@ export default function OptimizeFilePage() {
                             'image/jpeg': ['.jpg', '.jpeg'],
                             'image/png': ['.png'],
                           }}
-                          uploadHelpText="Sube archivos PDF, DOCX, JPG o PNG de hasta 50MB."
+                          uploadHelpText="Sube archivos PDF, DOCX, JPG o PNG. Límite de 50MB para invitados."
                         />
                     )}
 

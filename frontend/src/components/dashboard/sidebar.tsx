@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
-import { adminMenuItems, settingsMenuItems } from "./sidebar-data";
+import { publicMenuItems, privateMenuItems, settingsMenuItems } from "./sidebar-data";
 import { CollapsibleMenuItem } from "./collapsible-menu-item";
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -46,6 +46,30 @@ export function DashboardSidebar() {
     setTheme(isDark ? "light" : "dark");
   };
   
+  const allMenuItems = isLoggedIn ? [...privateMenuItems, ...publicMenuItems] : publicMenuItems;
+
+  const renderMenuItems = (items: typeof allMenuItems) => {
+    return items.map((item, index) =>
+      item.isCollapsible ? (
+        <CollapsibleMenuItem key={index} item={item} />
+      ) : (
+        <SidebarMenuItem key={index}>
+          <SidebarMenuButton
+            asChild
+            isActive={pathname === item.href}
+            tooltip={item.label}
+            onClick={() => setOpenMobile(false)}
+          >
+            <Link href={item.href}>
+              <item.icon />
+              <span>{item.label}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )
+    );
+  };
+  
   const MobileSidebarContent = () => (
     <div className="flex flex-col h-full">
         <SidebarHeader className="p-4 border-b">
@@ -64,27 +88,9 @@ export function DashboardSidebar() {
       </SidebarHeader>
 
       <div className="flex-1 overflow-y-auto p-4">
-        {isClient && isLoggedIn && (
+        {isClient && (
           <SidebarMenu>
-            {adminMenuItems.map((item, index) =>
-                item.isCollapsible ? (
-                  <CollapsibleMenuItem key={index} item={item} />
-                ) : (
-                  <SidebarMenuItem key={index}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.href}
-                      tooltip={item.label}
-                      onClick={() => setOpenMobile(false)}
-                    >
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-            )}
+            {renderMenuItems(allMenuItems)}
           </SidebarMenu>
         )}
       </div>
@@ -170,19 +176,26 @@ export function DashboardSidebar() {
           </div>
         </SidebarHeader>
 
-        {isClient && isLoggedIn && (
+        {isClient && (
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto px-4">
               <SidebarMenu>
-                {adminMenuItems.map((item, index) =>
-                    item.isCollapsible ? (
-                      <CollapsibleMenuItem key={index} item={item} />
-                    ) : (
+                {renderMenuItems(allMenuItems)}
+              </SidebarMenu>
+            </div>
+
+            <SidebarFooter className="p-4 mt-auto">
+              <SidebarSeparator className="mb-4" />
+              
+              {isLoggedIn && user && (
+                <>
+                <SidebarMenu>
+                  {settingsMenuItems.map((item, index) => (
                       <SidebarMenuItem key={index}>
                         <SidebarMenuButton
                           asChild
-                          isActive={pathname === item.href}
                           tooltip={item.label}
+                          isActive={pathname === item.href}
                         >
                           <Link href={item.href}>
                             <item.icon />
@@ -190,32 +203,11 @@ export function DashboardSidebar() {
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                    )
-                )}
-              </SidebarMenu>
-            </div>
-
-            <SidebarFooter className="p-4 mt-auto">
-              <SidebarSeparator className="mb-4" />
-              
-              <SidebarMenu>
-                {settingsMenuItems.map((item, index) => (
-                    <SidebarMenuItem key={index}>
-                      <SidebarMenuButton
-                        asChild
-                        tooltip={item.label}
-                        isActive={pathname === item.href}
-                      >
-                        <Link href={item.href}>
-                          <item.icon />
-                          <span>{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-
-              <SidebarSeparator className="my-4" />
+                  ))}
+                </SidebarMenu>
+                <SidebarSeparator className="my-4" />
+                </>
+              )}
 
               {isClient && (
                 <>
@@ -237,32 +229,31 @@ export function DashboardSidebar() {
                   </div>
                 </>
               )}
-
-              <SidebarMenu>
-                {user && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Perfil de usuario">
-                      <Link href="/profile">
-                        <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
-                          <AvatarFallback className="bg-transparent text-white">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col group-data-[state=collapsed]:hidden">
-                          <span className="font-semibold">{user.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {user.email}
-                          </span>
-                        </div>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
-                <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Cerrar Sesión" onClick={clearSession}>
-                        <LogOut />
-                        <span className="group-data-[state=collapsed]:hidden">Cerrar Sesión</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
+                {isLoggedIn && user ? (
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Perfil de usuario">
+                        <Link href="/profile">
+                          <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+                            <AvatarFallback className="bg-transparent text-white">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col group-data-[state=collapsed]:hidden">
+                            <span className="font-semibold">{user.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {user.email}
+                            </span>
+                          </div>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Cerrar Sesión" onClick={clearSession}>
+                            <LogOut />
+                            <span className="group-data-[state=collapsed]:hidden">Cerrar Sesión</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                ) : null}
             </SidebarFooter>
           </div>
         )}

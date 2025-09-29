@@ -1,3 +1,4 @@
+
 import {
     LayoutDashboard,
     BarChart3,
@@ -19,7 +20,6 @@ import {
     FileSymlink,
     Replace,
     AreaChart,
-    File,
     DatabaseZap,
     FileSignature,
     FilePen,
@@ -44,9 +44,7 @@ export type SettingsMenuItem = {
     badge?: string;
 };
 
-
-export const adminMenuItems: AdminMenuItem[] = [
-    { icon: LayoutDashboard, label: "Tablero", href: "/" },
+export const publicMenuItems: AdminMenuItem[] = [
     {
         icon: FileText,
         label: "Gestión PDF",
@@ -66,11 +64,6 @@ export const adminMenuItems: AdminMenuItem[] = [
         submenu: [
             { icon: FileSymlink, label: "Convertir a PDF", href: "/gestion-word/convertir-a-pdf" },
         ]
-    },
-    {
-        icon: BrainCircuit,
-        label: "Buscar con IA",
-        href: "/buscar-con-ia/busqueda-semantica",
     },
     {
         icon: BarChart3,
@@ -93,6 +86,15 @@ export const adminMenuItems: AdminMenuItem[] = [
             { icon: Table2, label: "Conversión a Dataset", href: "/subir-excel/conversion-a-dataset" },
             { icon: DatabaseZap, label: "Excel a API", href: "/subir-excel/excel-a-api" },
         ]
+    },
+];
+
+export const privateMenuItems: AdminMenuItem[] = [
+    { icon: LayoutDashboard, label: "Tablero", href: "/" },
+    {
+        icon: BrainCircuit,
+        label: "Buscar con IA",
+        href: "/buscar-con-ia/busqueda-semantica",
     },
     {
         icon: AreaChart,

@@ -7,19 +7,25 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, X, Download, CheckCircle, FileUp } from 'lucide-react';
+import { FileText, X, Download, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { convertPdfToWord, type ConversionResult } from '@/services/conversionService';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { saveAs } from 'file-saver';
+import { useAuthStore } from '@/hooks/useAuthStore';
+import { useAuthModal } from '@/hooks/use-auth-modal';
+
+const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
 
 export default function ConvertPdfToWordPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [convertedInfo, setConvertedInfo] = useState<ConversionResult | null>(null);
   const [conversionProgress, setConversionProgress] = useState<number | null>(null);
   const { toast } = useToast();
+  const { isLoggedIn } = useAuthStore();
+  const authModal = useAuthModal();
 
   const handleFilesSelected = (newFiles: File[]) => {
     const pdfFiles = newFiles.filter(file => file.type === 'application/pdf');
@@ -29,6 +35,17 @@ export default function ConvertPdfToWordPage() {
         title: "Archivos no válidos",
         description: "Solo se pueden seleccionar archivos PDF para esta conversión.",
       });
+    }
+
+    const totalSize = pdfFiles.reduce((acc, file) => acc + file.size, 0);
+    if (!isLoggedIn && totalSize > FILE_SIZE_LIMIT) {
+        toast({
+            variant: "destructive",
+            title: "Límite de tamaño excedido",
+            description: "Has superado el límite de 50MB. Por favor, inicia sesión para subir archivos más grandes.",
+        });
+        authModal.onOpen();
+        return;
     }
 
     const combinedFiles = [...files, ...pdfFiles];
@@ -136,7 +153,7 @@ export default function ConvertPdfToWordPage() {
                         onFilesSelected={handleFilesSelected}
                         allowMultiple={true}
                         acceptedFileTypes={{ 'application/pdf': ['.pdf'] }}
-                        uploadHelpText="Sube archivos PDF de hasta 20MB."
+                        uploadHelpText="Sube archivos PDF. Límite de 50MB para invitados."
                       />
                     )}
 

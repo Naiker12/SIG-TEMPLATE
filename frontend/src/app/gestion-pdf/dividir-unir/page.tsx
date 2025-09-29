@@ -19,6 +19,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CircularProgressBar } from "@/components/ui/circular-progress-bar";
 import { splitPdf, mergePdfs } from "@/services/pdfManipulationService";
 import { saveAs } from "file-saver";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useAuthModal } from "@/hooks/use-auth-modal";
 
 type ProcessResult = {
   blob: Blob;
@@ -26,9 +28,13 @@ type ProcessResult = {
   fileName: string;
 };
 
+const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
+
 export default function SplitMergePdfPage() {
   const [activeTab, setActiveTab] = useState('split');
   const { toast } = useToast();
+  const { isLoggedIn } = useAuthStore();
+  const authModal = useAuthModal();
   
   // State for Split
   const [splitFile, setSplitFile] = useState<File[]>([]);
@@ -50,6 +56,18 @@ export default function SplitMergePdfPage() {
   }
 
   const handleFilesSelected = (newFiles: File[], type: 'split' | 'merge') => {
+      const totalSize = newFiles.reduce((acc, file) => acc + file.size, 0);
+
+      if (!isLoggedIn && totalSize > FILE_SIZE_LIMIT) {
+          toast({
+              variant: "destructive",
+              title: "Límite de tamaño excedido",
+              description: "Has superado el límite de 50MB. Por favor, inicia sesión para subir archivos más grandes.",
+          });
+          authModal.onOpen();
+          return;
+      }
+      
       setProcessResult(null);
       if (type === 'split') {
         setSplitFile(newFiles.slice(0, 1));
@@ -193,7 +211,7 @@ export default function SplitMergePdfPage() {
                            <FileUploadForm 
                               onFilesSelected={(files) => handleFilesSelected(files, 'split')}
                               acceptedFileTypes={{'application/pdf': ['.pdf']}}
-                              uploadHelpText="Sube un archivo PDF para dividir."
+                              uploadHelpText="Sube un archivo PDF para dividir. Límite de 50MB para invitados."
                             />
                         ) : (
                           <div className='space-y-6'>
@@ -232,7 +250,7 @@ export default function SplitMergePdfPage() {
                                allowMultiple
                                onFilesSelected={(files) => handleFilesSelected(files, 'merge')}
                                acceptedFileTypes={{'application/pdf': ['.pdf']}}
-                               uploadHelpText="Sube o arrastra archivos PDF para unirlos."
+                               uploadHelpText="Sube o arrastra archivos PDF para unirlos. Límite de 50MB para invitados."
                                isButton={mergeFiles.length > 0}
                              />
                            {mergeFiles.length > 0 && (

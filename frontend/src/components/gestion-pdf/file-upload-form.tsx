@@ -30,6 +30,8 @@ export function FileUploadForm({
       const newFiles = Array.from(event.target.files);
       onFilesSelected(newFiles);
     }
+    // Reset the input value to allow selecting the same file again
+    event.target.value = '';
   };
 
   const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -46,7 +48,7 @@ export function FileUploadForm({
     event.stopPropagation();
   };
   
-  const acceptString = useMemo(() => Object.keys(acceptedFileTypes).join(','), [acceptedFileTypes]);
+  const acceptString = useMemo(() => Object.values(acceptedFileTypes).flat().join(','), [acceptedFileTypes]);
 
   const uniqueId = useId();
   const fileInputId = `file-upload-${uniqueId}`;
