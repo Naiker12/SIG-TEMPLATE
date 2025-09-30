@@ -52,7 +52,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     except JWTError:
         raise credentials_exception
     
-    user = await prisma.user.find_unique(
+    user = await prisma.User.find_unique(
         where={"email": email},
         include={"role": True}
     )
