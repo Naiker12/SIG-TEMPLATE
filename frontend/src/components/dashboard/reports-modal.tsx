@@ -8,6 +8,8 @@ import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartToo
 import type { ChartConfig } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useMemo } from 'react';
+import type { File } from '@/services/fileService';
 
 const chartData = [
   { month: "Enero", documents: 186, tokens: 8000 },
@@ -29,23 +31,6 @@ const chartConfig: ChartConfig = {
   },
 };
 
-const pieChartData = [
-    { name: 'Completo', value: 1180, fill: 'hsl(var(--chart-1))' },
-    { name: 'Fallido', value: 23, fill: 'hsl(var(--destructive))' },
-    { name: 'En Espera', value: 47, fill: 'hsl(var(--chart-4))' },
-]
-const pieChartConfig = {
-    completo: { label: 'Completo' },
-    fallido: { label: 'Fallido' },
-    enEspera: { label: 'En Espera' },
-} satisfies ChartConfig;
-
-const usageChartData = [
-    { type: 'PDF', count: 789 },
-    { type: 'Excel', count: 251 },
-    { type: 'APIs', count: 124 },
-    { type: 'Word', count: 86 },
-]
 
 const usageChartConfig: ChartConfig = {
     count: {
@@ -58,9 +43,40 @@ const usageChartConfig: ChartConfig = {
 type ReportsModalProps = {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
+    files: File[];
 };
 
-export function ReportsModal({ isOpen, onOpenChange }: ReportsModalProps) {
+export function ReportsModal({ isOpen, onOpenChange, files }: ReportsModalProps) {
+
+    const { pieChartData, usageChartData } = useMemo(() => {
+        const statusCounts = files.reduce((acc, file) => {
+            acc[file.status] = (acc[file.status] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        const pieChartData = [
+            { name: 'Completo', value: statusCounts['COMPLETED'] || 0, fill: 'hsl(var(--chart-1))' },
+            { name: 'Fallido', value: statusCounts['FAILED'] || 0, fill: 'hsl(var(--destructive))' },
+            { name: 'En Espera', value: statusCounts['PENDING'] || 0, fill: 'hsl(var(--chart-4))' },
+        ].filter(item => item.value > 0);
+
+        const typeCounts = files.reduce((acc, file) => {
+            const simpleType = file.fileType.split('/')[1] || 'desconocido';
+            const capitalizedType = simpleType.charAt(0).toUpperCase() + simpleType.slice(1);
+            acc[capitalizedType] = (acc[capitalizedType] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        const usageChartData = Object.entries(typeCounts).map(([type, count]) => ({ type, count }));
+
+        return { pieChartData, usageChartData };
+    }, [files]);
+    
+    const pieChartConfig = {
+        completo: { label: 'Completo' },
+        fallido: { label: 'Fallido' },
+        enEspera: { label: 'En Espera' },
+    } satisfies ChartConfig;
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -83,7 +99,7 @@ export function ReportsModal({ isOpen, onOpenChange }: ReportsModalProps) {
                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                   <Card className="lg:col-span-2">
                                       <CardHeader>
-                                          <CardTitle>Uso Mensual</CardTitle>
+                                          <CardTitle>Uso Mensual (Simulado)</CardTitle>
                                           <CardDescription>Documentos procesados y tokens de IA utilizados en los últimos 6 meses.</CardDescription>
                                       </CardHeader>
                                       <CardContent>

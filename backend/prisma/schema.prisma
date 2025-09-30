@@ -4,7 +4,6 @@
 generator client {
   provider        = "prisma-client-py"
   previewFeatures = ["python-sdk"]
-  client_version  = ">=0.11.0"
 }
 
 datasource db {
@@ -13,19 +12,33 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   email     String   @unique
   name      String
-  bio       String?
   password  String
+  bio       String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  role      Role?    @relation(fields: [roleId], references: [id])
-  roleId    String?
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  files     File[] // Un usuario puede tener muchos archivos
 }
 
 model Role {
-  id   String @id @default(uuid())
-  name String @unique
+  id    String @id @default(cuid())
+  name  String @unique
   users User[]
+}
+
+model File {
+  id        String   @id @default(cuid())
+  filename  String
+  fileType  String
+  size      Int
+  status    String // e.g., "COMPLETED", "FAILED", "PENDING"
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
