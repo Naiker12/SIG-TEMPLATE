@@ -8,7 +8,6 @@ from typing import Tuple, List
 from docx2pdf import convert as convert_docx
 from PIL import Image
 
-# Rutas según la estructura del proyecto
 TEMP_DIR = Path("temp_files")
 OUTPUT_DIR = Path("outputs")
 

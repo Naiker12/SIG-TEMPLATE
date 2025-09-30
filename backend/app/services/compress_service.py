@@ -6,7 +6,6 @@ import os
 from fastapi import UploadFile
 from typing import Tuple
 
-# Rutas según la estructura del proyecto
 UPLOAD_DIR = Path("uploads")
 TEMP_DIR = Path("temp_files")
 OUTPUT_DIR = Path("outputs")

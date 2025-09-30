@@ -18,10 +18,10 @@ python-jose[cryptography]==3.3.0
 # Cliente HTTP
 httpx==0.23.3
 
-# Supabase (opcional)
+# Supabase
 supabase==1.0.3
 
-# Emails (opcional)
+# Emails
 aiosmtplib==2.0.2
 
 # PDF/Word/Image Conversion & File Handling
