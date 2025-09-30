@@ -1,29 +1,34 @@
 
 import { API_BASE_URL } from '@/lib/api-config';
-import { useAuthStore } from '@/hooks/useAuthStore';
 
-async function fetchWithAuth(url: string, options: RequestInit) {
-    const token = useAuthStore.getState().token;
-    if (!token) {
-        throw new Error("No estás autenticado.");
-    }
-
+export async function fetchWithAuth(url: string, options: RequestInit) {
+    const token = await import('@/hooks/useAuthStore').then(m => m.useAuthStore.getState().token);
+    
     const headers = new Headers(options.headers || {});
-    headers.set('Authorization', `Bearer ${token}`);
+    if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+    }
 
     const response = await fetch(url, { ...options, headers });
     
     if (!response.ok) {
+        if (response.status === 401) {
+            // Option: auto-logout on 401
+            // (await import('@/hooks/useAuthStore')).useAuthStore.getState().clearSession();
+            throw new Error("Could not validate credentials");
+        }
         const errorData = await response.json().catch(() => ({ detail: 'Ocurrió un error inesperado.' }));
         throw new Error(errorData.detail || `Error: ${response.status}`);
     }
     
+    // Handle responses with no content
     if (response.status === 204 || response.headers.get('content-length') === '0') {
         return null;
     }
     
     return response.json();
 }
+
 
 type UserUpdateData = {
     name?: string;
@@ -44,11 +49,9 @@ type PasswordUpdateData = {
 };
 
 export async function updateUserPassword(data: PasswordUpdateData) {
-    const res = await fetchWithAuth(`${API_BASE_URL}/auth/me/password`, {
+    return fetchWithAuth(`${API_BASE_URL}/auth/me/password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
-    // For password, we don't expect a user object back, just a success message
-    return res;
 }

@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/lib/api-config';
+import { fetchWithAuth } from './userService';
 
 export async function registerUser(userData: any) {
   const res = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -31,14 +32,13 @@ export async function loginUser(credentials: any) {
     const tokenData = await res.json();
 
     // After getting token, fetch user details
-    const userRes = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    const user = await fetchWithAuth(`${API_BASE_URL}/auth/me`, {
+        method: 'GET'
     });
     
-    if (!userRes.ok) {
+    if (!user) {
         throw new Error('Failed to fetch user details');
     }
 
-    const user = await userRes.json();
     return { token: tokenData.access_token, user };
 }

@@ -1,6 +1,6 @@
 
 import { API_BASE_URL } from '@/lib/api-config';
-import { useAuthStore } from '@/hooks/useAuthStore';
+import { fetchWithAuth } from './userService';
 
 // Type definitions based on backend schemas
 export type File = {
@@ -21,24 +21,10 @@ type FileCreate = Omit<File, 'id' | 'createdAt' | 'userId'>;
  * Throws an error if the request fails.
  */
 export async function getUserFiles(): Promise<File[]> {
-  const token = useAuthStore.getState().token;
-  if (!token) {
-    throw new Error("No estás autenticado.");
-  }
-
-  const res = await fetch(`${API_BASE_URL}/files`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ detail: 'Failed to fetch files.' }));
-    throw new Error(errorData.detail || "Could not validate credentials");
-  }
-
-  return res.json();
+    const files = await fetchWithAuth(`${API_BASE_URL}/files`, {
+        method: 'GET',
+    });
+    return files || [];
 }
 
 /**
@@ -46,29 +32,16 @@ export async function getUserFiles(): Promise<File[]> {
  * Throws an error if the request fails.
  * @param fileData - The metadata of the file to save.
  */
-export async function uploadFileMetadata(fileData: FileCreate): Promise<File> {
-  const token = useAuthStore.getState().token;
-   if (!token) {
-    // Cannot upload metadata if not logged in.
-    // We can just skip this without throwing an error.
-    console.warn("User not logged in, skipping metadata upload.");
-    // Return a mock object that satisfies the type, but indicates it's not a real DB entry.
-    return { ...fileData, id: '', createdAt: new Date().toISOString(), userId: '' };
-  }
-
-  const res = await fetch(`${API_BASE_URL}/files/metadata`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(fileData),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ detail: 'Failed to upload metadata.' }));
-    throw new Error(errorData.detail || "Could not validate credentials");
-  }
-
-  return res.json();
+export async function uploadFileMetadata(fileData: FileCreate): Promise<File | null> {
+    const token = await import('@/hooks/useAuthStore').then(m => m.useAuthStore.getState().token);
+    if (!token) {
+        console.warn("User not logged in, skipping metadata upload.");
+        return null;
+    }
+    
+    return fetchWithAuth(`${API_BASE_URL}/files/metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fileData),
+    });
 }

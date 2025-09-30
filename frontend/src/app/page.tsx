@@ -24,26 +24,28 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isLoggedIn) {
+    const fetchFiles = async () => {
       setIsLoadingFiles(true);
-      const fetchFiles = async () => {
-        try {
-          const userFiles = await getUserFiles();
-          setFiles(userFiles);
-        } catch (error) {
-          console.error("Failed to fetch files:", error);
-          if (error instanceof Error) {
-              toast({ variant: "destructive", title: "Error", description: error.message });
-          } else {
-              toast({ variant: "destructive", title: "Error", description: "No se pudieron cargar los archivos recientes." });
-          }
-        } finally {
-          setIsLoadingFiles(false);
+      try {
+        const userFiles = await getUserFiles();
+        setFiles(userFiles);
+      } catch (error) {
+        console.error("Failed to fetch files:", error);
+        if (error instanceof Error) {
+            toast({ variant: "destructive", title: "Error", description: error.message });
+        } else {
+            toast({ variant: "destructive", title: "Error", description: "No se pudieron cargar los archivos recientes." });
         }
-      };
+      } finally {
+        setIsLoadingFiles(false);
+      }
+    };
+
+    if (isLoggedIn) {
       fetchFiles();
     } else {
         setFiles([]);
+        setIsLoadingFiles(false);
     }
   }, [isLoggedIn, toast]);
 
