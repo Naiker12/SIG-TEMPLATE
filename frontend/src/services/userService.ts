@@ -1,10 +1,10 @@
 
 import { API_BASE_URL } from '@/lib/api-config';
 
-export async function fetchWithAuth(url: string, options: RequestInit) {
+export async function fetchWithAuth(url: string, options: RequestInit, explicitToken?: string) {
     // Dynamically import the store to ensure state is hydrated from localStorage.
     const { useAuthStore } = await import('@/hooks/useAuthStore');
-    const token = useAuthStore.getState().token;
+    const token = explicitToken ?? useAuthStore.getState().token;
     
     const headers = new Headers(options.headers || {});
     if (token) {
@@ -15,8 +15,6 @@ export async function fetchWithAuth(url: string, options: RequestInit) {
     
     if (!response.ok) {
         if (response.status === 401) {
-            // Option: auto-logout on 401
-            // useAuthStore.getState().clearSession();
             throw new Error("Could not validate credentials");
         }
         const errorData = await response.json().catch(() => ({ detail: 'Ocurrió un error inesperado.' }));
@@ -43,7 +41,7 @@ export async function updateUserProfile(data: UserUpdateData) {
         payload.name = data.name;
     }
     // Only include bio if it's not undefined (allows clearing it with empty string)
-    if (data.bio !== undefined) {
+    if (data.bio) {
         payload.bio = data.bio;
     }
 

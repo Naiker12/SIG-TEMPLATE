@@ -36,6 +36,7 @@ const AuthModal = () => {
     const { setSession } = useAuthStore();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('login');
 
     const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -73,7 +74,7 @@ const AuthModal = () => {
             setSession(token, user);
             toast({ title: "¡Bienvenido a SIG IA!", description: `Tu cuenta ha sido creada y has iniciado sesión.` });
             onClose();
-
+            form.reset(); // Clear the form fields
         } catch (error) {
              toast({ variant: "destructive", title: "Error en el registro", description: error instanceof Error ? error.message : "Ocurrió un error." });
         } finally {
@@ -85,7 +86,7 @@ const AuthModal = () => {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md p-0">
-                 <Tabs defaultValue="login" className="w-full">
+                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
                         <TabsTrigger value="register">Registrarse</TabsTrigger>
