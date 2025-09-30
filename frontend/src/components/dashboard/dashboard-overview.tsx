@@ -1,12 +1,16 @@
 import { FileUp, BrainCircuit, FileCheck, AlertTriangle } from "lucide-react";
 import { MetricCard } from "./metric-card";
 
-export function DashboardOverview() {
+type DashboardOverviewProps = {
+  fileCount: number;
+}
+
+export function DashboardOverview({ fileCount }: DashboardOverviewProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <MetricCard 
         title="Archivos Subidos"
-        value="1,250"
+        value={fileCount.toString()}
         change="+20 archivos este mes"
         icon={<FileUp className="h-6 w-6 text-muted-foreground" />}
       />

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
 
 # --- Role Schemas ---
 class Role(BaseModel):
@@ -25,6 +26,23 @@ class User(UserBase):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     bio: Optional[str] = None
+
+# --- File Schemas ---
+class FileBase(BaseModel):
+    filename: str
+    fileType: str
+    size: int
+    status: str
+
+class FileCreate(FileBase):
+    pass
+
+class File(FileBase):
+    id: str
+    createdAt: datetime
+    userId: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Password Schemas ---
 class PasswordUpdate(BaseModel):

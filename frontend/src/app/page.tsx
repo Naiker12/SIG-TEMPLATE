@@ -1,22 +1,48 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
-import { PdfFilesTable } from "@/components/dashboard/pdf-files-table";
+import { RecentFilesTable } from "@/components/dashboard/recent-files-table";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Sidebar, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { AreaChart, Bot } from "lucide-react";
+import { AreaChart, Bot, Loader2 } from "lucide-react";
 import { ReportsModal } from "@/components/dashboard/reports-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useAuthModal } from "@/hooks/use-auth-modal";
+import { getUserFiles, type File } from "@/services/fileService";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const { isLoggedIn } = useAuthStore();
   const authModal = useAuthModal();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setIsLoadingFiles(true);
+      const fetchFiles = async () => {
+        try {
+          const userFiles = await getUserFiles();
+          setFiles(userFiles);
+        } catch (error) {
+          console.error("Failed to fetch files:", error);
+          toast({ variant: "destructive", title: "Error", description: "No se pudieron cargar los archivos recientes." });
+        } finally {
+          setIsLoadingFiles(false);
+        }
+      };
+      fetchFiles();
+    } else {
+        setFiles([]);
+    }
+  }, [isLoggedIn, toast]);
+
 
   if (!isLoggedIn) {
       return (
@@ -69,12 +95,19 @@ export default function Home() {
               </Button>
             </div>
             
-            <DashboardOverview />
-            <PdfFilesTable />
+            <DashboardOverview fileCount={files.length} />
+            
+            {isLoadingFiles ? (
+                <div className="flex items-center justify-center h-64">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                </div>
+            ) : (
+                <RecentFilesTable files={files} />
+            )}
           </div>
         </main>
       </SidebarInset>
-      <ReportsModal isOpen={isReportsModalOpen} onOpenChange={setIsReportsModalOpen} />
+      <ReportsModal isOpen={isReportsModalOpen} onOpenChange={setIsReportsModalOpen} files={files}/>
     </SidebarProvider>
   );
 }

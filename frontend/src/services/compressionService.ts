@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/lib/api-config';
+import { uploadFileMetadata } from './fileService';
 
 export async function compressFiles(files: File[], compressionLevel: number): Promise<Blob> {
   const formData = new FormData();
@@ -14,13 +15,23 @@ export async function compressFiles(files: File[], compressionLevel: number): Pr
     });
 
     if (!res.ok) {
-      // Intenta leer el error del backend para dar más contexto
       const errorBody = await res.text();
       console.error("Error response from backend:", errorBody);
       throw new Error(`API Error: ${res.status} ${res.statusText}`);
     }
 
-    return await res.blob();
+    const blob = await res.blob();
+    
+    // Log metadata for each file
+    const originalSize = files.reduce((acc, file) => acc + file.size, 0);
+    await uploadFileMetadata({
+        filename: files.length > 1 ? "archivos_comprimidos.zip" : files[0].name,
+        fileType: files.length > 1 ? 'zip' : files[0].type,
+        size: originalSize,
+        status: "COMPLETED",
+    });
+
+    return blob;
   } catch (error) {
     console.error("Failed to fetch from compression service:", error);
     if (error instanceof Error) {
