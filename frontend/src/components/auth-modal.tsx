@@ -76,7 +76,21 @@ const AuthModal = () => {
             onClose();
             form.reset(); // Clear the form fields
         } catch (error) {
-             toast({ variant: "destructive", title: "Error en el registro", description: error instanceof Error ? error.message : "Ocurrió un error." });
+             const errorMessage = error instanceof Error ? error.message : "Ocurrió un error.";
+             if (errorMessage.includes("Email already registered")) {
+                toast({ 
+                    variant: "destructive", 
+                    title: "Error en el registro", 
+                    description: "Este correo electrónico ya está registrado. Por favor, inicia sesión." 
+                });
+                setActiveTab("login");
+             } else {
+                toast({ 
+                    variant: "destructive", 
+                    title: "Error en el registro", 
+                    description: errorMessage 
+                });
+             }
         } finally {
             setIsLoading(false);
         }
