@@ -23,8 +23,7 @@ type FileCreate = Omit<File, 'id' | 'createdAt' | 'userId'>;
 export async function getUserFiles(): Promise<File[]> {
   const token = useAuthStore.getState().token;
   if (!token) {
-    // If there's no token, there are no user files to fetch.
-    return [];
+    throw new Error("No estás autenticado.");
   }
 
   const res = await fetch(`${API_BASE_URL}/files`, {
@@ -36,7 +35,7 @@ export async function getUserFiles(): Promise<File[]> {
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: 'Failed to fetch files.' }));
-    throw new Error(errorData.detail);
+    throw new Error(errorData.detail || "Could not validate credentials");
   }
 
   return res.json();
@@ -53,6 +52,7 @@ export async function uploadFileMetadata(fileData: FileCreate): Promise<File> {
     // Cannot upload metadata if not logged in.
     // We can just skip this without throwing an error.
     console.warn("User not logged in, skipping metadata upload.");
+    // Return a mock object that satisfies the type, but indicates it's not a real DB entry.
     return { ...fileData, id: '', createdAt: new Date().toISOString(), userId: '' };
   }
 
@@ -67,7 +67,7 @@ export async function uploadFileMetadata(fileData: FileCreate): Promise<File> {
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: 'Failed to upload metadata.' }));
-    throw new Error(errorData.detail);
+    throw new Error(errorData.detail || "Could not validate credentials");
   }
 
   return res.json();

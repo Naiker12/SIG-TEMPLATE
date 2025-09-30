@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FileText, X, CheckCircle, Download, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { compressFiles } from '@/services/compressionService';
+import { uploadFileMetadata } from '@/services/fileService';
 import { saveAs } from 'file-saver';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -101,6 +102,25 @@ export default function OptimizeFilePage() {
       clearInterval(progressInterval);
       setOptimizationProgress(100);
 
+      // Log metadata after successful compression
+      if (isLoggedIn) {
+        try {
+            await uploadFileMetadata({
+                filename: files.length > 1 ? "archivos_comprimidos.zip" : files[0].name,
+                fileType: files.length > 1 ? 'application/zip' : files[0].type,
+                size: zipBlob.size,
+                status: "COMPLETED",
+            });
+        } catch (metaError) {
+             console.error("Failed to upload metadata:", metaError);
+             toast({
+                variant: "destructive",
+                title: "Error de Metadatos",
+                description: "Los archivos se comprimieron, pero no se pudo guardar el registro.",
+             })
+        }
+      }
+
       setTimeout(() => {
         setCompressedInfo({
             blob: zipBlob,
@@ -121,7 +141,7 @@ export default function OptimizeFilePage() {
       toast({
         variant: "destructive",
         title: "Error de Optimización",
-        description: "Hubo un problema al comprimir los archivos. Inténtalo de nuevo.",
+        description: error instanceof Error ? error.message : "Hubo un problema al comprimir los archivos. Inténtalo de nuevo.",
       });
     }
   };
