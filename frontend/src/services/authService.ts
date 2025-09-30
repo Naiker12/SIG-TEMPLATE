@@ -30,15 +30,16 @@ export async function loginUser(credentials: any) {
         throw new Error(errorData.detail || 'Failed to login');
     }
     const tokenData = await res.json();
+    const accessToken = tokenData.access_token;
 
-    // After getting token, fetch user details
+    // After getting token, fetch user details using the NEW token
     const user = await fetchWithAuth(`${API_BASE_URL}/auth/me`, {
         method: 'GET'
-    });
+    }, accessToken);
     
     if (!user) {
         throw new Error('Failed to fetch user details');
     }
 
-    return { token: tokenData.access_token, user };
+    return { token: accessToken, user };
 }
