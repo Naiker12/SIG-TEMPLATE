@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-py"
-  previewFeatures = ["python-sdk"]
+  provider = "prisma-client-py"
 }
 
 datasource db {
@@ -12,22 +11,26 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
   name      String
+  email     String    @unique
   password  String
   bio       String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   roleId    String
-  role      Role     @relation(fields: [roleId], references: [id])
-  files     File[] // Un usuario puede tener muchos archivos
+  role      Role      @relation(fields: [roleId], references: [id])
+  files     File[] // Relation to File model
+
+  @@map("Usuario")
 }
 
 model Role {
   id    String @id @default(cuid())
   name  String @unique
   users User[]
+
+  @@map("Role")
 }
 
 model File {
@@ -35,10 +38,10 @@ model File {
   filename  String
   fileType  String
   size      Int
-  status    String // e.g., "COMPLETED", "FAILED", "PENDING"
+  status    String
   createdAt DateTime @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
 
-  @@index([userId])
+  @@map("File")
 }

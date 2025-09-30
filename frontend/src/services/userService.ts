@@ -36,10 +36,19 @@ type UserUpdateData = {
 };
 
 export async function updateUserProfile(data: UserUpdateData) {
+    const payload: UserUpdateData = {};
+    if (data.name) {
+        payload.name = data.name;
+    }
+    // Only include bio if it's not undefined (allows clearing it with empty string)
+    if (data.bio !== undefined) {
+        payload.bio = data.bio;
+    }
+
     return fetchWithAuth(`${API_BASE_URL}/auth/me`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
     });
 }
 
