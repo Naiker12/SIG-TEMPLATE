@@ -32,7 +32,11 @@ export default function Home() {
           setFiles(userFiles);
         } catch (error) {
           console.error("Failed to fetch files:", error);
-          toast({ variant: "destructive", title: "Error", description: "No se pudieron cargar los archivos recientes." });
+          if (error instanceof Error) {
+              toast({ variant: "destructive", title: "Error", description: error.message });
+          } else {
+              toast({ variant: "destructive", title: "Error", description: "No se pudieron cargar los archivos recientes." });
+          }
         } finally {
           setIsLoadingFiles(false);
         }
