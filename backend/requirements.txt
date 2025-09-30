@@ -24,8 +24,9 @@ supabase==1.0.3
 # Emails (opcional)
 aiosmtplib==2.0.2
 
-# PDF/Word/Image Conversion
+# PDF/Word/Image Conversion & File Handling
 docx2pdf==0.1.8
 Pillow==10.3.0
 pypdf==4.2.0
 pdf2docx==0.5.8
+python-magic==0.4.27
