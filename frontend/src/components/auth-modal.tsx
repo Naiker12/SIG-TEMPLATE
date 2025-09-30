@@ -69,12 +69,13 @@ const AuthModal = () => {
         try {
             await registerUser({ name, email, password });
             
-            // Auto-login after successful registration
-            const { token, user } = await loginUser({ email, password });
-            setSession(token, user);
-            toast({ title: "¡Bienvenido a SIG IA!", description: `Tu cuenta ha sido creada y has iniciado sesión.` });
-            onClose();
-            form.reset(); // Clear the form fields
+            toast({ 
+                title: "¡Cuenta creada con éxito!", 
+                description: "Por favor, inicia sesión para continuar." 
+            });
+            form.reset(); // Limpiar el formulario de registro
+            setActiveTab("login"); // Cambiar a la pestaña de login
+
         } catch (error) {
              const errorMessage = error instanceof Error ? error.message : "Ocurrió un error.";
              if (errorMessage.includes("Email already registered")) {
