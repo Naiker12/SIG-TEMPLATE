@@ -20,7 +20,7 @@ async def register_user(user: schemas.UserCreate):
     Registers a new user in the system.
     Hashes the password before storing it and assigns a default role.
     """
-    db_user = await prisma.user.find_unique(where={"email": user.email})
+    db_user = await prisma.User.find_unique(where={"email": user.email})
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -28,10 +28,10 @@ async def register_user(user: schemas.UserCreate):
         )
     
     # Find the default 'USER' role, or create it if it doesn't exist
-    user_role = await prisma.role.find_unique(where={"name": "USER"})
+    user_role = await prisma.Role.find_unique(where={"name": "USER"})
     if not user_role:
         try:
-            user_role = await prisma.role.create(data={"name": "USER"})
+            user_role = await prisma.Role.create(data={"name": "USER"})
         except Exception as e:
              raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -47,10 +47,10 @@ async def register_user(user: schemas.UserCreate):
         "roleId": user_role.id
     }
 
-    new_user = await prisma.user.create(data=new_user_data)
+    new_user = await prisma.User.create(data=new_user_data)
     
     # To match the response model, we fetch the created user with its role
-    created_user_with_role = await prisma.user.find_unique(
+    created_user_with_role = await prisma.User.find_unique(
         where={"id": new_user.id},
         include={"role": True}
     )
@@ -68,7 +68,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     """
     Authenticates a user and returns a JWT access token.
     """
-    user = await prisma.user.find_unique(
+    user = await prisma.User.find_unique(
         where={"email": form_data.username},
         include={"role": True}
     )
@@ -108,7 +108,7 @@ async def update_user_me(
     if not update_data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No update data provided")
 
-    updated_user = await prisma.user.update(
+    updated_user = await prisma.User.update(
         where={"id": current_user.id},
         data=update_data,
         include={"role": True}
@@ -131,7 +131,7 @@ async def update_password_me(
 
     hashed_password = get_password_hash(password_update.new_password)
     
-    await prisma.user.update(
+    await prisma.User.update(
         where={"id": current_user.id},
         data={"password": hashed_password}
     )
