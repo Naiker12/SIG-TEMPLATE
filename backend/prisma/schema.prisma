@@ -10,27 +10,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String    @id @default(cuid())
-  name      String
-  email     String    @unique
-  password  String
-  bio       String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  roleId    String
-  role      Role      @relation(fields: [roleId], references: [id])
-  files     File[] // Relation to File model
-
-  @@map("Usuario")
-}
-
 model Role {
-  id    String @id @default(cuid())
-  name  String @unique
-  users User[]
+  id      String @id @default(cuid())
+  name    String @unique
+  users   User[]
 
   @@map("Role")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  bio       String?
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+  roleId    String   @map("roleid")
+  role      Role     @relation(fields: [roleId], references: [id])
+  files     File[]
+
+  @@map("Usuario")
 }
 
 model File {
@@ -40,7 +41,8 @@ model File {
   size      Int
   status    String
   createdAt DateTime @default(now())
-  userId    String
+
+  userId    String   @map("userid")
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("File")

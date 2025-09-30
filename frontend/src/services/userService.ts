@@ -2,7 +2,9 @@
 import { API_BASE_URL } from '@/lib/api-config';
 
 export async function fetchWithAuth(url: string, options: RequestInit) {
-    const token = await import('@/hooks/useAuthStore').then(m => m.useAuthStore.getState().token);
+    // Dynamically import the store to ensure state is hydrated from localStorage.
+    const { useAuthStore } = await import('@/hooks/useAuthStore');
+    const token = useAuthStore.getState().token;
     
     const headers = new Headers(options.headers || {});
     if (token) {
@@ -14,7 +16,7 @@ export async function fetchWithAuth(url: string, options: RequestInit) {
     if (!response.ok) {
         if (response.status === 401) {
             // Option: auto-logout on 401
-            // (await import('@/hooks/useAuthStore')).useAuthStore.getState().clearSession();
+            // useAuthStore.getState().clearSession();
             throw new Error("Could not validate credentials");
         }
         const errorData = await response.json().catch(() => ({ detail: 'Ocurrió un error inesperado.' }));
