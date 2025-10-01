@@ -154,7 +154,6 @@ export function DataTable<TData, TValue>({
         </div>
         
       <div className="rounded-md border max-h-[60vh] overflow-auto">
-        <div className="relative w-full">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -203,7 +202,6 @@ export function DataTable<TData, TValue>({
               )}
             </TableBody>
           </Table>
-        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-0 pt-4">
@@ -234,7 +232,7 @@ export function DataTable<TData, TValue>({
                 </div>
                 <div className="flex w-[100px] items-center justify-center text-sm font-medium">
                 Página {table.getState().pagination.pageIndex + 1} de{" "}
-                {table.getPageCount()}
+                {table.getPageCount() ?? 0}
                 </div>
                 <div className="flex items-center space-x-2">
                 <Button
