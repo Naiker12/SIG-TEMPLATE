@@ -91,7 +91,8 @@ export default function ProcessExcelPage() {
         description: "El backend ha procesado el archivo. Obteniendo vista previa...",
       });
       
-      await fetchPageData(file_id, 1, 10);
+      // Fetch initial page
+      await fetchPageData(file_id, 1, pagination.pageSize);
 
     } catch (error) {
       console.error(error);
@@ -125,12 +126,14 @@ export default function ProcessExcelPage() {
     }
   };
   
-  const handlePaginationChange = useCallback((newPagination: PaginationState) => {
+  const handlePaginationChange = useCallback((updater: React.SetStateAction<PaginationState>) => {
     if (!processedFileId) return;
 
+    const newPagination = typeof updater === 'function' ? updater(pagination) : updater;
+    
     setPagination(newPagination);
     fetchPageData(processedFileId, newPagination.pageIndex + 1, newPagination.pageSize);
-  }, [processedFileId, fetchPageData]);
+  }, [processedFileId, fetchPageData, pagination]);
 
   const handleDuplicate = () => {
     if (selectedRows.length !== 1) return;
@@ -153,6 +156,7 @@ export default function ProcessExcelPage() {
             description: `Se han creado ${count - 1} copias de la fila. Actualizando tabla...`,
         });
 
+        // Refetch current page to show updates
         await fetchPageData(processedFileId, pagination.pageIndex + 1, pagination.pageSize);
 
     } catch (error) {
@@ -325,7 +329,7 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
   if (!rowData) return null;
 
   const rowDescription = Object.entries(rowData)
-    .filter(([key]) => key !== 'id' && key.toLowerCase() !== 'id')
+    .filter(([key, value]) => key !== 'id' && value)
     .slice(0, 2)
     .map(([key, value]) => `${key}: ${value}`)
     .join(', ');
@@ -340,7 +344,7 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
-          <div className="p-4 bg-muted rounded-lg border text-sm">
+          <div className="p-3 bg-muted rounded-lg border text-sm">
              <p className="font-semibold truncate">Fila seleccionada (ID: {rowData.id})</p>
              <p className="text-muted-foreground text-xs truncate">{rowDescription}</p>
           </div>
