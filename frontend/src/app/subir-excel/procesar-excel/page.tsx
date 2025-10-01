@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
@@ -9,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, Loader2 } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview } from '@/services/excelService';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+import { useAuthStore } from '@/hooks/useAuthStore';
 
 type PaginationState = {
   pageIndex: number;
@@ -27,6 +29,29 @@ export default function ProcessExcelPage() {
   const [processedData, setProcessedData] = useState<ExcelPreview | null>(null);
   const [processingProgress, setProcessingProgress] = useState<number | null>(null);
   const { toast } = useToast();
+  const { isLoggedIn } = useAuthStore();
+  const router = useRouter();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    if (useAuthStore.persist.hasHydrated()) {
+        if (!useAuthStore.getState().isLoggedIn) {
+            router.push('/');
+        } else {
+            setIsCheckingAuth(false);
+        }
+    }
+    
+    const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+         if (!useAuthStore.getState().isLoggedIn) {
+            router.push('/');
+        } else {
+            setIsCheckingAuth(false);
+        }
+    });
+
+    return () => unsubscribe();
+  }, [isLoggedIn, router]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -109,6 +134,14 @@ export default function ProcessExcelPage() {
     }));
   }, [processedData]);
 
+  if (isCheckingAuth) {
+    return (
+        <div className="flex items-center justify-center h-screen bg-background">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
+  }
+
   return (
     <>
       <SidebarProvider>
@@ -131,7 +164,7 @@ export default function ProcessExcelPage() {
                   <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent">
                       <CardHeader>
                           <CardTitle>Cargar Archivo</CardTitle>
-                          <CardDescription>Selecciona un archivo .xlsx o .csv para empezar.</CardDescription>
+                          <CardDescription>Selecciona un archivo .xlsx o .xls para empezar.</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
                           <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center">
@@ -141,9 +174,9 @@ export default function ProcessExcelPage() {
                                     {file ? "Cambiar Archivo" : "Seleccionar Archivo"}
                                   </Label>
                               </Button>
-                              <Input id="file-upload" type="file" onChange={handleFileChange} accept=".csv, .xlsx, .xls" className="hidden" />
+                              <Input id="file-upload" type="file" onChange={handleFileChange} accept=".xlsx, .xls" className="hidden" />
                               <p className="text-muted-foreground text-sm mt-3">
-                                {file ? file.name : "Formatos soportados: .csv, .xlsx, .xls"}
+                                {file ? file.name : "Formatos soportados: .xlsx, .xls"}
                               </p>
                           </div>
                           <Button onClick={handleProcess} disabled={!file} className="w-full" size="lg">
