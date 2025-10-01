@@ -16,13 +16,15 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def duplicate_rows_with_format(ws: Worksheet, cantidad_col: str = "cantidad"):
     """
     Duplicates rows in a worksheet based on a 'cantidad' column, preserving cell formatting.
+    If the 'cantidad' column doesn't exist, it does nothing.
     """
     try:
         headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
         headers_lower = [str(h).strip().lower() if h else "" for h in headers]
 
         if cantidad_col not in headers_lower:
-            raise HTTPException(status_code=400, detail=f"El archivo debe contener una columna '{cantidad_col}'")
+            # If the column doesn't exist, just return without doing anything.
+            return
 
         col_index = headers_lower.index(cantidad_col) + 1
         data_to_duplicate = []
@@ -39,6 +41,7 @@ def duplicate_rows_with_format(ws: Worksheet, cantidad_col: str = "cantidad"):
             
             cantidad_val = ws.cell(row=row_idx, column=col_index).value
             try:
+                # Ensure that None or non-numeric values default to 1
                 count = int(cantidad_val) if pd.notna(cantidad_val) else 1
             except (ValueError, TypeError):
                 count = 1
@@ -47,7 +50,7 @@ def duplicate_rows_with_format(ws: Worksheet, cantidad_col: str = "cantidad"):
 
         # Delete old rows (from bottom to top to avoid shifting issues if needed)
         if ws.max_row >= 2:
-            ws.delete_rows(2, ws.max_row -1)
+            ws.delete_rows(2, ws.max_row - 1)
 
         # Write duplicated data
         current_row_to_write = 2
@@ -87,11 +90,14 @@ async def upload_excel(file: UploadFile):
         ws = wb.active
         duplicate_rows_with_format(ws, "cantidad")
         wb.save(file_path)
+    except HTTPException as e:
+        # Re-raise HTTP exceptions from duplicate_rows_with_format
+        raise e
     except Exception as e:
-        # Clean up the file if processing fails
+        # Clean up the file if processing fails and raise a generic error
         if os.path.exists(file_path):
             os.remove(file_path)
-        raise e # Re-raise the exception caught in duplicate_rows_with_format or load_workbook
+        raise HTTPException(status_code=500, detail=f"Error al procesar el archivo Excel: {e}")
 
     return {"message": "Archivo subido y procesado correctamente", "file_id": file_id}
 
