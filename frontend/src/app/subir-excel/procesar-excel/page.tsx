@@ -7,7 +7,7 @@ import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar"
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UploadCloud, FileSpreadsheet, Loader2, Rows } from "lucide-react";
@@ -42,25 +42,26 @@ export default function ProcessExcelPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
+    // This effect ensures we wait for Zustand's persisted state to be rehydrated
+    // before checking for authentication. This prevents race conditions on page load.
+    const handleAuthCheck = () => {
+      const state = useAuthStore.getState();
+      if (!state.isLoggedIn) {
+        router.push('/');
+      } else {
+        setIsCheckingAuth(false);
+      }
+    };
+
     if (useAuthStore.persist.hasHydrated()) {
-        const state = useAuthStore.getState();
-        if (!state.isLoggedIn) {
-            router.push('/');
-        } else {
-            setIsCheckingAuth(false);
-        }
+      handleAuthCheck();
     }
     
-    const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
-        const state = useAuthStore.getState();
-         if (!state.isLoggedIn) {
-            router.push('/');
-        } else {
-            setIsCheckingAuth(false);
-        }
-    });
+    const unsubscribe = useAuthStore.persist.onFinishHydration(handleAuthCheck);
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, [isLoggedIn, router]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,7 +119,6 @@ export default function ProcessExcelPage() {
         description: "El backend ha procesado el archivo. Obteniendo vista previa...",
       });
       
-      // Fetch the first page of data
       await fetchPageData(file_id, 1, 10);
 
     } catch (error) {
