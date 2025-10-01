@@ -1,2 +1,20 @@
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
+services:
+  - type: web
+    name: fastapi-app  
+    env: python
+    pythonVersion: 3.11.9   
+    plan: free             
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+      prisma generate
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ALGORITHM
+        sync: false
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        sync: false
