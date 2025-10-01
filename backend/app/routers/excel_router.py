@@ -11,7 +11,7 @@ excel_router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
-@excel_router.post("/upload")
+@excel_router.post("/upload/")
 async def upload(file: UploadFile = File(...)):
     """
     Uploads an Excel file, processes it by duplicating rows based on a 'cantidad' column,
