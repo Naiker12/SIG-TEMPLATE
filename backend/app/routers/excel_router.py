@@ -1,8 +1,6 @@
-
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from typing import List, Dict, Any
 from app.services import excel_service
-from app.services.auth_service import get_current_user
 from app import schemas
 
 excel_router = APIRouter(
@@ -33,6 +31,18 @@ async def modify(file_id: str, modifications: List[Dict[str, Any]]):
     Modifies specific cells in the Excel file based on a list of modifications.
     """
     return excel_service.modify_excel(file_id, modifications)
+
+
+@excel_router.post("/duplicate_row")
+async def duplicate_row(payload: schemas.DuplicateRowPayload):
+    """
+    Duplicates a specific row in the Excel file a given number of times.
+    """
+    return excel_service.duplicate_row(
+        file_id=payload.file_id,
+        row_id=payload.row_id,
+        count=payload.count
+    )
 
 
 @excel_router.get("/download/{file_id}")

@@ -5,11 +5,9 @@ import pandas as pd
 from typing import List, Dict, Any
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException, UploadFile, status
 from copy import copy
 from fastapi.responses import FileResponse
-from app.services.auth_service import get_current_user
-from fastapi import Depends
 from app import schemas
 
 UPLOAD_DIR = "uploads"
@@ -108,6 +106,7 @@ async def upload_excel(file: UploadFile):
 def preview_excel(file_id: str, page: int = 1, page_size: int = 10):
     """
     Provides a paginated JSON preview of an Excel file using openpyxl for robust reading.
+    Adds a unique 'id' to each row for frontend identification.
     """
     file_path = os.path.join(UPLOAD_DIR, file_id)
     if not os.path.exists(file_path):
@@ -123,8 +122,12 @@ def preview_excel(file_id: str, page: int = 1, page_size: int = 10):
         
         # Extract rows as dictionaries
         all_rows = []
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            row_dict = {headers[i]: value for i, value in enumerate(row)}
+        # Add a unique ID to each row based on its physical row number
+        for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            row_dict = {
+                "id": row_idx,  # Unique ID based on row number
+                **{headers[i]: value for i, value in enumerate(row)}
+            }
             all_rows.append(row_dict)
             
         total_rows = len(all_rows)
@@ -155,6 +158,54 @@ def modify_excel(file_id: str, modifications: List[Dict[str, Any]]):
     # This is a complex operation. The provided logic has issues.
     # For now, this is a placeholder.
     raise HTTPException(status_code=501, detail="La modificación de celdas aún no está implementada.")
+
+
+def duplicate_row(file_id: str, row_id: int, count: int):
+    """
+    Duplicates a specific row in the Excel file `count` number of times.
+    """
+    file_path = os.path.join(UPLOAD_DIR, file_id)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+
+    if count <= 0:
+        return {"message": "No se realizaron duplicados."}
+
+    try:
+        wb = load_workbook(file_path)
+        ws = wb.active
+
+        if not (2 <= row_id <= ws.max_row):
+            raise HTTPException(status_code=404, detail=f"Fila con ID {row_id} no encontrada.")
+
+        # Get the data and styles from the source row
+        source_row_data = []
+        for col_idx in range(1, ws.max_column + 1):
+            cell = ws.cell(row=row_id, column=col_idx)
+            source_row_data.append({
+                "value": cell.value,
+                "style": copy(cell._style) if cell.has_style else None
+            })
+
+        # Insert new rows below the source row
+        ws.insert_rows(row_id + 1, count)
+
+        # Write the duplicated data into the new rows
+        for i in range(count):
+            target_row_idx = row_id + 1 + i
+            for col_idx, cell_data in enumerate(source_row_data, start=1):
+                new_cell = ws.cell(row=target_row_idx, column=col_idx, value=cell_data["value"])
+                if cell_data["style"]:
+                    new_cell._style = copy(cell_data["style"])
+        
+        wb.save(file_path)
+
+        return {"message": f"{count} duplicado(s) de la fila {row_id} creado(s) con éxito."}
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al duplicar la fila: {e}")
 
 
 def download_excel(file_id: str):
