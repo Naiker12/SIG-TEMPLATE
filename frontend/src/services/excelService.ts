@@ -1,6 +1,5 @@
 
 import { API_BASE_URL } from '@/lib/api-config';
-import { fetchWithAuth } from './userService';
 
 export type ExcelColumn = {
     accessorKey: string;
@@ -27,16 +26,17 @@ export async function uploadAndProcessExcel(file: File): Promise<{ file_id: stri
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetchWithAuth(`${API_BASE_URL}/excel/upload`, {
+    const response = await fetch(`${API_BASE_URL}/excel/upload/`, {
         method: 'POST',
         body: formData,
     });
     
-    if (!response) {
-        throw new Error('No se recibió respuesta del servidor al subir el archivo.');
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to process the error response.' }));
+        throw new Error(errorData.detail || `Error: ${response.status}`);
     }
 
-    return response;
+    return response.json();
 }
 
 /**
@@ -47,15 +47,16 @@ export async function uploadAndProcessExcel(file: File): Promise<{ file_id: stri
  * @returns The paginated data and metadata for the Excel file.
  */
 export async function getExcelPreview(fileId: string, page: number, pageSize: number): Promise<ExcelPreview> {
-    const response = await fetchWithAuth(`${API_BASE_URL}/excel/preview?file_id=${fileId}&page=${page}&page_size=${pageSize}`, {
+    const response = await fetch(`${API_BASE_URL}/excel/preview?file_id=${fileId}&page=${page}&page_size=${pageSize}`, {
         method: 'GET',
     });
     
-    if (!response) {
-        throw new Error('No se recibió respuesta del servidor al obtener la vista previa.');
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to process the error response.' }));
+        throw new Error(errorData.detail || `Error: ${response.status}`);
     }
     
-    // Add fileId to the response for state management
-    response.fileId = fileId;
-    return response;
+    const data = await response.json();
+    data.fileId = fileId;
+    return data;
 }
