@@ -147,13 +147,13 @@ export default function ProcessExcelPage() {
         await duplicateExcelRow({
             file_id: processedFileId,
             row_id: duplicateModal.rowData.id,
-            count: count - 1
+            count: count,
         });
 
         setDuplicateModal({ isOpen: false, rowData: null });
         toast({
             title: "Fila Duplicada",
-            description: `Se han creado ${count - 1} copias de la fila. Actualizando tabla...`,
+            description: `Se han creado ${count} copias de la fila. Actualizando tabla...`,
         });
 
         // Refetch current page to show updates
@@ -187,7 +187,11 @@ export default function ProcessExcelPage() {
 
   const columns = useMemo<ColumnDef<any>[]>(() => {
     if (!tableData || !tableData.columns) return [];
-    return tableData.columns;
+    return tableData.columns.map(col => ({
+        id: col.accessorKey,
+        accessorKey: col.accessorKey,
+        header: col.header,
+    }));
   }, [tableData]);
   
   const tableToolbar = useMemo(() => {
@@ -318,11 +322,11 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
   rowData: any | null,
   onConfirm: (count: number) => void
 }) {
-  const [count, setCount] = useState(2);
+  const [count, setCount] = useState(1);
 
   useEffect(() => {
     if (isOpen) {
-        setCount(2); // Reset count when modal opens
+        setCount(1); // Reset count when modal opens
     }
   }, [isOpen]);
 
@@ -330,9 +334,9 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
 
   const rowDescription = Object.entries(rowData)
     .filter(([key, value]) => key !== 'id' && value)
-    .slice(0, 2)
+    .slice(0, 3)
     .map(([key, value]) => `${key}: ${value}`)
-    .join(', ');
+    .join(' | ');
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -340,16 +344,16 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
         <DialogHeader>
           <DialogTitle>Duplicar Fila</DialogTitle>
           <DialogDescription>
-            ¿Cuántas copias totales de esta fila deseas tener? El original más las nuevas copias.
+            Indica cuántas copias adicionales de la fila seleccionada deseas crear.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
-          <div className="p-3 bg-muted rounded-lg border text-sm">
+          <div className="p-3 bg-muted rounded-lg border text-sm space-y-1">
              <p className="font-semibold truncate">Fila seleccionada (ID: {rowData.id})</p>
              <p className="text-muted-foreground text-xs truncate">{rowDescription}</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="duplicate-count">Número total de filas (original + copias)</Label>
+            <Label htmlFor="duplicate-count">Número de copias a crear</Label>
             <Input 
               id="duplicate-count"
               type="number"
@@ -357,14 +361,11 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
               value={count}
               onChange={(e) => setCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
             />
-             <p className="text-xs text-muted-foreground">
-                Si ingresas 3, tendrás la fila original + 2 copias.
-            </p>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={() => onConfirm(count)}>Confirmar Duplicación</Button>
+          <Button onClick={() => onConfirm(count)}>Crear {count} {count === 1 ? 'Copia' : 'Copias'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
