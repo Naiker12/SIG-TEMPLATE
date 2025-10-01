@@ -117,8 +117,15 @@ def preview_excel(file_id: str, page: int = 1, page_size: int = 10):
         ws = wb.active
         
         # Extract headers and create column definitions
-        headers = [cell.value for cell in ws[1]]
-        columns = [{"accessorKey": str(h), "header": str(h)} for h in headers if h is not None]
+        raw_headers = [cell.value for cell in ws[1]]
+        headers = []
+        for i, h in enumerate(raw_headers):
+            if h is None:
+                headers.append(f"columna_{i+1}")
+            else:
+                headers.append(str(h))
+        
+        columns = [{"accessorKey": h, "header": h} for h in headers if h is not None]
         
         # Extract rows as dictionaries
         all_rows = []

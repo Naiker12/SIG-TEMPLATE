@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet, Rows, Download } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, Rows, Download, Loader2 } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
-import { type ColumnDef, type Row } from '@tanstack/react-table';
+import { type ColumnDef, type Row, type PaginationState } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview, duplicateExcelRow } from '@/services/excelService';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -31,7 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PaginationState } from '@tanstack/react-table';
+import { useAuthStore } from '@/hooks/useAuthStore';
+
 
 type DuplicateModalState = {
   isOpen: boolean;
@@ -49,25 +50,8 @@ export default function ProcessExcelPage() {
     pageIndex: 0,
     pageSize: 10,
   });
-  const { toast } = useToast();
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const selectedFile = event.target.files[0];
-      if (!selectedFile.name.endsWith('.xlsx') && !selectedFile.name.endsWith('.xls')) {
-        toast({
-          variant: "destructive",
-          title: "Archivo no válido",
-          description: "Por favor, selecciona un archivo de Excel (.xlsx o .xls).",
-        });
-        setFile(null);
-        return;
-      }
-      setFile(selectedFile);
-      setTableData(null);
-      setProcessedFileId(null);
-    }
-  };
+  const { toast } = useToast();
 
   const fetchPageData = useCallback(async (fileId: string, page: number, pageSize: number) => {
     try {
@@ -122,11 +106,33 @@ export default function ProcessExcelPage() {
       setTimeout(() => setProcessingProgress(null), 500);
     }
   };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const selectedFile = event.target.files[0];
+      if (!selectedFile.name.endsWith('.xlsx') && !selectedFile.name.endsWith('.xls')) {
+        toast({
+          variant: "destructive",
+          title: "Archivo no válido",
+          description: "Por favor, selecciona un archivo de Excel (.xlsx o .xls).",
+        });
+        setFile(null);
+        return;
+      }
+      setFile(selectedFile);
+      setTableData(null);
+      setProcessedFileId(null);
+    }
+  };
   
   const handlePaginationChange = (newPagination: PaginationState) => {
     if (!processedFileId) return;
-    setPagination(newPagination);
-    fetchPageData(processedFileId, newPagination.pageIndex + 1, newPagination.pageSize);
+    const { pageIndex, pageSize } = newPagination;
+    // Ensure we are calling with valid numbers
+    if (typeof pageIndex === 'number' && typeof pageSize === 'number') {
+        setPagination(newPagination);
+        fetchPageData(processedFileId, pageIndex + 1, pageSize);
+    }
   };
 
   const handleDuplicate = () => {
@@ -175,11 +181,8 @@ export default function ProcessExcelPage() {
 
   const columns = useMemo<ColumnDef<any>[]>(() => {
     if (!tableData || !tableData.columns) return [];
-    return tableData.columns.map(col => ({
-        id: col.accessorKey,
-        accessorKey: col.accessorKey,
-        header: col.header,
-    }));
+    // The backend now provides the correct column structure.
+    return tableData.columns;
   }, [tableData]);
   
   const tableToolbar = useMemo(() => {
