@@ -1,10 +1,6 @@
 services:
-  # ---------------------------
-  # Backend FastAPI
-  # ---------------------------
   - type: web
     name: fastapi-app
-    rootDir: backend
     env: python
     pythonVersion: 3.11.9
     buildCommand: |
@@ -21,19 +17,3 @@ services:
         sync: false
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         sync: false
-
-  # ---------------------------
-  # Frontend Next.js
-  # ---------------------------
-  - type: web
-    name: nextjs-app
-    rootDir: frontend
-    env: node
-    plan: free
-    buildCommand: |
-      npm install
-      npm run build
-    startCommand: npm run start
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        value: https://fastapi-app.onrender.com
