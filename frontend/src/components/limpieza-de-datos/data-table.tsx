@@ -9,6 +9,7 @@ import {
   useReactTable,
   getPaginationRowModel,
   PaginationState,
+  Row,
 } from "@tanstack/react-table"
 
 import {
@@ -42,8 +43,9 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   pageCount?: number;
   pagination?: PaginationState;
-  onPaginationChange?: (pagination: PaginationState) => void;
+  onPaginationChange?: (pageIndex: number, pageSize: number) => void;
   toolbarContent?: React.ReactNode;
+  onRowSelectionChange?: (selectedRows: Row<TData>[]) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -53,6 +55,7 @@ export function DataTable<TData, TValue>({
   pagination: controlledPagination,
   onPaginationChange,
   toolbarContent,
+  onRowSelectionChange,
 }: DataTableProps<TData, TValue>) {
     
   const [sorting, setSorting] = useState<SortingState>([])
@@ -100,7 +103,6 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onPaginationChange: onPaginationChange,
     state: {
       sorting,
       columnFilters,
@@ -109,6 +111,20 @@ export function DataTable<TData, TValue>({
       ...(isServerPaginated && { pagination: controlledPagination }),
     },
   });
+
+  useEffect(() => {
+    if (onRowSelectionChange) {
+        onRowSelectionChange(table.getFilteredSelectedRowModel().rows);
+    }
+  }, [rowSelection, onRowSelectionChange, table]);
+  
+  useEffect(() => {
+    if (isServerPaginated && onPaginationChange) {
+        const { pageIndex, pageSize } = table.getState().pagination;
+        onPaginationChange(pageIndex, pageSize);
+    }
+  }, [table.getState().pagination.pageIndex, table.getState().pagination.pageSize, isServerPaginated, onPaginationChange]);
+
 
   return (
     <div className="w-full space-y-4">
@@ -270,3 +286,5 @@ export function DataTable<TData, TValue>({
     </div>
   )
 }
+
+    
