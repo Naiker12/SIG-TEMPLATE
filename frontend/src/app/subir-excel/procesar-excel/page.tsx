@@ -113,13 +113,9 @@ export default function ProcessExcelPage() {
   };
 
   const columns = useMemo<ColumnDef<any>[]>(() => {
-    if (!tableData || tableData.columns.length === 0) return [];
-    
-    return tableData.columns.map(col => ({
-      id: col.accessorKey, // Explicitly define the column ID
-      accessorKey: col.accessorKey,
-      header: col.header,
-    }));
+    if (!tableData || !tableData.columns) return [];
+    // As the backend now provides the correct column structure, we can use it directly.
+    return tableData.columns;
   }, [tableData]);
   
   const tableToolbar = useMemo(() => {
