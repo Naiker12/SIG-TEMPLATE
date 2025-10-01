@@ -7,8 +7,7 @@ from app import schemas
 
 excel_router = APIRouter(
     prefix="/excel", 
-    tags=["Excel Processing"],
-    dependencies=[Depends(get_current_user)]
+    tags=["Excel Processing"]
 )
 
 @excel_router.post("/upload/")

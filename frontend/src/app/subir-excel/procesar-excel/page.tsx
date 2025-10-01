@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
@@ -10,14 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet, Loader2, Rows } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, Rows } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview } from '@/services/excelService';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
-import { useAuthStore } from '@/hooks/useAuthStore';
 import {
   Select,
   SelectContent,
@@ -37,32 +35,6 @@ export default function ProcessExcelPage() {
   const [tableData, setTableData] = useState<ExcelPreview | null>(null);
   const [processingProgress, setProcessingProgress] = useState<number | null>(null);
   const { toast } = useToast();
-  const { isLoggedIn } = useAuthStore();
-  const router = useRouter();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    // This effect ensures we wait for Zustand's persisted state to be rehydrated
-    // before checking for authentication. This prevents race conditions on page load.
-    const handleAuthCheck = () => {
-      const state = useAuthStore.getState();
-      if (!state.isLoggedIn) {
-        router.push('/');
-      } else {
-        setIsCheckingAuth(false);
-      }
-    };
-
-    if (useAuthStore.persist.hasHydrated()) {
-      handleAuthCheck();
-    }
-    
-    const unsubscribe = useAuthStore.persist.onFinishHydration(handleAuthCheck);
-
-    return () => {
-      unsubscribe();
-    };
-  }, [isLoggedIn, router]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -170,15 +142,6 @@ export default function ProcessExcelPage() {
         </div>
      );
   }, [tableData]);
-
-
-  if (isCheckingAuth) {
-    return (
-        <div className="flex items-center justify-center h-screen bg-background">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-    );
-  }
 
   return (
     <>
