@@ -110,7 +110,7 @@ export function DataTable<TData, TValue>({
       rowSelection,
       ...(isServerPaginated && { pagination: controlledPagination }),
     },
-    onPaginationChange: onPaginationChange,
+    ...(isServerPaginated && { onPaginationChange: onPaginationChange }),
   });
 
   useEffect(() => {
