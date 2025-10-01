@@ -12,41 +12,15 @@ import { AreaChart, Bot, Loader2 } from "lucide-react";
 import { ReportsModal } from "@/components/dashboard/reports-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useAuthModal } from "@/hooks/use-auth-modal";
-import { getUserFiles, type File } from "@/services/fileService";
+import type { File } from "@/services/fileService";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(true);
   const { isLoggedIn } = useAuthStore();
   const authModal = useAuthModal();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchFiles = async () => {
-      setIsLoadingFiles(true);
-      try {
-        const userFiles = await getUserFiles();
-        setFiles(userFiles);
-      } catch (error) {
-        console.error("Failed to fetch files:", error);
-        if (error instanceof Error && error.message !== 'Could not validate credentials') {
-            toast({ variant: "destructive", title: "Error", description: "No se pudieron cargar los archivos recientes." });
-        }
-      } finally {
-        setIsLoadingFiles(false);
-      }
-    };
-
-    if (isLoggedIn) {
-      fetchFiles();
-    } else {
-        setFiles([]);
-        setIsLoadingFiles(false);
-    }
-  }, [isLoggedIn, toast]);
-
 
   if (!isLoggedIn) {
       return (
@@ -70,22 +44,6 @@ export default function Home() {
                                   Comenzar Ahora
                               </Button>
                           </div>
-                      </div>
-                  </main>
-              </SidebarInset>
-          </SidebarProvider>
-      );
-  }
-  
-  if (isLoadingFiles) {
-     return (
-          <SidebarProvider>
-              <Sidebar variant="sidebar" collapsible="icon"><DashboardSidebar /></Sidebar>
-              <SidebarInset>
-                  <main className="min-h-screen bg-background">
-                      <TopBar />
-                      <div className="flex items-center justify-center h-[calc(100vh-5rem)]">
-                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
                       </div>
                   </main>
               </SidebarInset>
