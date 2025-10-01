@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet, Rows, Download, Loader2 } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, Rows, Download } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef, type Row, type PaginationState } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuthStore } from '@/hooks/useAuthStore';
 
 
 type DuplicateModalState = {
@@ -91,6 +90,7 @@ export default function ProcessExcelPage() {
         description: "El backend ha procesado el archivo. Obteniendo vista previa...",
       });
       
+      // Fetch initial page after processing
       await fetchPageData(file_id, 1, pagination.pageSize);
 
     } catch (error) {
@@ -125,15 +125,23 @@ export default function ProcessExcelPage() {
     }
   };
   
-  const handlePaginationChange = (newPagination: PaginationState) => {
+  const handlePaginationChange = useCallback((updaterOrValue: PaginationState) => {
     if (!processedFileId) return;
-    const { pageIndex, pageSize } = newPagination;
-    // Ensure we are calling with valid numbers
-    if (typeof pageIndex === 'number' && typeof pageSize === 'number') {
-        setPagination(newPagination);
-        fetchPageData(processedFileId, pageIndex + 1, pageSize);
+
+    const newPageIndex = typeof updaterOrValue === 'function' 
+        ? updaterOrValue(pagination).pageIndex 
+        : updaterOrValue.pageIndex;
+
+    const newPageSize = typeof updaterOrValue === 'function'
+        ? updaterOrValue(pagination).pageSize
+        : updaterOrValue.pageSize;
+
+    if (newPageIndex !== pagination.pageIndex || newPageSize !== pagination.pageSize) {
+        setPagination({ pageIndex: newPageIndex, pageSize: newPageSize });
+        fetchPageData(processedFileId, newPageIndex + 1, newPageSize);
     }
-  };
+  }, [processedFileId, pagination, fetchPageData]);
+
 
   const handleDuplicate = () => {
     if (selectedRows.length !== 1) return;
@@ -143,14 +151,26 @@ export default function ProcessExcelPage() {
   const handleConfirmDuplicate = async (count: number) => {
     if (!duplicateModal.rowData || !processedFileId || count < 1) return;
     
-    const newCopiesCount = count - 1;
+    // The user inputs the total desired count, so we calculate the number of new copies
+    const newCopiesCount = count - 1; 
+
     if (newCopiesCount < 0) {
-         toast({
-            variant: "destructive",
-            title: "Valor inválido",
-            description: "El número de duplicados debe ser al menos 1.",
-        });
-        return;
+      toast({
+        variant: "destructive",
+        title: "Valor inválido",
+        description: "El número total de filas debe ser al menos 1.",
+      });
+      return;
+    }
+
+    // If only 1 total row is desired, no new copies are needed.
+    if (newCopiesCount === 0) {
+      setDuplicateModal({ isOpen: false, rowData: null });
+      toast({
+          title: "No se duplicó",
+          description: "No se crearon copias adicionales.",
+      });
+      return;
     }
 
     try {
@@ -181,7 +201,6 @@ export default function ProcessExcelPage() {
 
   const columns = useMemo<ColumnDef<any>[]>(() => {
     if (!tableData || !tableData.columns) return [];
-    // The backend now provides the correct column structure.
     return tableData.columns;
   }, [tableData]);
   
