@@ -187,11 +187,8 @@ export default function ProcessExcelPage() {
 
   const columns = useMemo<ColumnDef<any>[]>(() => {
     if (!tableData || !tableData.columns) return [];
-    return tableData.columns.map(col => ({
-        id: col.accessorKey,
-        accessorKey: col.accessorKey,
-        header: col.header,
-    }));
+    // The backend now provides the correct column structure.
+    return tableData.columns;
   }, [tableData]);
   
   const tableToolbar = useMemo(() => {
@@ -332,12 +329,6 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
 
   if (!rowData) return null;
 
-  const rowDescription = Object.entries(rowData)
-    .filter(([key, value]) => key !== 'id' && value)
-    .slice(0, 3)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(' | ');
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -350,7 +341,6 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
         <div className="py-4 space-y-4">
           <div className="p-3 bg-muted rounded-lg border text-sm space-y-1">
              <p className="font-semibold truncate">Fila seleccionada (ID: {rowData.id})</p>
-             <p className="text-muted-foreground text-xs truncate">{rowDescription}</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="duplicate-count">Número de copias a crear</Label>
@@ -361,6 +351,7 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
               value={count}
               onChange={(e) => setCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
             />
+             <p className="text-xs text-muted-foreground">Se crearán {count} fila(s) nueva(s) debajo de la original.</p>
           </div>
         </div>
         <DialogFooter>
