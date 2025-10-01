@@ -116,6 +116,7 @@ export default function ProcessExcelPage() {
     if (!tableData || tableData.columns.length === 0) return [];
     
     return tableData.columns.map(col => ({
+      id: col.accessorKey, // Explicitly define the column ID
       accessorKey: col.accessorKey,
       header: col.header,
     }));
