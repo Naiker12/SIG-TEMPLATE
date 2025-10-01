@@ -1,18 +1,13 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   ColumnDef,
-  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
   useReactTable,
-  VisibilityState,
+  getPaginationRowModel,
 } from "@tanstack/react-table"
 
 import {
@@ -38,20 +33,22 @@ import {
     ChevronsRight,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-
+import { ColumnFiltersState, getFilteredRowModel, getSortedRowModel, SortingState, VisibilityState } from "@tanstack/react-table"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  file?: File | null
-  toolbarContent?: (selectedRows: any[]) => React.ReactNode;
+  pageCount?: number
+  onPaginationChange?: (pagination: { pageIndex: number; pageSize: number }) => void
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  toolbarContent,
+  pageCount: controlledPageCount,
+  onPaginationChange,
 }: DataTableProps<TData, TValue>) {
+    
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -60,6 +57,9 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
+    manualPagination: !!onPaginationChange,
+    pageCount: controlledPageCount ?? -1,
+    
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -74,17 +74,18 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
     },
-  })
+  });
 
-  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  useEffect(() => {
+    if (onPaginationChange) {
+        const { pageIndex, pageSize } = table.getState().pagination;
+        onPaginationChange({ pageIndex, pageSize });
+    }
+  }, [table.getState().pagination.pageIndex, table.getState().pagination.pageSize, onPaginationChange]);
 
   return (
     <div className="w-full space-y-4">
-      {toolbarContent && (
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                {toolbarContent(selectedRows)}
-            </div>
+      <div className="flex items-center justify-end">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">
@@ -112,7 +113,6 @@ export function DataTable<TData, TValue>({
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
-      )}
         
       <div className="rounded-md border">
         <div className="relative w-full overflow-auto">
@@ -178,14 +178,14 @@ export function DataTable<TData, TValue>({
                 <Select
                     value={`${table.getState().pagination.pageSize}`}
                     onValueChange={(value) => {
-                    table.setPageSize(Number(value))
+                        table.setPageSize(Number(value));
                     }}
                 >
                     <SelectTrigger className="h-8 w-[70px]">
                     <SelectValue placeholder={table.getState().pagination.pageSize} />
                     </SelectTrigger>
                     <SelectContent side="top">
-                    {[5, 10, 20].map((pageSize) => (
+                    {[10, 20, 50].map((pageSize) => (
                         <SelectItem key={pageSize} value={`${pageSize}`}>
                         {pageSize}
                         </SelectItem>
