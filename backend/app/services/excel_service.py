@@ -8,6 +8,9 @@ from openpyxl.worksheet.worksheet import Worksheet
 from fastapi import HTTPException, UploadFile
 from copy import copy
 from fastapi.responses import FileResponse
+from app.services.auth_service import get_current_user
+from fastapi import Depends
+from app import schemas
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -111,12 +114,12 @@ def preview_excel(file_id: str, page: int = 1, page_size: int = 10):
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
     try:
-        # Use openpyxl to read the file, which is more robust for .xlsx
         wb = load_workbook(filename=file_path, data_only=True)
         ws = wb.active
         
-        # Extract headers
+        # Extract headers and create column definitions
         headers = [cell.value for cell in ws[1]]
+        columns = [{"accessorKey": str(h), "header": str(h)} for h in headers if h is not None]
         
         # Extract rows as dictionaries
         all_rows = []
@@ -128,9 +131,6 @@ def preview_excel(file_id: str, page: int = 1, page_size: int = 10):
         start_index = (page - 1) * page_size
         end_index = start_index + page_size
         paginated_data = all_rows[start_index:end_index]
-        
-        # Generate columns for the data table dynamically
-        columns = [{"accessorKey": col, "header": col} for col in headers]
 
         return {
             "page": page,
