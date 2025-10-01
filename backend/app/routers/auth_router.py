@@ -15,12 +15,9 @@ from app.core.config import settings
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+#Enpoide of register
 @auth_router.post("/register", response_model=schemas.User)
 async def register_user(user: schemas.UserCreate):
-    """
-    Registers a new user in the system.
-    Hashes the password before storing it and assigns a default role.
-    """
     db_user = await prisma.user.find_unique(where={"email": user.email})
     if db_user:
         raise HTTPException(
@@ -63,7 +60,7 @@ async def register_user(user: schemas.UserCreate):
 
     return created_user_with_role
 
-
+#Enpoide of login
 @auth_router.post("/login", response_model=schemas.Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     """

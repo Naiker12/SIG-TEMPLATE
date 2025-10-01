@@ -58,16 +58,30 @@ export default function DataAnalysisPage() {
     const [data, setData] = useState<any[]>([]);
     const [filters, setFilters] = useState<{ category?: string; month?: string }>({});
     const { setIsLoading } = useLoadingStore();
-    const { isLoggedIn } = useAuthStore();
+    const { isLoggedIn } = useAuthStore(state => ({ isLoggedIn: state.isLoggedIn }));
     const router = useRouter();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
     useEffect(() => {
-        if (!isLoggedIn) {
-            router.push('/');
-        } else {
-            setIsCheckingAuth(false);
+        // Zustand persistence might take a moment to hydrate.
+        // This effect waits for the auth state to be confirmed.
+        if (useAuthStore.persist.hasHydrated()) {
+            if (!useAuthStore.getState().isLoggedIn) {
+                router.push('/');
+            } else {
+                setIsCheckingAuth(false);
+            }
         }
+        
+        const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+             if (!useAuthStore.getState().isLoggedIn) {
+                router.push('/');
+            } else {
+                setIsCheckingAuth(false);
+            }
+        });
+
+        return () => unsubscribe();
     }, [isLoggedIn, router]);
 
     // --- DATA PROCESSING & MEMOIZATION ---
@@ -156,8 +170,8 @@ export default function DataAnalysisPage() {
     // --- RENDER ---
     if (isCheckingAuth) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <Loader2 className="h-12 w-12 animate-spin" />
+            <div className="flex items-center justify-center h-screen bg-background">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
             </div>
         );
     }

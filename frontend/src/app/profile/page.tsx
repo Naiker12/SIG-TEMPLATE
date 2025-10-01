@@ -34,17 +34,19 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export default function ProfilePage() {
-    const { isLoggedIn, user, clearSession, setSession } = useAuthStore();
+    const { isLoggedIn, user, clearSession, setSession } = useAuthStore(state => ({
+        isLoggedIn: state.isLoggedIn,
+        user: state.user,
+        clearSession: state.clearSession,
+        setSession: state.setSession,
+    }));
     const router = useRouter();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-    const { register: registerProfile, handleSubmit: handleProfileSubmit, formState: { errors: profileErrors } } = useForm<ProfileFormValues>({
+    const { register: registerProfile, handleSubmit: handleProfileSubmit, formState: { errors: profileErrors }, setValue } = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
-        defaultValues: {
-            name: user?.name || '',
-            bio: user?.bio || '',
-        },
     });
     
     const { register: registerPassword, handleSubmit: handlePasswordSubmit, formState: { errors: passwordErrors }, reset: resetPasswordForm } = useForm<PasswordFormValues>({
@@ -52,10 +54,30 @@ export default function ProfilePage() {
     });
 
     useEffect(() => {
-        if (!isLoggedIn) {
-            router.push('/');
+        if (useAuthStore.persist.hasHydrated()) {
+            const state = useAuthStore.getState();
+            if (!state.isLoggedIn) {
+                router.push('/');
+            } else {
+                setValue('name', state.user?.name || '');
+                setValue('bio', state.user?.bio || '');
+                setIsCheckingAuth(false);
+            }
         }
-    }, [isLoggedIn, router]);
+        
+        const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+             const state = useAuthStore.getState();
+             if (!state.isLoggedIn) {
+                router.push('/');
+            } else {
+                setValue('name', state.user?.name || '');
+                setValue('bio', state.user?.bio || '');
+                setIsCheckingAuth(false);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [isLoggedIn, router, setValue]);
 
     const onProfileSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
         setIsLoading(true);
@@ -86,17 +108,17 @@ export default function ProfilePage() {
         }
     }
 
-    if (!isLoggedIn || !user) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <Loader2 className="h-12 w-12 animate-spin" />
-            </div>
-        );
-    }
-    
     const handleLogout = () => {
         clearSession();
         router.push('/');
+    }
+
+    if (isCheckingAuth || !user) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-background">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+        );
     }
 
   return (
@@ -146,54 +168,62 @@ export default function ProfilePage() {
                    </Card>
                 </div>
 
-                <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="lg:col-span-2 space-y-8">
-                   <Card className="shadow-lg border-2 border-accent">
-                     <CardHeader>
-                        <CardTitle>Datos Personales</CardTitle>
-                        <CardDescription>Actualiza tu foto y tus datos personales aquí.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Nombre Completo</Label>
-                            <Input id="name" {...registerProfile("name")} />
-                            {profileErrors.name && <p className="text-sm text-destructive">{profileErrors.name.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Correo Electrónico</Label>
-                            <Input id="email" type="email" defaultValue={user.email} disabled />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="bio">Biografía</Label>
-                            <Textarea id="bio" placeholder="Cuéntanos un poco sobre ti." {...registerProfile("bio")} />
-                        </div>
-                    </CardContent>
-                  </Card>
+                <div className="lg:col-span-2 space-y-8">
+                   <form onSubmit={handleProfileSubmit(onProfileSubmit)}>
+                       <Card className="shadow-lg border-2 border-accent mb-8">
+                         <CardHeader>
+                            <CardTitle>Datos Personales</CardTitle>
+                            <CardDescription>Actualiza tu foto y tus datos personales aquí.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Nombre Completo</Label>
+                                <Input id="name" {...registerProfile("name")} />
+                                {profileErrors.name && <p className="text-sm text-destructive">{profileErrors.name.message}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Correo Electrónico</Label>
+                                <Input id="email" type="email" defaultValue={user.email} disabled />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="bio">Biografía</Label>
+                                <Textarea id="bio" placeholder="Cuéntanos un poco sobre ti." {...registerProfile("bio")} />
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-end">
+                            <Button type="submit" disabled={isLoading}>
+                               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>} Guardar Datos
+                            </Button>
+                        </CardFooter>
+                      </Card>
+                  </form>
                   
-                  <Card className="shadow-lg border-2 border-accent">
-                      <CardHeader>
-                         <CardTitle>Seguridad</CardTitle>
-                         <CardDescription>Gestiona la seguridad de tu cuenta.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                           <Label htmlFor="currentPassword">Contraseña Actual</Label>
-                           <Input id="currentPassword" type="password" placeholder="••••••••" {...registerPassword("currentPassword")} />
-                           {passwordErrors.currentPassword && <p className="text-sm text-destructive">{passwordErrors.currentPassword.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                           <Label htmlFor="newPassword">Nueva Contraseña</Label>
-                           <Input id="newPassword" type="password" placeholder="••••••••" {...registerPassword("newPassword")} />
-                           {passwordErrors.newPassword && <p className="text-sm text-destructive">{passwordErrors.newPassword.message}</p>}
-                        </div>
-                      </CardContent>
-                  </Card>
-
-                    <div className="flex justify-end">
-                        <Button type="submit" disabled={isLoading}>
-                           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>} Guardar Cambios
-                        </Button>
-                    </div>
-                </form>
+                  <form onSubmit={handlePasswordSubmit(onPasswordSubmit)}>
+                      <Card className="shadow-lg border-2 border-accent">
+                          <CardHeader>
+                             <CardTitle>Seguridad</CardTitle>
+                             <CardDescription>Gestiona la seguridad de tu cuenta.</CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                               <Label htmlFor="currentPassword">Contraseña Actual</Label>
+                               <Input id="currentPassword" type="password" placeholder="••••••••" {...registerPassword("currentPassword")} />
+                               {passwordErrors.currentPassword && <p className="text-sm text-destructive">{passwordErrors.currentPassword.message}</p>}
+                            </div>
+                            <div className="space-y-2">
+                               <Label htmlFor="newPassword">Nueva Contraseña</Label>
+                               <Input id="newPassword" type="password" placeholder="••••••••" {...registerPassword("newPassword")} />
+                               {passwordErrors.newPassword && <p className="text-sm text-destructive">{passwordErrors.newPassword.message}</p>}
+                            </div>
+                          </CardContent>
+                          <CardFooter className="flex justify-end">
+                             <Button type="submit" disabled={isLoading}>
+                               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>} Cambiar Contraseña
+                            </Button>
+                          </CardFooter>
+                      </Card>
+                  </form>
+                </div>
               </div>
             </div>
           </div>

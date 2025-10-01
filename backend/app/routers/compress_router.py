@@ -10,7 +10,7 @@ compress_router = APIRouter(prefix="/files", tags=["Compress"])
 async def upload(
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
-    compression_level: int = Form(1) # Valor por defecto 1 (Recomendado)
+    compression_level: int = Form(1)
 ):
     """
     Recibe archivos subidos, los comprime en un ZIP con un nivel de compresión
