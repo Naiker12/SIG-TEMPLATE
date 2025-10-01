@@ -21,7 +21,7 @@ import { UploadCloud, FileSpreadsheet, Rows, Download } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef, type Row } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
-import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview } from '@/services/excelService';
+import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview, duplicateExcelRow } from '@/services/excelService';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import {
@@ -31,11 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type PaginationState = {
-  pageIndex: number;
-  pageSize: number;
-};
+import { PaginationState } from '@tanstack/react-table';
 
 type DuplicateModalState = {
   isOpen: boolean;
@@ -49,6 +45,10 @@ export default function ProcessExcelPage() {
   const [processingProgress, setProcessingProgress] = useState<number | null>(null);
   const [selectedRows, setSelectedRows] = useState<Row<any>[]>([]);
   const [duplicateModal, setDuplicateModal] = useState<DuplicateModalState>({ isOpen: false, rowData: null });
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,6 +73,7 @@ export default function ProcessExcelPage() {
     try {
       const previewData = await getExcelPreview(fileId, page, pageSize);
       setTableData(previewData);
+      setPagination({ pageIndex: previewData.page - 1, pageSize: previewData.pageSize });
     } catch (error) {
        toast({
         variant: "destructive",
@@ -106,7 +107,7 @@ export default function ProcessExcelPage() {
         description: "El backend ha procesado el archivo. Obteniendo vista previa...",
       });
       
-      await fetchPageData(file_id, 1, 10);
+      await fetchPageData(file_id, 1, pagination.pageSize);
 
     } catch (error) {
       console.error(error);
@@ -122,9 +123,10 @@ export default function ProcessExcelPage() {
     }
   };
   
-  const handlePaginationChange = async (pageIndex: number, pageSize: number) => {
+  const handlePaginationChange = (newPagination: PaginationState) => {
     if (!processedFileId) return;
-    await fetchPageData(processedFileId, pageIndex + 1, pageSize);
+    setPagination(newPagination);
+    fetchPageData(processedFileId, newPagination.pageIndex + 1, newPagination.pageSize);
   };
 
   const handleDuplicate = () => {
@@ -132,10 +134,9 @@ export default function ProcessExcelPage() {
     setDuplicateModal({ isOpen: true, rowData: selectedRows[0].original });
   };
   
-  const handleConfirmDuplicate = (count: number) => {
-    if (!duplicateModal.rowData || count < 1) return;
+  const handleConfirmDuplicate = async (count: number) => {
+    if (!duplicateModal.rowData || !processedFileId || count < 1) return;
     
-    // As requested x-1 logic. If user wants 3 total, they enter 3. 2 new copies are made.
     const newCopiesCount = count - 1;
     if (newCopiesCount < 0) {
          toast({
@@ -145,16 +146,30 @@ export default function ProcessExcelPage() {
         });
         return;
     }
-    
-    // Here you would typically call a backend service.
-    // For now, we simulate it on the frontend.
-    console.log(`Simulating duplication of row ID ${duplicateModal.rowData.id}, ${newCopiesCount} new copies.`);
-    
-    setDuplicateModal({ isOpen: false, rowData: null });
-    toast({
-        title: "Fila Duplicada",
-        description: `Se han creado ${newCopiesCount} copias de la fila seleccionada.`,
-    });
+
+    try {
+        await duplicateExcelRow({
+            file_id: processedFileId,
+            row_id: duplicateModal.rowData.id,
+            count: newCopiesCount
+        });
+
+        setDuplicateModal({ isOpen: false, rowData: null });
+        toast({
+            title: "Fila Duplicada",
+            description: `Se han creado ${newCopiesCount} copias de la fila. Actualizando tabla...`,
+        });
+
+        // Refresh the current page
+        await fetchPageData(processedFileId, pagination.pageIndex + 1, pagination.pageSize);
+
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Error al duplicar",
+            description: error instanceof Error ? error.message : "No se pudo duplicar la fila en el servidor.",
+        });
+    }
   }
 
 
@@ -251,10 +266,7 @@ export default function ProcessExcelPage() {
                           columns={columns} 
                           data={tableData.data}
                           pageCount={tableData.totalPages}
-                          pagination={{
-                            pageIndex: tableData.page - 1,
-                            pageSize: tableData.pageSize,
-                          }}
+                          pagination={pagination}
                           onPaginationChange={handlePaginationChange}
                           toolbarContent={tableToolbar}
                           onRowSelectionChange={(rows) => setSelectedRows(rows)}
@@ -302,6 +314,12 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
 
   if (!rowData) return null;
 
+  const rowDescription = Object.entries(rowData)
+    .filter(([key]) => key !== 'id' && key.toLowerCase() !== 'id')
+    .slice(0, 2)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join(', ');
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -314,7 +332,7 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
         <div className="py-4 space-y-4">
           <div className="p-4 bg-muted rounded-lg border text-sm">
              <p className="font-semibold truncate">Fila seleccionada (ID: {rowData.id})</p>
-             <p className="text-muted-foreground text-xs truncate">Cliente: {rowData['nombre']} {rowData['apellido']}</p>
+             <p className="text-muted-foreground text-xs truncate">{rowDescription}</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="duplicate-count">Número total de filas (original + copias)</Label>
@@ -338,5 +356,3 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
     </Dialog>
   )
 }
-
-    

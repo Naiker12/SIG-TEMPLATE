@@ -56,3 +56,9 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+# --- Excel Schemas ---
+class DuplicateRowPayload(BaseModel):
+    file_id: str
+    row_id: int
+    count: int

@@ -43,7 +43,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   pageCount?: number;
   pagination?: PaginationState;
-  onPaginationChange?: (pageIndex: number, pageSize: number) => void;
+  onPaginationChange?: (pagination: PaginationState) => void;
   toolbarContent?: React.ReactNode;
   onRowSelectionChange?: (selectedRows: Row<TData>[]) => void;
 }
@@ -63,7 +63,7 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
 
-  const isServerPaginated = controlledPageCount !== undefined && onPaginationChange !== undefined;
+  const isServerPaginated = controlledPageCount !== undefined && onPaginationChange !== undefined && controlledPagination !== undefined;
 
   const table = useReactTable({
     data,
@@ -110,6 +110,7 @@ export function DataTable<TData, TValue>({
       rowSelection,
       ...(isServerPaginated && { pagination: controlledPagination }),
     },
+    onPaginationChange: onPaginationChange,
   });
 
   useEffect(() => {
@@ -117,14 +118,6 @@ export function DataTable<TData, TValue>({
         onRowSelectionChange(table.getFilteredSelectedRowModel().rows);
     }
   }, [rowSelection, onRowSelectionChange, table]);
-  
-  useEffect(() => {
-    if (isServerPaginated && onPaginationChange) {
-        const { pageIndex, pageSize } = table.getState().pagination;
-        onPaginationChange(pageIndex, pageSize);
-    }
-  }, [table.getState().pagination.pageIndex, table.getState().pagination.pageSize, isServerPaginated, onPaginationChange]);
-
 
   return (
     <div className="w-full space-y-4">
@@ -141,7 +134,7 @@ export function DataTable<TData, TValue>({
                 <DropdownMenuContent align="end">
                     {table
                     .getAllColumns()
-                    .filter((column) => column.getCanHide())
+                    .filter((column) => column.getCanHide() && column.id !== 'select')
                     .map((column) => {
                         return (
                         <DropdownMenuCheckboxItem
@@ -286,5 +279,3 @@ export function DataTable<TData, TValue>({
     </div>
   )
 }
-
-    

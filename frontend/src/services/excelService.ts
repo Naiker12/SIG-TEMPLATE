@@ -1,5 +1,5 @@
-
 import { API_BASE_URL } from '@/lib/api-config';
+import type { DuplicateRowPayload } from './types';
 
 export type ExcelColumn = {
     accessorKey: string;
@@ -59,4 +59,25 @@ export async function getExcelPreview(fileId: string, page: number, pageSize: nu
     const data = await response.json();
     data.fileId = fileId;
     return data;
+}
+
+/**
+ * Sends a request to duplicate a row in an Excel file.
+ * @param payload - The data for the duplication request.
+ */
+export async function duplicateExcelRow(payload: DuplicateRowPayload): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/excel/duplicate_row`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to process the duplication error response.' }));
+        throw new Error(errorData.detail || `Error: ${response.status}`);
+    }
+
+    return response.json();
 }
