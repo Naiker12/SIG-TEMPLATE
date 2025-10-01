@@ -28,16 +28,28 @@ export default function CustomApiPage() {
   const [hasHeaders, setHasHeaders] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('cards');
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn } = useAuthStore(state => ({ isLoggedIn: state.isLoggedIn }));
   const router = useRouter();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      router.push('/');
-    } else {
-      setIsCheckingAuth(false);
+    if (useAuthStore.persist.hasHydrated()) {
+        if (!useAuthStore.getState().isLoggedIn) {
+            router.push('/');
+        } else {
+            setIsCheckingAuth(false);
+        }
     }
+    
+    const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+         if (!useAuthStore.getState().isLoggedIn) {
+            router.push('/');
+        } else {
+            setIsCheckingAuth(false);
+        }
+    });
+
+    return () => unsubscribe();
   }, [isLoggedIn, router]);
 
   const handleExtract = () => {
@@ -65,8 +77,8 @@ export default function CustomApiPage() {
   
   if (isCheckingAuth) {
     return (
-        <div className="flex items-center justify-center h-screen">
-            <Loader2 className="h-12 w-12 animate-spin" />
+        <div className="flex items-center justify-center h-screen bg-background">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
   }

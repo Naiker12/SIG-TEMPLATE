@@ -24,16 +24,28 @@ export default function SemanticSearchPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [query, setQuery] = useState('');
     const [messages, setMessages] = useState<any[]>([]);
-    const { isLoggedIn } = useAuthStore();
+    const { isLoggedIn } = useAuthStore(state => ({ isLoggedIn: state.isLoggedIn }));
     const router = useRouter();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
     useEffect(() => {
-        if (!isLoggedIn) {
-            router.push('/');
-        } else {
-            setIsCheckingAuth(false);
+        if (useAuthStore.persist.hasHydrated()) {
+            if (!useAuthStore.getState().isLoggedIn) {
+                router.push('/');
+            } else {
+                setIsCheckingAuth(false);
+            }
         }
+        
+        const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+             if (!useAuthStore.getState().isLoggedIn) {
+                router.push('/');
+            } else {
+                setIsCheckingAuth(false);
+            }
+        });
+
+        return () => unsubscribe();
     }, [isLoggedIn, router]);
 
     const handleSourceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,8 +78,8 @@ export default function SemanticSearchPage() {
     
     if (isCheckingAuth) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <Loader2 className="h-12 w-12 animate-spin" />
+            <div className="flex items-center justify-center h-screen bg-background">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
             </div>
         );
     }

@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Home() {
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(true);
   const { isLoggedIn } = useAuthStore();
   const authModal = useAuthModal();
   const { toast } = useToast();
@@ -31,9 +31,7 @@ export default function Home() {
         setFiles(userFiles);
       } catch (error) {
         console.error("Failed to fetch files:", error);
-        if (error instanceof Error) {
-            toast({ variant: "destructive", title: "Error", description: error.message });
-        } else {
+        if (error instanceof Error && error.message !== 'Could not validate credentials') {
             toast({ variant: "destructive", title: "Error", description: "No se pudieron cargar los archivos recientes." });
         }
       } finally {
@@ -78,6 +76,22 @@ export default function Home() {
           </SidebarProvider>
       );
   }
+  
+  if (isLoadingFiles) {
+     return (
+          <SidebarProvider>
+              <Sidebar variant="sidebar" collapsible="icon"><DashboardSidebar /></Sidebar>
+              <SidebarInset>
+                  <main className="min-h-screen bg-background">
+                      <TopBar />
+                      <div className="flex items-center justify-center h-[calc(100vh-5rem)]">
+                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                      </div>
+                  </main>
+              </SidebarInset>
+          </SidebarProvider>
+      );
+  }
 
   return (
     <SidebarProvider>
@@ -103,13 +117,7 @@ export default function Home() {
             
             <DashboardOverview fileCount={files.length} />
             
-            {isLoadingFiles ? (
-                <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                </div>
-            ) : (
-                <RecentFilesTable files={files} />
-            )}
+            <RecentFilesTable files={files} />
           </div>
         </main>
       </SidebarInset>
