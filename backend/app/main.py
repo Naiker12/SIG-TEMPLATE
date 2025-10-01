@@ -9,6 +9,7 @@ from app.routers.merge_pdf_router import merge_pdf_router
 from app.routers.pdf_to_word_router import pdf_to_word_router
 from app.routers.auth_router import auth_router
 from app.routers.file_router import file_router
+from app.routers.excel_router import excel_router
 from app.core.middleware import setup_cors
 from db.database import prisma
 
@@ -36,3 +37,4 @@ app.include_router(merge_pdf_router)
 app.include_router(pdf_to_word_router)
 app.include_router(auth_router)
 app.include_router(file_router)
+app.include_router(excel_router)

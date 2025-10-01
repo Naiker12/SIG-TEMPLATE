@@ -9,142 +9,102 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud } from "lucide-react";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
+import { UploadCloud, FileSpreadsheet } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useLoadingStore } from '@/hooks/use-loading-store';
+import { useToast } from '@/hooks/use-toast';
+import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview } from '@/services/excelService';
 
+type PaginationState = {
+  pageIndex: number;
+  pageSize: number;
+};
 
 export default function ProcessExcelPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [data, setData] = useState<any[]>([]);
-  const { setIsLoading, isLoading } = useLoadingStore();
-
+  const [processedData, setProcessedData] = useState<ExcelPreview | null>(null);
+  const { setIsLoading } = useLoadingStore();
+  const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFile(event.target.files[0]);
-      setData([]);
+    if (event.target.files && event.target.files.length > 0) {
+      const selectedFile = event.target.files[0];
+      if (!selectedFile.name.endsWith('.xlsx') && !selectedFile.name.endsWith('.xls')) {
+        toast({
+          variant: "destructive",
+          title: "Archivo no válido",
+          description: "Por favor, selecciona un archivo de Excel (.xlsx o .xls).",
+        });
+        setFile(null);
+        return;
+      }
+      setFile(selectedFile);
+      setProcessedData(null); // Reset data when a new file is selected
     }
   };
 
-  const handleProcess = () => {
-    if (!file) return;
+  const handleProcess = async () => {
+    if (!file) {
+        toast({
+            variant: "destructive",
+            title: "No hay archivo",
+            description: "Por favor, selecciona un archivo para procesar.",
+        });
+        return;
+    }
     setIsLoading(true);
-    setTimeout(() => {
-        const mockExcelData = [
-            { id: "row-1", "ID Cliente": "C001", "Nombre": "Ana", "Apellido": "Torres", "Email": "ana.t@example.com", "País": "España", "Último Pedido": "2024-08-15", "Total Gastado": "1,250.75", "Fecha Registro": "2023-01-20", "Estado": "Activo" },
-            { id: "row-2", "ID Cliente": "C002", "Nombre": "Luis", "Apellido": "Gomez", "Email": "luis.g@example.com", "País": "México", "Último Pedido": "2024-08-12", "Total Gastado": "850.00", "Fecha Registro": "2022-11-05", "Estado": "Activo" },
-            { id: "row-3", "ID Cliente": "C003", "Nombre": "Carla", "Apellido": "Diaz", "Email": "carla.d@example.com", "País": "Argentina", "Último Pedido": "2024-08-10", "Total Gastado": "2,300.50", "Fecha Registro": "2023-03-15", "Estado": "Inactivo" },
-             { id: "row-4", "ID Cliente": "C004", "Nombre": "Jorge", "Apellido": "Perez", "Email": "jorge.p@example.com", "País": "Colombia", "Último Pedido": "2024-08-20", "Total Gastado": "500.00", "Fecha Registro": "2023-05-10", "Estado": "Activo" },
-        ];
-        setData(mockExcelData);
-        setIsLoading(false);
-    }, 1500);
+    try {
+      // Step 1: Upload and process the file
+      const { file_id } = await uploadAndProcessExcel(file);
+      toast({
+        title: "Archivo Procesado",
+        description: "El backend ha procesado el archivo. Obteniendo vista previa...",
+      });
+
+      // Step 2: Get the first page of the preview
+      const previewData = await getExcelPreview(file_id, 1, 10);
+      setProcessedData(previewData);
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error en el Procesamiento",
+        description: error instanceof Error ? error.message : "No se pudo procesar el archivo.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  const columns: ColumnDef<any>[] = useMemo(() => {
-    if (data.length === 0) return [];
+  const handlePaginationChange = async (pagination: PaginationState) => {
+    if (!processedData?.fileId) return;
     
-    const headers = Object.keys(data[0]);
+    setIsLoading(true);
+    try {
+        const newPreviewData = await getExcelPreview(processedData.fileId, pagination.pageIndex + 1, pagination.pageSize);
+        setProcessedData(newPreviewData);
+    } catch (error) {
+        console.error(error);
+        toast({
+            variant: "destructive",
+            title: "Error al paginar",
+            description: "No se pudieron cargar los datos de la página solicitada.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
-    const dynamicColumns = headers.map(header => ({
-        accessorKey: header,
-        header: header,
-        cell: ({ row }: any) => <div>{row.getValue(header)}</div>,
+  const columns = useMemo<ColumnDef<any>[]>(() => {
+    if (!processedData || processedData.columns.length === 0) return [];
+    
+    return processedData.columns.map(col => ({
+      accessorKey: col.accessorKey,
+      header: col.header,
     }));
-    
-    return [
-        {
-        id: "select",
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-      },
-        ...dynamicColumns
-    ]
-
-  }, [data]);
-
-  const renderDuplicateModal = (selectedRows: any[]) => {
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline" disabled={selectedRows.length === 0}>
-            Duplicar Filas
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Duplicar Filas</DialogTitle>
-            <DialogDescription>
-              Selecciona las filas que quieres duplicar y la cantidad de veces.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Filas Seleccionadas</Label>
-               <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder={`${selectedRows.length} fila(s) seleccionada(s)`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedRows.map((row: any) => (
-                    <SelectItem key={row.original.id} value={row.original.id}>
-                      {`Fila ${row.index + 1}: ${row.original.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="duplicate-count">Número de copias</Label>
-              <Input id="duplicate-count" type="number" defaultValue="1" min="1" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button">Generar Copias</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
+  }, [processedData]);
 
   return (
     <SidebarProvider>
@@ -155,7 +115,7 @@ export default function ProcessExcelPage() {
         <main className="min-h-screen bg-background">
           <TopBar />
           <div className="p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-full mx-auto">
               <header className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Procesar Documento Excel</h1>
                 <p className="text-muted-foreground mt-2 max-w-3xl">
@@ -163,7 +123,7 @@ export default function ProcessExcelPage() {
                 </p>
               </header>
 
-              {data.length === 0 ? (
+              {!processedData ? (
                 <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent">
                     <CardHeader>
                         <CardTitle>Cargar Archivo</CardTitle>
@@ -182,18 +142,27 @@ export default function ProcessExcelPage() {
                               {file ? file.name : "Formatos soportados: .csv, .xlsx, .xls"}
                             </p>
                         </div>
-                        <Button onClick={handleProcess} disabled={!file || isLoading} className="w-full" size="lg">
-                            {isLoading ? 'Procesando...' : 'Procesar Archivo'}
+                        <Button onClick={handleProcess} disabled={!file} className="w-full" size="lg">
+                            Procesar Archivo
                         </Button>
                     </CardContent>
                 </Card>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto space-y-4">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2 text-lg font-semibold">
+                            <FileSpreadsheet className="text-primary" />
+                            Mostrando resultados para: <span className="text-primary">{file?.name}</span>
+                        </div>
+                         <Button onClick={() => { setFile(null); setProcessedData(null); }}>
+                           Procesar otro archivo
+                        </Button>
+                    </div>
                     <DataTable 
-                    columns={columns} 
-                    data={data} 
-                    file={file} 
-                    toolbarContent={renderDuplicateModal} 
+                        columns={columns} 
+                        data={processedData.data}
+                        pageCount={processedData.totalPages}
+                        onPaginationChange={handlePaginationChange}
                     />
                 </div>
               )}
