@@ -2,6 +2,14 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
@@ -9,9 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet, Rows } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, Rows, Download } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
-import { type ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef, type Row } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview } from '@/services/excelService';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -22,11 +30,16 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 type PaginationState = {
   pageIndex: number;
   pageSize: number;
+};
+
+type DuplicateModalState = {
+  isOpen: boolean;
+  rowData: any | null;
 };
 
 export default function ProcessExcelPage() {
@@ -34,6 +47,8 @@ export default function ProcessExcelPage() {
   const [processedFileId, setProcessedFileId] = useState<string | null>(null);
   const [tableData, setTableData] = useState<ExcelPreview | null>(null);
   const [processingProgress, setProcessingProgress] = useState<number | null>(null);
+  const [selectedRows, setSelectedRows] = useState<Row<any>[]>([]);
+  const [duplicateModal, setDuplicateModal] = useState<DuplicateModalState>({ isOpen: false, rowData: null });
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,15 +122,49 @@ export default function ProcessExcelPage() {
     }
   };
   
-  const handlePaginationChange = async ({ pageIndex, pageSize }: PaginationState) => {
+  const handlePaginationChange = async (pageIndex: number, pageSize: number) => {
     if (!processedFileId) return;
     await fetchPageData(processedFileId, pageIndex + 1, pageSize);
   };
 
+  const handleDuplicate = () => {
+    if (selectedRows.length !== 1) return;
+    setDuplicateModal({ isOpen: true, rowData: selectedRows[0].original });
+  };
+  
+  const handleConfirmDuplicate = (count: number) => {
+    if (!duplicateModal.rowData || count < 1) return;
+    
+    // As requested x-1 logic. If user wants 3 total, they enter 3. 2 new copies are made.
+    const newCopiesCount = count - 1;
+    if (newCopiesCount < 0) {
+         toast({
+            variant: "destructive",
+            title: "Valor inválido",
+            description: "El número de duplicados debe ser al menos 1.",
+        });
+        return;
+    }
+    
+    // Here you would typically call a backend service.
+    // For now, we simulate it on the frontend.
+    console.log(`Simulating duplication of row ID ${duplicateModal.rowData.id}, ${newCopiesCount} new copies.`);
+    
+    setDuplicateModal({ isOpen: false, rowData: null });
+    toast({
+        title: "Fila Duplicada",
+        description: `Se han creado ${newCopiesCount} copias de la fila seleccionada.`,
+    });
+  }
+
+
   const columns = useMemo<ColumnDef<any>[]>(() => {
     if (!tableData || !tableData.columns) return [];
-    // As the backend now provides the correct column structure, we can use it directly.
-    return tableData.columns;
+    return tableData.columns.map(col => ({
+        id: col.accessorKey,
+        accessorKey: col.accessorKey,
+        header: col.header,
+    }));
   }, [tableData]);
   
   const tableToolbar = useMemo(() => {
@@ -135,10 +184,12 @@ export default function ProcessExcelPage() {
                     </SelectContent>
                 </Select>
              </div>
-             <Button variant="outline"><Rows className="mr-2 h-4 w-4"/> Duplicar Fila</Button>
+             <Button variant="outline" onClick={handleDuplicate} disabled={selectedRows.length !== 1}>
+                <Rows className="mr-2 h-4 w-4"/> Duplicar Fila
+             </Button>
         </div>
      );
-  }, [tableData]);
+  }, [tableData, selectedRows]);
 
   return (
     <>
@@ -183,15 +234,18 @@ export default function ProcessExcelPage() {
                       </CardContent>
                   </Card>
                 ) : (
-                  <div className="overflow-x-auto space-y-4">
+                  <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                           <div className="flex items-center gap-2 text-lg font-semibold">
                               <FileSpreadsheet className="text-primary" />
                               Mostrando resultados para: <span className="text-primary">{file?.name}</span>
                           </div>
-                           <Button onClick={() => { setFile(null); setTableData(null); setProcessedFileId(null)}}>
-                             Procesar otro archivo
-                          </Button>
+                          <div className="flex gap-2">
+                             <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Descargar</Button>
+                             <Button onClick={() => { setFile(null); setTableData(null); setProcessedFileId(null)}}>
+                                Procesar otro archivo
+                             </Button>
+                          </div>
                       </div>
                       <DataTable 
                           columns={columns} 
@@ -203,6 +257,7 @@ export default function ProcessExcelPage() {
                           }}
                           onPaginationChange={handlePaginationChange}
                           toolbarContent={tableToolbar}
+                          onRowSelectionChange={(rows) => setSelectedRows(rows)}
                       />
                   </div>
                 )}
@@ -226,6 +281,62 @@ export default function ProcessExcelPage() {
             </motion.div>
         )}
       </AnimatePresence>
+      <DuplicateRowModal 
+        isOpen={duplicateModal.isOpen} 
+        onOpenChange={(isOpen) => setDuplicateModal(prev => ({...prev, isOpen}))}
+        rowData={duplicateModal.rowData}
+        onConfirm={handleConfirmDuplicate}
+      />
     </>
   );
 }
+
+// Modal Component
+function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
+  isOpen: boolean,
+  onOpenChange: (isOpen: boolean) => void,
+  rowData: any | null,
+  onConfirm: (count: number) => void
+}) {
+  const [count, setCount] = useState(2);
+
+  if (!rowData) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Duplicar Fila</DialogTitle>
+          <DialogDescription>
+            ¿Cuántas copias totales de esta fila deseas tener? El original más las nuevas copias.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4 space-y-4">
+          <div className="p-4 bg-muted rounded-lg border text-sm">
+             <p className="font-semibold truncate">Fila seleccionada (ID: {rowData.id})</p>
+             <p className="text-muted-foreground text-xs truncate">Cliente: {rowData['nombre']} {rowData['apellido']}</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="duplicate-count">Número total de filas (original + copias)</Label>
+            <Input 
+              id="duplicate-count"
+              type="number"
+              min="1"
+              value={count}
+              onChange={(e) => setCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            />
+             <p className="text-xs text-muted-foreground">
+                Si ingresas 3, tendrás la fila original + 2 copias.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => onConfirm(count)}>Confirmar Duplicación</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+    
