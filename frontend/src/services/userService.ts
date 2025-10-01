@@ -1,23 +1,34 @@
-
 import { API_BASE_URL } from '@/lib/api-config';
+import { useAuthStore } from '@/hooks/useAuthStore';
 
 export async function fetchWithAuth(url: string, options: RequestInit, explicitToken?: string) {
-    // Dynamically import the store to ensure state is hydrated from localStorage.
-    const { useAuthStore } = await import('@/hooks/useAuthStore');
     const token = explicitToken ?? useAuthStore.getState().token;
     
     const headers = new Headers(options.headers || {});
-    if (token) {
+    // Do not set Authorization header if the body is FormData,
+    // the browser will set it with the correct boundary.
+    // Only add it for JSON requests or other types.
+    if (token && !(options.body instanceof FormData)) {
         headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    // If body is FormData, let the browser set the Content-Type
+    if (options.body instanceof FormData) {
+        // Headers must be plain objects when body is FormData, so remove Content-Type
+        headers.delete('Content-Type');
     }
 
     const response = await fetch(url, { ...options, headers });
     
     if (!response.ok) {
         if (response.status === 401) {
+            // This is a critical error, often meaning the token is expired or invalid.
+            // Forcing a logout might be a good strategy here.
+            // useAuthStore.getState().clearSession();
             throw new Error("Could not validate credentials");
         }
-        const errorData = await response.json().catch(() => ({ detail: 'Ocurrió un error inesperado.' }));
+        // Try to parse the error message from the backend
+        const errorData = await response.json().catch(() => ({ detail: 'An unexpected error occurred.' }));
         throw new Error(errorData.detail || `Error: ${response.status}`);
     }
     

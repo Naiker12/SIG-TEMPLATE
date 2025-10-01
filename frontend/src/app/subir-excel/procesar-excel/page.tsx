@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet, Loader2 } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, Loader2, Rows } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,13 @@ import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview } from '@/ser
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { useAuthStore } from '@/hooks/useAuthStore';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type PaginationState = {
   pageIndex: number;
@@ -26,7 +33,8 @@ type PaginationState = {
 
 export default function ProcessExcelPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [processedData, setProcessedData] = useState<ExcelPreview | null>(null);
+  const [processedFileId, setProcessedFileId] = useState<string | null>(null);
+  const [tableData, setTableData] = useState<ExcelPreview | null>(null);
   const [processingProgress, setProcessingProgress] = useState<number | null>(null);
   const { toast } = useToast();
   const { isLoggedIn } = useAuthStore();
@@ -35,7 +43,8 @@ export default function ProcessExcelPage() {
 
   useEffect(() => {
     if (useAuthStore.persist.hasHydrated()) {
-        if (!useAuthStore.getState().isLoggedIn) {
+        const state = useAuthStore.getState();
+        if (!state.isLoggedIn) {
             router.push('/');
         } else {
             setIsCheckingAuth(false);
@@ -43,7 +52,8 @@ export default function ProcessExcelPage() {
     }
     
     const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
-         if (!useAuthStore.getState().isLoggedIn) {
+        const state = useAuthStore.getState();
+         if (!state.isLoggedIn) {
             router.push('/');
         } else {
             setIsCheckingAuth(false);
@@ -66,9 +76,23 @@ export default function ProcessExcelPage() {
         return;
       }
       setFile(selectedFile);
-      setProcessedData(null);
+      setTableData(null);
+      setProcessedFileId(null);
     }
   };
+
+  const fetchPageData = useCallback(async (fileId: string, page: number, pageSize: number) => {
+    try {
+      const previewData = await getExcelPreview(fileId, page, pageSize);
+      setTableData(previewData);
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Error al cargar los datos",
+        description: error instanceof Error ? error.message : "No se pudieron cargar los datos de la página.",
+      });
+    }
+  }, [toast]);
 
   const handleProcess = async () => {
     if (!file) {
@@ -87,13 +111,15 @@ export default function ProcessExcelPage() {
 
     try {
       const { file_id } = await uploadAndProcessExcel(file);
+      setProcessedFileId(file_id);
+      
       toast({
         title: "Archivo Procesado",
         description: "El backend ha procesado el archivo. Obteniendo vista previa...",
       });
-
-      const previewData = await getExcelPreview(file_id, 1, 10);
-      setProcessedData(previewData);
+      
+      // Fetch the first page of data
+      await fetchPageData(file_id, 1, 10);
 
     } catch (error) {
       console.error(error);
@@ -109,30 +135,42 @@ export default function ProcessExcelPage() {
     }
   };
   
-  const handlePaginationChange = async (pagination: PaginationState) => {
-    if (!processedData?.fileId) return;
-    
-    try {
-        const newPreviewData = await getExcelPreview(processedData.fileId, pagination.pageIndex + 1, pagination.pageSize);
-        setProcessedData(newPreviewData);
-    } catch (error) {
-        console.error(error);
-        toast({
-            variant: "destructive",
-            title: "Error al paginar",
-            description: "No se pudieron cargar los datos de la página solicitada.",
-        });
-    }
+  const handlePaginationChange = async ({ pageIndex, pageSize }: PaginationState) => {
+    if (!processedFileId) return;
+    await fetchPageData(processedFileId, pageIndex + 1, pageSize);
   };
 
   const columns = useMemo<ColumnDef<any>[]>(() => {
-    if (!processedData || processedData.columns.length === 0) return [];
+    if (!tableData || tableData.columns.length === 0) return [];
     
-    return processedData.columns.map(col => ({
+    return tableData.columns.map(col => ({
       accessorKey: col.accessorKey,
       header: col.header,
     }));
-  }, [processedData]);
+  }, [tableData]);
+  
+  const tableToolbar = useMemo(() => {
+     if (!tableData) return null;
+     return (
+        <div className="flex items-center gap-4">
+             <div className="flex items-center gap-2">
+                <Label htmlFor="month-filter">Mes:</Label>
+                <Select>
+                    <SelectTrigger id="month-filter" className="w-[180px]">
+                        <SelectValue placeholder="Filtrar por mes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="enero">Enero</SelectItem>
+                        <SelectItem value="febrero">Febrero</SelectItem>
+                        <SelectItem value="marzo">Marzo</SelectItem>
+                    </SelectContent>
+                </Select>
+             </div>
+             <Button variant="outline"><Rows className="mr-2 h-4 w-4"/> Duplicar Fila</Button>
+        </div>
+     );
+  }, [tableData]);
+
 
   if (isCheckingAuth) {
     return (
@@ -160,7 +198,7 @@ export default function ProcessExcelPage() {
                   </p>
                 </header>
 
-                {!processedData ? (
+                {!tableData ? (
                   <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent">
                       <CardHeader>
                           <CardTitle>Cargar Archivo</CardTitle>
@@ -186,20 +224,25 @@ export default function ProcessExcelPage() {
                   </Card>
                 ) : (
                   <div className="overflow-x-auto space-y-4">
-                      <div className="flex justify-between items-center">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                           <div className="flex items-center gap-2 text-lg font-semibold">
                               <FileSpreadsheet className="text-primary" />
                               Mostrando resultados para: <span className="text-primary">{file?.name}</span>
                           </div>
-                           <Button onClick={() => { setFile(null); setProcessedData(null); }}>
+                           <Button onClick={() => { setFile(null); setTableData(null); setProcessedFileId(null)}}>
                              Procesar otro archivo
                           </Button>
                       </div>
                       <DataTable 
                           columns={columns} 
-                          data={processedData.data}
-                          pageCount={processedData.totalPages}
+                          data={tableData.data}
+                          pageCount={tableData.totalPages}
+                          pagination={{
+                            pageIndex: tableData.page - 1,
+                            pageSize: tableData.pageSize,
+                          }}
                           onPaginationChange={handlePaginationChange}
+                          toolbarContent={tableToolbar}
                       />
                   </div>
                 )}

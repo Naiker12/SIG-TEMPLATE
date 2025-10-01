@@ -8,6 +8,7 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
+  PaginationState,
 } from "@tanstack/react-table"
 
 import {
@@ -34,19 +35,24 @@ import {
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { ColumnFiltersState, getFilteredRowModel, getSortedRowModel, SortingState, VisibilityState } from "@tanstack/react-table"
+import { Checkbox } from "../ui/checkbox"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  pageCount?: number
-  onPaginationChange?: (pagination: { pageIndex: number; pageSize: number }) => void
+  pageCount?: number;
+  pagination?: PaginationState;
+  onPaginationChange?: (pagination: PaginationState) => void;
+  toolbarContent?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   pageCount: controlledPageCount,
+  pagination: controlledPagination,
   onPaginationChange,
+  toolbarContent,
 }: DataTableProps<TData, TValue>) {
     
   const [sorting, setSorting] = useState<SortingState>([])
@@ -54,10 +60,36 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
 
+  const isServerPaginated = controlledPageCount !== undefined && onPaginationChange !== undefined;
+
   const table = useReactTable({
     data,
-    columns,
-    manualPagination: !!onPaginationChange,
+    columns: [
+        {
+          id: "select",
+          header: ({ table }) => (
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() ||
+                (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              aria-label="Select all"
+            />
+          ),
+          cell: ({ row }) => (
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Select row"
+            />
+          ),
+          enableSorting: false,
+          enableHiding: false,
+        },
+        ...columns
+    ],
+    manualPagination: isServerPaginated,
     pageCount: controlledPageCount ?? -1,
     
     onSortingChange: setSorting,
@@ -68,24 +100,22 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: onPaginationChange,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      ...(isServerPaginated && { pagination: controlledPagination }),
     },
   });
 
-  useEffect(() => {
-    if (onPaginationChange) {
-        const { pageIndex, pageSize } = table.getState().pagination;
-        onPaginationChange({ pageIndex, pageSize });
-    }
-  }, [table.getState().pagination.pageIndex, table.getState().pagination.pageSize, onPaginationChange]);
-
   return (
     <div className="w-full space-y-4">
-      <div className="flex items-center justify-end">
+       <div className="flex items-center justify-between">
+            <div className="flex-1">
+              {toolbarContent}
+            </div>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">
@@ -155,7 +185,7 @@ export function DataTable<TData, TValue>({
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length}
+                    colSpan={columns.length + 1}
                     className="h-24 text-center"
                   >
                     No hay resultados.
