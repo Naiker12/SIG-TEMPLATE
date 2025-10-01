@@ -13,7 +13,7 @@ export type ExcelPreview = {
     totalPages: number;
     columns: ExcelColumn[];
     data: any[];
-    fileId?: string; // Add fileId to the response for subsequent calls
+    fileId?: string;
 };
 
 /**
@@ -80,4 +80,32 @@ export async function duplicateExcelRow(payload: DuplicateRowPayload): Promise<{
     }
 
     return response.json();
+}
+
+/**
+ * Downloads the processed excel file.
+ * @param fileId The ID of the processed file.
+ * @returns An object with the file blob and filename.
+ */
+export async function downloadExcelFile(fileId: string): Promise<{ blob: Blob, filename: string }> {
+    const response = await fetch(`${API_BASE_URL}/excel/download/${fileId}`, {
+        method: 'GET',
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to download file.' }));
+        throw new Error(errorData.detail || `Error: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const contentDisposition = response.headers.get('content-disposition');
+    let filename = fileId;
+    if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match && match.length > 1) {
+            filename = match[1];
+        }
+    }
+    
+    return { blob, filename };
 }

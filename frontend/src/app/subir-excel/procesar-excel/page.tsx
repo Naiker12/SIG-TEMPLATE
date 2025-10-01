@@ -21,7 +21,7 @@ import { UploadCloud, FileSpreadsheet, Rows, Download } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef, type Row, type PaginationState } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
-import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview, duplicateExcelRow } from '@/services/excelService';
+import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview, duplicateExcelRow, downloadExcelFile } from '@/services/excelService';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import {
@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { saveAs } from 'file-saver';
 
 
 type DuplicateModalState = {
@@ -90,8 +91,7 @@ export default function ProcessExcelPage() {
         description: "El backend ha procesado el archivo. Obteniendo vista previa...",
       });
       
-      // Fetch initial page after processing
-      await fetchPageData(file_id, 1, pagination.pageSize);
+      await fetchPageData(file_id, 1, 10);
 
     } catch (error) {
       console.error(error);
@@ -125,23 +125,12 @@ export default function ProcessExcelPage() {
     }
   };
   
-  const handlePaginationChange = useCallback((updaterOrValue: PaginationState) => {
+  const handlePaginationChange = useCallback((newPagination: PaginationState) => {
     if (!processedFileId) return;
 
-    const newPageIndex = typeof updaterOrValue === 'function' 
-        ? updaterOrValue(pagination).pageIndex 
-        : updaterOrValue.pageIndex;
-
-    const newPageSize = typeof updaterOrValue === 'function'
-        ? updaterOrValue(pagination).pageSize
-        : updaterOrValue.pageSize;
-
-    if (newPageIndex !== pagination.pageIndex || newPageSize !== pagination.pageSize) {
-        setPagination({ pageIndex: newPageIndex, pageSize: newPageSize });
-        fetchPageData(processedFileId, newPageIndex + 1, newPageSize);
-    }
-  }, [processedFileId, pagination, fetchPageData]);
-
+    setPagination(newPagination);
+    fetchPageData(processedFileId, newPagination.pageIndex + 1, newPagination.pageSize);
+  }, [processedFileId, fetchPageData]);
 
   const handleDuplicate = () => {
     if (selectedRows.length !== 1) return;
@@ -151,42 +140,19 @@ export default function ProcessExcelPage() {
   const handleConfirmDuplicate = async (count: number) => {
     if (!duplicateModal.rowData || !processedFileId || count < 1) return;
     
-    // The user inputs the total desired count, so we calculate the number of new copies
-    const newCopiesCount = count - 1; 
-
-    if (newCopiesCount < 0) {
-      toast({
-        variant: "destructive",
-        title: "Valor inválido",
-        description: "El número total de filas debe ser al menos 1.",
-      });
-      return;
-    }
-
-    // If only 1 total row is desired, no new copies are needed.
-    if (newCopiesCount === 0) {
-      setDuplicateModal({ isOpen: false, rowData: null });
-      toast({
-          title: "No se duplicó",
-          description: "No se crearon copias adicionales.",
-      });
-      return;
-    }
-
     try {
         await duplicateExcelRow({
             file_id: processedFileId,
             row_id: duplicateModal.rowData.id,
-            count: newCopiesCount
+            count: count - 1
         });
 
         setDuplicateModal({ isOpen: false, rowData: null });
         toast({
             title: "Fila Duplicada",
-            description: `Se han creado ${newCopiesCount} copias de la fila. Actualizando tabla...`,
+            description: `Se han creado ${count - 1} copias de la fila. Actualizando tabla...`,
         });
 
-        // Refresh the current page
         await fetchPageData(processedFileId, pagination.pageIndex + 1, pagination.pageSize);
 
     } catch (error) {
@@ -197,6 +163,22 @@ export default function ProcessExcelPage() {
         });
     }
   }
+
+  const handleDownload = async () => {
+    if (!processedFileId) return;
+
+    toast({ title: "Preparando descarga...", description: "Tu archivo se está generando." });
+    try {
+        const { blob, filename } = await downloadExcelFile(processedFileId);
+        saveAs(blob, filename);
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error al descargar",
+            description: error instanceof Error ? error.message : "No se pudo descargar el archivo.",
+        });
+    }
+  };
 
 
   const columns = useMemo<ColumnDef<any>[]>(() => {
@@ -278,7 +260,7 @@ export default function ProcessExcelPage() {
                               Mostrando resultados para: <span className="text-primary">{file?.name}</span>
                           </div>
                           <div className="flex gap-2">
-                             <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Descargar</Button>
+                             <Button variant="outline" onClick={handleDownload}><Download className="mr-2 h-4 w-4" /> Descargar</Button>
                              <Button onClick={() => { setFile(null); setTableData(null); setProcessedFileId(null)}}>
                                 Procesar otro archivo
                              </Button>
@@ -333,6 +315,12 @@ function DuplicateRowModal({ isOpen, onOpenChange, rowData, onConfirm }: {
   onConfirm: (count: number) => void
 }) {
   const [count, setCount] = useState(2);
+
+  useEffect(() => {
+    if (isOpen) {
+        setCount(2); // Reset count when modal opens
+    }
+  }, [isOpen]);
 
   if (!rowData) return null;
 
