@@ -107,6 +107,7 @@ def preview_excel(file_id: str, page: int = 1, page_size: int = 10):
     """
     Provides a paginated JSON preview of an Excel file using openpyxl for robust reading.
     Adds a unique 'id' to each row for frontend identification.
+    Limits the preview to the first 12 columns.
     """
     file_path = os.path.join(UPLOAD_DIR, file_id)
     if not os.path.exists(file_path):
@@ -116,21 +117,21 @@ def preview_excel(file_id: str, page: int = 1, page_size: int = 10):
         wb = load_workbook(filename=file_path, data_only=True)
         ws = wb.active
         
-        # Extract headers and create column definitions
-        raw_headers = [cell.value for cell in ws[1]]
+        # Extract headers, limited to first 12 columns
+        raw_headers = [cell.value for cell in ws[1][:12]]
         headers = []
         for i, h in enumerate(raw_headers):
-            if h is None:
+            if h is None or str(h).strip() == "":
                 headers.append(f"columna_{i+1}")
             else:
                 headers.append(str(h))
         
         columns = [{"accessorKey": h, "header": h} for h in headers if h is not None]
         
-        # Extract rows as dictionaries
+        # Extract rows as dictionaries, limited to first 12 columns
         all_rows = []
         # Add a unique ID to each row based on its physical row number
-        for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        for row_idx, row in enumerate(ws.iter_rows(min_row=2, max_col=12, values_only=True), start=2):
             row_dict = {
                 "id": row_idx,  # Unique ID based on row number
                 **{headers[i]: value for i, value in enumerate(row)}
