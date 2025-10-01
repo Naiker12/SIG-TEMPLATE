@@ -1,10 +1,10 @@
 from fastapi.middleware.cors import CORSMiddleware
 
 def setup_cors(app):
-    origins = [
-        "http://localhost:3000",
-        "http://192.168.1.212:3000",
-    ]
+    # En desarrollo, permitir todos los orígenes con "*" es una práctica común
+    # para evitar problemas de CORS al cambiar de red o IP.
+    # En producción, esto debería ser una lista estricta de dominios permitidos.
+    origins = ["*"]
 
     app.add_middleware(
         CORSMiddleware,
