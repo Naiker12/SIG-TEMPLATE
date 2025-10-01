@@ -104,37 +104,44 @@ async def upload_excel(file: UploadFile):
 
 def preview_excel(file_id: str, page: int = 1, page_size: int = 10):
     """
-    Provides a paginated JSON preview of an Excel file.
+    Provides a paginated JSON preview of an Excel file using openpyxl for robust reading.
     """
     file_path = os.path.join(UPLOAD_DIR, file_id)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
     try:
-        df = pd.read_excel(file_path, sheet_name=0) # Read the first sheet
-        df = df.where(pd.notna(df), None) # Replace NaN with None for JSON compatibility
+        # Use openpyxl to read the file, which is more robust for .xlsx
+        wb = load_workbook(filename=file_path, data_only=True)
+        ws = wb.active
+        
+        # Extract headers
+        headers = [cell.value for cell in ws[1]]
+        
+        # Extract rows as dictionaries
+        all_rows = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            row_dict = {headers[i]: value for i, value in enumerate(row)}
+            all_rows.append(row_dict)
+            
+        total_rows = len(all_rows)
+        start_index = (page - 1) * page_size
+        end_index = start_index + page_size
+        paginated_data = all_rows[start_index:end_index]
+        
+        # Generate columns for the data table dynamically
+        columns = [{"accessorKey": col, "header": col} for col in headers]
+
+        return {
+            "page": page,
+            "pageSize": page_size,
+            "totalRows": total_rows,
+            "totalPages": (total_rows + page_size - 1) // page_size,
+            "columns": columns,
+            "data": paginated_data,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al leer el archivo Excel: {e}")
-
-    total_rows = len(df)
-    start = (page - 1) * page_size
-    end = start + page_size
-    
-    # Get the paginated data
-    paginated_df = df.iloc[start:end]
-    data = paginated_df.to_dict(orient='records')
-    
-    # Generate columns for the data table dynamically
-    columns = [{"accessorKey": col, "header": col} for col in df.columns]
-
-    return {
-        "page": page,
-        "pageSize": page_size,
-        "totalRows": total_rows,
-        "totalPages": (total_rows + page_size - 1) // page_size,
-        "columns": columns,
-        "data": data,
-    }
 
 
 def modify_excel(file_id: str, modifications: List[Dict[str, Any]]):
