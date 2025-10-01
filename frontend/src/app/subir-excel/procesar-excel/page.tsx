@@ -155,7 +155,7 @@ export default function ProcessExcelPage() {
         <main className="min-h-screen bg-background">
           <TopBar />
           <div className="p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-full mx-auto">
               <header className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Procesar Documento Excel</h1>
                 <p className="text-muted-foreground mt-2 max-w-3xl">

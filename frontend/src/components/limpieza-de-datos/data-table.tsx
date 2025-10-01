@@ -38,7 +38,6 @@ import {
     ChevronsRight,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { CardFooter } from "../ui/card"
 
 
 interface DataTableProps<TData, TValue> {
