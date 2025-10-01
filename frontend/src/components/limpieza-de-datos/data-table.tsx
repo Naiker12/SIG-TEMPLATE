@@ -153,8 +153,8 @@ export function DataTable<TData, TValue>({
             </DropdownMenu>
         </div>
         
-      <div className="rounded-md border">
-        <div className="relative w-full overflow-auto">
+      <div className="rounded-md border max-h-[60vh] overflow-auto">
+        <div className="relative w-full">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -182,7 +182,7 @@ export function DataTable<TData, TValue>({
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="text-sm p-2 sm:p-2">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
