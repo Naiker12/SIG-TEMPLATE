@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -9,7 +8,7 @@ import { Search, Bell, Menu, LogIn } from "lucide-react";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import Link from "next/link";
-import { SidebarTrigger } from "../ui/sidebar";
+import { useSidebarStore } from "@/hooks/use-sidebar-store";
 
 
 export function TopBar() {
@@ -17,6 +16,7 @@ export function TopBar() {
   const [isClient, setIsClient] = useState(false);
   const authModal = useAuthModal();
   const { isLoggedIn, user } = useAuthStore();
+  const { toggle } = useSidebarStore();
   
   useEffect(() => {
     setIsClient(true);
@@ -31,7 +31,10 @@ export function TopBar() {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-x-4 border-b bg-background px-4 sm:px-6">
       <div className="flex flex-1 items-center gap-4 min-w-0">
-        <SidebarTrigger />
+        <Button onClick={toggle} variant="ghost" size="icon" className="sm:hidden">
+          <Menu />
+          <span className="sr-only">Toggle Sidebar</span>
+        </Button>
          <div className="relative w-full max-w-md hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar..." className="w-full pl-10 bg-background rounded-lg" />

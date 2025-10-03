@@ -131,7 +131,6 @@ const SidebarRail = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
-  const { isHovered } = useSidebarStore()
   return (
     <div
       ref={ref}
