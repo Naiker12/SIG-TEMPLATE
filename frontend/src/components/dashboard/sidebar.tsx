@@ -1,9 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -18,6 +19,7 @@ import { useAuthStore } from "@/hooks/useAuthStore"
 import { cn } from "@/lib/utils"
 import { menuItems } from "./sidebar-data";
 import { ThemeSwitcher } from "./theme-switcher";
+import { Switch } from "@/components/ui/switch"
 
 export function DashboardSidebar() {
     const { isLoggedIn, user, clearSession } = useAuthStore();
@@ -78,8 +80,8 @@ export function DashboardSidebar() {
                     <div>
                         <SidebarGroup>
                             <SidebarGroupContent>
-                                <NavItem item={{ title: "Perfil", href: "/profile", icon: User }} isOpen={isOpen} pathname={pathname} />
-                                <NavItem item={{ title: "Configuración", href: "/settings", icon: Settings }} isOpen={isOpen} pathname={pathname} />
+                                <NavItem item={{ title: "Perfil", href: "/profile", icon: User, isCollapsible: false }} isOpen={isOpen} pathname={pathname} />
+                                <NavItem item={{ title: "Configuración", href: "/settings", icon: Settings, isCollapsible: false }} isOpen={isOpen} pathname={pathname} />
                             </SidebarGroupContent>
                         </SidebarGroup>
                         <div className={cn("mt-4 p-4 border-t", !isOpen && "px-2")}>
