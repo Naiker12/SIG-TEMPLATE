@@ -7,21 +7,21 @@ import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 import type { ChartConfig } from '@/components/ui/chart';
 
 const chartData = [
-  { month: 'Jan', sales: 186, subscriptions: 80 },
+  { month: 'Ene', sales: 186, subscriptions: 80 },
   { month: 'Feb', sales: 305, subscriptions: 200 },
   { month: 'Mar', sales: 237, subscriptions: 120 },
-  { month: 'Apr', sales: 73, subscriptions: 190 },
+  { month: 'Abr', sales: 73, subscriptions: 190 },
   { month: 'May', sales: 209, subscriptions: 130 },
   { month: 'Jun', sales: 214, subscriptions: 140 },
 ];
 
 const chartConfig = {
   sales: {
-    label: 'Sales',
+    label: 'Ventas',
     color: 'hsl(var(--chart-1))',
   },
   subscriptions: {
-    label: 'Subscriptions',
+    label: 'Suscripciones',
     color: 'hsl(var(--chart-2))',
   },
 } satisfies ChartConfig;
@@ -30,8 +30,8 @@ export function SaleActivityChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sale Activity - Monthly</CardTitle>
-        <CardDescription>Showing total sales for the last 6 months</CardDescription>
+        <CardTitle>Actividad de Ventas - Mensual</CardTitle>
+        <CardDescription>Mostrando ventas totales de los últimos 6 meses</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-64 w-full">

@@ -9,7 +9,7 @@ import { type File as RecentFile } from '@/services/fileService';
 
 const metricCardData = [
   {
-    title: 'New Subscriptions',
+    title: 'Nuevas Suscripciones',
     value: '4,682',
     change: '+15.54%',
     isPositive: true,
@@ -17,7 +17,7 @@ const metricCardData = [
     chartData: [5, 6, 5, 9, 8, 7, 6],
   },
   {
-    title: 'New Orders',
+    title: 'Nuevas Órdenes',
     value: '1,226',
     change: '-40.2%',
     isPositive: false,
@@ -25,7 +25,7 @@ const metricCardData = [
     chartData: [9, 8, 7, 6, 5, 4, 3],
   },
   {
-    title: 'Avg Order Revenue',
+    title: 'Ingreso Prom. por Orden',
     value: '1080',
     change: '+10.8%',
     isPositive: true,

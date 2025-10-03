@@ -9,34 +9,34 @@ import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const salesChartData = [
-  { month: 'Jan', sales: 120000 },
+  { month: 'Ene', sales: 120000 },
   { month: 'Feb', sales: 280000 },
   { month: 'Mar', sales: 240000 },
-  { month: 'Apr', sales: 80000 },
+  { month: 'Abr', sales: 80000 },
   { month: 'May', sales: 220000 },
   { month: 'Jun', sales: 250000 },
 ];
 
 const visitorsChartData = [
-    { month: 'Jan', new: 18000, returning: 1200 },
+    { month: 'Ene', new: 18000, returning: 1200 },
     { month: 'Feb', new: 22000, returning: 1500 },
     { month: 'Mar', new: 25000, returning: 1300 },
-    { month: 'Apr', new: 19000, returning: 1600 },
+    { month: 'Abr', new: 19000, returning: 1600 },
     { month: 'May', new: 32000, returning: 1800 },
     { month: 'Jun', new: 36786, returning: 467 },
 ];
 
 const trafficSourceData = [
-    { source: 'Direct', value: 237, fill: 'var(--color-chart-3)' },
+    { source: 'Directo', value: 237, fill: 'var(--color-chart-3)' },
     { source: 'Social', value: 305, fill: 'var(--color-chart-2)' },
     { source: 'Google', value: 186, fill: 'var(--color-chart-1)' },
 ];
 
 const customersData = [
-    { month: 'Jan', customers: 4000 },
+    { month: 'Ene', customers: 4000 },
     { month: 'Feb', customers: 3000 },
     { month: 'Mar', customers: 2000 },
-    { month: 'Apr', customers: 2780 },
+    { month: 'Abr', customers: 2780 },
     { month: 'May', customers: 1890 },
     { month: 'Jun', customers: 2390 },
     { month: 'Jul', customers: 3490 },
@@ -60,13 +60,13 @@ export function AnalyticsView() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Sales</CardTitle>
-                <CardDescription>Visualize sales performance trends</CardDescription>
+                <CardTitle>Ventas</CardTitle>
+                <CardDescription>Visualiza las tendencias de rendimiento de ventas.</CardDescription>
               </div>
               <Tabs defaultValue="month" className="w-auto">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="month">Month</TabsTrigger>
-                  <TabsTrigger value="week">Week</TabsTrigger>
+                  <TabsTrigger value="month">Mes</TabsTrigger>
+                  <TabsTrigger value="week">Semana</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -75,7 +75,7 @@ export function AnalyticsView() {
             <div className="space-y-4">
               <Card className="bg-muted/50 p-4">
                 <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm text-muted-foreground">Net Sales</p>
+                    <p className="text-sm text-muted-foreground">Ventas Netas</p>
                     <Info className="w-4 h-4 text-muted-foreground"/>
                 </div>
                 <p className="text-2xl font-bold">$4.567.820</p>
@@ -83,7 +83,7 @@ export function AnalyticsView() {
               </Card>
               <Card className="bg-muted/50 p-4">
                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm text-muted-foreground">Orders</p>
+                    <p className="text-sm text-muted-foreground">Órdenes</p>
                     <Info className="w-4 h-4 text-muted-foreground"/>
                 </div>
                 <p className="text-2xl font-bold">1246</p>
@@ -110,13 +110,13 @@ export function AnalyticsView() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Visitors</CardTitle>
-                <CardDescription>Key visitor information at a glance</CardDescription>
+                <CardTitle>Visitantes</CardTitle>
+                <CardDescription>Información clave de los visitantes.</CardDescription>
               </div>
               <Tabs defaultValue="month" className="w-auto">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="month">Month</TabsTrigger>
-                  <TabsTrigger value="week">Week</TabsTrigger>
+                  <TabsTrigger value="month">Mes</TabsTrigger>
+                  <TabsTrigger value="week">Semana</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -125,7 +125,7 @@ export function AnalyticsView() {
             <div className="space-y-4">
               <Card className="bg-muted/50 p-4">
                 <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm text-muted-foreground">New Visitors</p>
+                    <p className="text-sm text-muted-foreground">Nuevos Visitantes</p>
                     <Info className="w-4 h-4 text-muted-foreground"/>
                 </div>
                 <p className="text-2xl font-bold">36.786</p>
@@ -133,7 +133,7 @@ export function AnalyticsView() {
               </Card>
               <Card className="bg-muted/50 p-4">
                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm text-muted-foreground">Returning</p>
+                    <p className="text-sm text-muted-foreground">Recurrentes</p>
                     <Info className="w-4 h-4 text-muted-foreground"/>
                 </div>
                 <p className="text-2xl font-bold">467</p>
@@ -171,13 +171,13 @@ export function AnalyticsView() {
                     <CardHeader>
                         <div className="flex justify-between items-center">
                         <div>
-                            <CardTitle>Traffic Source</CardTitle>
-                            <CardDescription>Gain insights into where your visitors are coming from.</CardDescription>
+                            <CardTitle>Fuentes de Tráfico</CardTitle>
+                            <CardDescription>De dónde vienen tus visitantes.</CardDescription>
                         </div>
                         <Tabs defaultValue="month" className="w-auto">
                             <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="month">Month</TabsTrigger>
-                            <TabsTrigger value="week">Week</TabsTrigger>
+                            <TabsTrigger value="month">Mes</TabsTrigger>
+                            <TabsTrigger value="week">Semana</TabsTrigger>
                             </TabsList>
                         </Tabs>
                         </div>
@@ -200,10 +200,10 @@ export function AnalyticsView() {
                 <Card>
                     <CardHeader>
                         <div className="flex justify-between items-center">
-                            <CardTitle>Customers</CardTitle>
+                            <CardTitle>Clientes</CardTitle>
                              <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
                         </div>
-                        <CardDescription>Customer performance and growth trends.</CardDescription>
+                        <CardDescription>Rendimiento y crecimiento de clientes.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-48">
                          <ResponsiveContainer width="100%" height="100%">
@@ -223,16 +223,16 @@ export function AnalyticsView() {
                     </CardContent>
                      <CardFooter className="flex justify-center text-sm text-muted-foreground">
                         <TrendingUp className="w-4 h-4 mr-1"/>
-                        Trending up by 5.2% this month
+                        Creciendo un 5.2% este mes
                     </CardFooter>
                 </Card>
                 <Card>
                      <CardHeader>
                         <div className="flex justify-between items-center">
-                            <CardTitle>Buyers Profile</CardTitle>
+                            <CardTitle>Perfil del Comprador</CardTitle>
                             <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
                         </div>
-                        <CardDescription>Discover key insights into the buyer's preferences</CardDescription>
+                        <CardDescription>Insights clave de las preferencias del comprador.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-48 flex items-center justify-center">
                         <div className="relative h-40 w-40">
@@ -256,13 +256,13 @@ export function AnalyticsView() {
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                                 <p className="text-3xl font-bold">200</p>
-                                <p className="text-sm text-muted-foreground">Buyers</p>
+                                <p className="text-sm text-muted-foreground">Compradores</p>
                             </div>
                         </div>
                     </CardContent>
                     <CardFooter className="flex justify-center text-sm text-muted-foreground">
                         <TrendingUp className="w-4 h-4 mr-1"/>
-                        Trending up by 5.2% this month
+                        Creciendo un 5.2% este mes
                     </CardFooter>
                 </Card>
             </div>

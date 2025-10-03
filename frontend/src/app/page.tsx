@@ -73,18 +73,18 @@ export default function Home() {
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Tablero</h1>
               </header>
               <div className="flex items-center gap-2">
-                  <Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4"/> Pick a date</Button>
-                  <Button><Download className="mr-2 h-4 w-4"/> Download</Button>
+                  <Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4"/> Seleccionar Fecha</Button>
+                  <Button><Download className="mr-2 h-4 w-4"/> Descargar</Button>
               </div>
             </div>
             
             <Tabs defaultValue="overview" className="w-full">
                 <TabsList>
                     <TabsTrigger value="overview">
-                        <AreaChart className="mr-2"/> Overview
+                        <AreaChart className="mr-2"/> Vista General
                     </TabsTrigger>
                     <TabsTrigger value="analytics">
-                        <Bot className="mr-2"/> Analytics
+                        <Bot className="mr-2"/> Analíticas
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview" className="mt-6">

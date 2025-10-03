@@ -18,9 +18,9 @@ export function RevenueChart() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardDescription>Total Revenue</CardDescription>
+        <CardDescription>Ingresos Totales</CardDescription>
         <CardTitle className="text-4xl">$15,231.89</CardTitle>
-        <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+        <p className="text-xs text-muted-foreground">+20.1% desde el mes pasado</p>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-20 w-full">

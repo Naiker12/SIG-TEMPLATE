@@ -10,7 +10,6 @@ import {
   Moon,
   Sun,
   ChevronDown,
-  ChevronsLeft,
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,6 +27,8 @@ import {
   useSidebar,
   Sheet,
   SheetContent,
+  SidebarGroup,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import {
   Collapsible,
@@ -38,11 +39,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
-  publicMenuItems,
-  privateMenuItems,
+  platformMenu,
+  toolsMenu,
   settingsMenuItems,
   type MenuItem,
-  type SubMenuItem,
+  type MenuGroup,
 } from "./sidebar-data";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { cn } from "@/lib/utils";
@@ -50,14 +51,17 @@ import { cn } from "@/lib/utils";
 const NavItem = ({ item, setOpenMobile }: { item: MenuItem; setOpenMobile: (open: boolean) => void }) => {
   const pathname = usePathname();
   const { state } = useSidebar();
-  const isChildActive = item.items?.some(sub => pathname === sub.href);
+  const isChildActive = item.href === pathname || (item.items?.some(sub => pathname === sub.href) ?? false);
   const [isOpen, setIsOpen] = useState(isChildActive);
 
   useEffect(() => {
     if (state === 'collapsed') {
       setIsOpen(false);
     }
-  }, [state]);
+    if (isChildActive) {
+      setIsOpen(true);
+    }
+  }, [state, isChildActive]);
 
   if (item.isCollapsible && item.items) {
     return (
@@ -85,6 +89,7 @@ const NavItem = ({ item, setOpenMobile }: { item: MenuItem; setOpenMobile: (open
               <SidebarMenuSubItem key={subItem.href}>
                 <SidebarMenuSubButton
                   asChild
+                  size="sm"
                   isActive={pathname === subItem.href}
                   onClick={() => setOpenMobile(false)}
                 >
@@ -118,62 +123,42 @@ const NavItem = ({ item, setOpenMobile }: { item: MenuItem; setOpenMobile: (open
   );
 };
 
-
 const UserMenu = ({ setOpenMobile }: { setOpenMobile: (open: boolean) => void }) => {
   const { user, clearSession } = useAuthStore();
-  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
   if (!user) return null;
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-            <SidebarMenuButton tooltip="User Menu" className="w-full h-auto p-2">
-                <Avatar className="size-8">
-                    <AvatarImage src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={`Avatar de ${user.name}`} />
-                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start text-left">
-                    <span className="font-semibold">{user.name}</span>
-                    <span className="text-xs text-muted-foreground">{user.email}</span>
-                </div>
-                 <ChevronsLeft className={cn(
-                    "ml-auto size-4 transition-transform",
-                    "group-data-[state=collapsed]:hidden",
-                    isOpen && "-rotate-90"
-                  )} />
-            </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-            <SidebarMenuSub>
-                 {settingsMenuItems.map((subItem) => (
-                  <SidebarMenuSubItem key={subItem.href}>
-                    <SidebarMenuSubButton
-                      asChild
-                      isActive={pathname === subItem.href}
-                      onClick={() => setOpenMobile(false)}
-                    >
-                      <Link href={subItem.href}>
-                        {subItem.icon && <subItem.icon />}
-                        <span>{subItem.title}</span>
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                ))}
-                <SidebarSeparator className="my-1"/>
-                 <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={clearSession}>
-                        <LogOut />
-                        <span>Cerrar Sesión</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-            </SidebarMenuSub>
-        </CollapsibleContent>
-    </Collapsible>
+     <SidebarGroup>
+        <SidebarGroupLabel asChild>
+          <div className="flex items-center justify-between">
+            <span>{user.name}</span>
+          </div>
+        </SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {settingsMenuItems.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                 <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.title} onClick={() => setOpenMobile(false)}>
+                    <Link href={item.href}>
+                      {item.icon && <item.icon/>}
+                      <span>{item.title}</span>
+                    </Link>
+                 </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+             <SidebarMenuItem>
+                <SidebarMenuButton onClick={clearSession} tooltip="Cerrar Sesión">
+                    <LogOut />
+                    <span>Cerrar Sesión</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
   )
 }
-
 
 export function DashboardSidebar() {
   const { theme, setTheme } = useTheme();
@@ -188,16 +173,25 @@ export function DashboardSidebar() {
   const isDark = theme === "dark";
   const toggleTheme = () => setTheme(isDark ? "light" : "dark");
   
-  const allMenuItems = isLoggedIn
-    ? [...privateMenuItems, ...publicMenuItems]
-    : publicMenuItems;
+  const menuGroups: MenuGroup[] = isLoggedIn
+    ? [platformMenu, toolsMenu]
+    : [toolsMenu];
 
   const SidebarItems = () => (
-    <SidebarMenu>
-      {allMenuItems.map((item) => (
-        <NavItem key={item.title} item={item} setOpenMobile={setOpenMobile} />
+    <>
+      {menuGroups.map((group) => (
+        <SidebarGroup key={group.label}>
+          <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {group.items.map((item) => (
+                <NavItem key={item.title} item={item} setOpenMobile={setOpenMobile} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       ))}
-    </SidebarMenu>
+    </>
   );
 
   const MobileSidebarContent = () => (
@@ -253,10 +247,10 @@ export function DashboardSidebar() {
             {isClient && <SidebarItems />}
         </SidebarContent>
 
-        <SidebarFooter className="p-4">
+        <SidebarFooter className="p-4 space-y-4">
             {isClient && (
                 <>
-                <div className="flex items-center justify-center group-data-[state=collapsed]:justify-start mb-4">
+                <div className="flex items-center justify-center group-data-[state=collapsed]:justify-start">
                     <div className="hidden items-center gap-2 group-data-[state=expanded]:flex">
                         <Sun className="size-5" />
                         <Switch

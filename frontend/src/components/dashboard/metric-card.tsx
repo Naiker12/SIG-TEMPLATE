@@ -37,7 +37,7 @@ export function MetricCard({ title, value, icon, change, isPositive, chartData }
         <div className="flex items-end justify-between gap-4">
             <div className="space-y-1">
                 <p className="text-3xl font-bold">{value}</p>
-                <p className="text-xs text-muted-foreground">Since Last week</p>
+                <p className="text-xs text-muted-foreground">Desde la semana pasada</p>
             </div>
             <div className="w-24 h-12 -mb-2">
                  <ChartContainer config={{ y: { color: chartColor } }} className="h-full w-full">
@@ -48,7 +48,7 @@ export function MetricCard({ title, value, icon, change, isPositive, chartData }
             </div>
         </div>
         <div className="flex justify-between items-center mt-4 pt-4 border-t">
-            <Button variant="link" className="p-0 h-auto text-xs">Details</Button>
+            <Button variant="link" className="p-0 h-auto text-xs">Detalles</Button>
             <div className={`flex items-center text-xs font-semibold ${changeColor}`}>
                 {isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
                 {change}

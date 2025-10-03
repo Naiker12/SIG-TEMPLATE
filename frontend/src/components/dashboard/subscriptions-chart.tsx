@@ -29,9 +29,9 @@ export function SubscriptionsChart() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardDescription>Subscriptions</CardDescription>
+        <CardDescription>Suscripciones</CardDescription>
         <CardTitle className="text-4xl">+2350</CardTitle>
-        <p className="text-xs text-muted-foreground">+180.1% from last month</p>
+        <p className="text-xs text-muted-foreground">+180.1% desde el mes pasado</p>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-20 w-full">
