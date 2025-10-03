@@ -32,6 +32,7 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar";
+import { Switch } from "@/components/ui/switch";
 import {
   Collapsible,
   CollapsibleContent,
@@ -170,7 +171,7 @@ export function DashboardSidebar() {
     : [toolsMenu];
 
   const SidebarItems = () => (
-    <>
+    <div className="flex-1 overflow-y-auto">
       {menuGroups.map((group) => (
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
@@ -183,7 +184,7 @@ export function DashboardSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       ))}
-    </>
+    </div>
   );
 
   const SidebarBottomContent = () => (
@@ -232,12 +233,12 @@ export function DashboardSidebar() {
                 <span className="text-xl font-semibold">SIG</span>
             </div>
         </SidebarHeader>
-        <SidebarContent className="flex-1 overflow-y-auto p-4">
+        <SidebarContent className="flex-1 overflow-y-auto p-4 flex flex-col justify-between">
             {isClient && <SidebarItems />}
+            <div className="mt-auto">
+              <SidebarBottomContent />
+            </div>
         </SidebarContent>
-        <SidebarFooter className="mt-auto border-t p-4">
-          <SidebarBottomContent />
-        </SidebarFooter>
     </div>
   );
 
@@ -264,12 +265,11 @@ export function DashboardSidebar() {
 
         <SidebarContent className="flex-1 px-4 flex flex-col justify-between">
             {isClient && <SidebarItems />}
-            {isClient && <div className="mt-auto"><SidebarBottomContent /></div>}
+            <div className="mt-auto">
+              {isClient && <SidebarBottomContent />}
+            </div>
         </SidebarContent>
 
-        <SidebarFooter className="p-4 space-y-4 hidden">
-           {/* Footer content moved to SidebarContent for better layout control */}
-        </SidebarFooter>
       </Sidebar>
     </>
   );
