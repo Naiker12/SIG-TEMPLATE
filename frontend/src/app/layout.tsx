@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthModalProvider } from '@/components/auth-modal';
 import { PageLoader } from '@/components/ui/page-loader';
 import { cn } from '@/lib/utils';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,10 +41,12 @@ export default function RootLayout({
       <head />
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <AuthModalProvider />
-          <PageLoader />
-          {children}
-          <Toaster />
+          <SidebarProvider>
+            <AuthModalProvider />
+            <PageLoader />
+            {children}
+            <Toaster />
+          </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>
