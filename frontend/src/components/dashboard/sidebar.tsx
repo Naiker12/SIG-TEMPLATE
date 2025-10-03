@@ -37,18 +37,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import {
-  platformMenu,
-  toolsMenu,
-  settingsMenuItems,
-  type MenuItem,
-  type MenuGroup,
-} from "./sidebar-data";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { cn } from "@/lib/utils";
+import { platformMenu, toolsMenu, settingsMenuItems, type MenuItem, type MenuGroup } from "./sidebar-data";
 
 const NavItem = ({ item, setOpenMobile }: { item: MenuItem; setOpenMobile: (open: boolean) => void }) => {
   const pathname = usePathname();
@@ -59,8 +50,7 @@ const NavItem = ({ item, setOpenMobile }: { item: MenuItem; setOpenMobile: (open
   useEffect(() => {
     if (state === 'collapsed') {
       setIsOpen(false);
-    }
-    if (isChildActive) {
+    } else if (isChildActive) {
       setIsOpen(true);
     }
   }, [state, isChildActive]);
@@ -196,6 +186,44 @@ export function DashboardSidebar() {
     </>
   );
 
+  const SidebarBottomContent = () => (
+    <div className="flex flex-col gap-4">
+      {isLoggedIn && isClient && (
+        <>
+          <SidebarSeparator />
+          <UserMenu setOpenMobile={setOpenMobile} />
+        </>
+      )}
+      {isClient && (
+        <div className="flex items-center justify-center group-data-[state=collapsed]:justify-start">
+          <div className="hidden items-center gap-2 group-data-[state=expanded]:flex">
+            <Sun className="size-5" />
+            <Switch
+              checked={isDark}
+              onCheckedChange={toggleTheme}
+              aria-label="Toggle theme"
+            />
+            <Moon className="size-5" />
+          </div>
+          <div className="hidden group-data-[state=collapsed]:flex">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={toggleTheme}
+                  tooltip={isDark ? "Modo Claro" : "Modo Oscuro"}
+                  variant="ghost"
+                  className="size-10 p-2"
+                >
+                  {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const MobileSidebarContent = () => (
      <div className="flex h-full flex-col">
         <SidebarHeader className="border-b p-4">
@@ -208,18 +236,7 @@ export function DashboardSidebar() {
             {isClient && <SidebarItems />}
         </SidebarContent>
         <SidebarFooter className="mt-auto border-t p-4">
-          {isLoggedIn && isClient && <UserMenu setOpenMobile={setOpenMobile} />}
-           {isClient && (
-            <div className="mt-4 flex items-center justify-center">
-              <Sun className="size-5" />
-              <Switch
-                checked={isDark}
-                onCheckedChange={toggleTheme}
-                className="mx-2"
-              />
-              <Moon className="size-5" />
-            </div>
-          )}
+          <SidebarBottomContent />
         </SidebarFooter>
     </div>
   );
@@ -235,8 +252,8 @@ export function DashboardSidebar() {
 
       {/* Desktop Sidebar */}
       <Sidebar collapsible="icon">
-        <SidebarHeader className="p-4">
-            <div className="flex items-center justify-between group-data-[state=collapsed]:justify-center">
+        <SidebarHeader className="p-4 flex justify-center items-center group-data-[state=collapsed]:p-2 group-data-[state=collapsed]:bg-primary/10 rounded-lg">
+            <div className="flex items-center justify-between group-data-[state=collapsed]:justify-center w-full">
                 <div className="flex items-center gap-2">
                     <Image src="/png/logo-256.png" alt="SIG Logo" width={24} height={24} />
                     <span className="text-xl font-semibold group-data-[state=collapsed]:hidden">SIG</span>
@@ -245,46 +262,13 @@ export function DashboardSidebar() {
             </div>
         </SidebarHeader>
 
-        <SidebarContent className="flex-1 px-4">
+        <SidebarContent className="flex-1 px-4 flex flex-col justify-between">
             {isClient && <SidebarItems />}
+            {isClient && <div className="mt-auto"><SidebarBottomContent /></div>}
         </SidebarContent>
 
-        <SidebarFooter className="p-4 space-y-4">
-            {isClient && (
-                <>
-                <div className="flex items-center justify-center group-data-[state=collapsed]:justify-start">
-                    <div className="hidden items-center gap-2 group-data-[state=expanded]:flex">
-                        <Sun className="size-5" />
-                        <Switch
-                        checked={isDark}
-                        onCheckedChange={toggleTheme}
-                        aria-label="Toggle theme"
-                        />
-                        <Moon className="size-5" />
-                    </div>
-                    <div className="hidden group-data-[state=collapsed]:flex">
-                        <SidebarMenu>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                onClick={toggleTheme}
-                                tooltip={isDark ? "Modo Claro" : "Modo Oscuro"}
-                                variant="ghost"
-                                className="size-10 p-2"
-                                >
-                                {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </div>
-                </div>
-                </>
-            )}
-           {isLoggedIn && isClient && (
-            <>
-              <SidebarSeparator />
-              <UserMenu setOpenMobile={setOpenMobile} />
-            </>
-           )}
+        <SidebarFooter className="p-4 space-y-4 hidden">
+           {/* Footer content moved to SidebarContent for better layout control */}
         </SidebarFooter>
       </Sidebar>
     </>
