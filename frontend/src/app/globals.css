@@ -8,31 +8,31 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 98%; /* #FAFAFA */
-    --foreground: 0 0% 13%; /* #222222 */
+    --background: 220 20% 97%; /* #F3F4F6 */
+    --foreground: 222 39% 11%; /* #111827 */
     --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 0 0% 13%;
+    --card-foreground: 222 39% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
-    --primary: 222 83% 60%; /* #3B82F6 - Blue */
+    --popover-foreground: 222 39% 11%;
+    --primary: 221 83% 53%; /* #3B82F6 */
     --primary-foreground: 0 0% 100%;
     --secondary: 45 100% 58%; /* #FFC72C */
     --secondary-foreground: 0 0% 13%;
-    --muted: 0 0% 96%; /* #F5F5F5 */
-    --muted-foreground: 0 0% 33%; /* #555555 */
-    --accent: 0 0% 94%; /* Light gray for hover */
-    --accent-foreground: 0 0% 9%; /* Darker text for accent */
-    --destructive: 0 84.2% 60.2%; /* Red */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 9% 47%; /* #6B7280 */
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 39% 11%;
+    --destructive: 0 84.2% 60.2%; /* #EF4444 */
     --destructive-foreground: 0 0% 98%;
-    --success: 142 71% 45%; /* Green */
+    --success: 142 71% 45%; /* #22C55E */
     --success-foreground: 0 0% 100%;
-    --warning: 45 93% 47%; /* Yellow */
+    --warning: 45 93% 47%; /* #FACC15 */
     --warning-foreground: 0 0% 13%;
-    --border: 0 0% 87%; /* #DDDDDD */
-    --input: 0 0% 87%;
-    --ring: 222 83% 60%; /* Blue */
+    --border: 214 32% 91%; /* #E5E7EB */
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
     
-    --chart-1: 222 83% 60%; /* Blue */
+    --chart-1: 221 83% 53%; /* Blue */
     --chart-2: 142 71% 45%; /* Green */
     --chart-3: 0 84% 60%; /* Red */
     --chart-4: 45 93% 47%; /* Yellow */
@@ -41,13 +41,13 @@ body {
     --radius: 0.8rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 13%;
-    --sidebar-primary: 222 83% 60%;
+    --sidebar-foreground: 222 39% 11%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 13%;
-    --sidebar-border: 0 0% 89.8%;
-    --sidebar-ring: 222 83% 60%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222 39% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 221 83% 53%;
   }
 
   .dark {
@@ -57,7 +57,7 @@ body {
     --card-foreground: 220 13% 90%;
     --popover: 222 17% 12%;
     --popover-foreground: 220 13% 90%;
-    --primary: 222 83% 60%; /* #3B82F6 */
+    --primary: 221 83% 53%; /* #3B82F6 */
     --primary-foreground: 0 0% 100%;
     --secondary: 45 100% 43%; /* #D9A500 */
     --secondary-foreground: 0 0% 13%;
@@ -73,9 +73,9 @@ body {
     --warning-foreground: 0 0% 13%;
     --border: 225 10% 19%; /* #2A2D35 */
     --input: 225 10% 19%;
-    --ring: 222 83% 60%;
+    --ring: 221 83% 53%;
 
-    --chart-1: 222 83% 60%; /* Blue */
+    --chart-1: 221 83% 53%; /* Blue */
     --chart-2: 142 71% 45%; /* Green */
     --chart-3: 0 72% 51%; /* Red */
     --chart-4: 42 95% 53%; /* Yellow */
@@ -83,12 +83,12 @@ body {
 
     --sidebar-background: 225 15% 8%; /* #111318 */
     --sidebar-foreground: 220 13% 90%;
-    --sidebar-primary: 222 83% 60%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 225 10% 19%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 225 10% 15%;
-    --sidebar-ring: 222 83% 60%;
+    --sidebar-ring: 221 83% 53%;
   }
 }
 
