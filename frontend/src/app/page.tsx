@@ -6,16 +6,29 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Sidebar, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { AreaChart, Bot, Download, Calendar as CalendarIcon } from "lucide-react";
+import { AreaChart, Bot, Download, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
 import { AnalyticsView } from "@/components/dashboard/analytics-view";
+import { getUserFiles, type File as RecentFile } from "@/services/fileService";
 
 export default function Home() {
   const { isLoggedIn } = useAuthStore();
   const authModal = useAuthModal();
+  const [recentFiles, setRecentFiles] = useState<RecentFile[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setIsLoadingFiles(true);
+      getUserFiles()
+        .then(files => setRecentFiles(files))
+        .catch(console.error)
+        .finally(() => setIsLoadingFiles(false));
+    }
+  }, [isLoggedIn]);
 
   if (!isLoggedIn) {
     return (
@@ -75,7 +88,13 @@ export default function Home() {
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview" className="mt-6">
-                    <DashboardOverview />
+                  {isLoadingFiles ? (
+                      <div className="flex justify-center items-center h-64">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                  ) : (
+                      <DashboardOverview files={recentFiles} />
+                  )}
                 </TabsContent>
                 <TabsContent value="analytics" className="mt-6">
                     <AnalyticsView />

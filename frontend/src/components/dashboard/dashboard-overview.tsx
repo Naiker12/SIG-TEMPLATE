@@ -4,6 +4,8 @@ import { MetricCard } from './metric-card';
 import { SaleActivityChart } from './sale-activity-chart';
 import { RevenueChart } from './revenue-chart';
 import { SubscriptionsChart } from './subscriptions-chart';
+import { RecentFilesTable } from './recent-files-table';
+import { type File as RecentFile } from '@/services/fileService';
 
 const metricCardData = [
   {
@@ -32,32 +34,39 @@ const metricCardData = [
   },
 ];
 
-export function DashboardOverview() {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main content area */}
-        <div className="lg:col-span-2 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {metricCardData.map((metric, index) => (
-                    <MetricCard 
-                        key={index}
-                        title={metric.title}
-                        value={metric.value}
-                        change={metric.change}
-                        isPositive={metric.isPositive}
-                        icon={metric.icon}
-                        chartData={metric.chartData}
-                    />
-                ))}
-            </div>
-            <SaleActivityChart />
-        </div>
+type DashboardOverviewProps = {
+  files: RecentFile[];
+};
 
-        {/* Sidebar area */}
-        <div className="lg:col-span-1 space-y-6">
-            <RevenueChart />
-            <SubscriptionsChart />
-        </div>
+export function DashboardOverview({ files }: DashboardOverviewProps) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main content area */}
+          <div className="lg:col-span-2 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {metricCardData.map((metric, index) => (
+                      <MetricCard 
+                          key={index}
+                          title={metric.title}
+                          value={metric.value}
+                          change={metric.change}
+                          isPositive={metric.isPositive}
+                          icon={metric.icon}
+                          chartData={metric.chartData}
+                      />
+                  ))}
+              </div>
+              <SaleActivityChart />
+          </div>
+
+          {/* Sidebar area */}
+          <div className="lg:col-span-1 space-y-6">
+              <RevenueChart />
+              <SubscriptionsChart />
+          </div>
+      </div>
+      <RecentFilesTable files={files} />
     </div>
   );
 }
