@@ -1,4 +1,3 @@
-
 import {
     LayoutDashboard,
     BarChart3,
@@ -23,102 +22,100 @@ import {
     DatabaseZap,
     FileSignature,
     FilePen,
+    ChevronRight,
 } from "lucide-react";
 
-export type AdminMenuItem = {
-    icon: React.ElementType;
-    label: string;
+export type SubMenuItem = {
+    title: string;
     href: string;
+    icon?: React.ElementType;
+};
+
+export type MenuItem = {
+    title: string;
+    href: string;
+    icon: React.ElementType;
     isCollapsible?: boolean;
-    submenu?: {
-        icon: React.ElementType;
-        label: string;
-        href: string;
-    }[];
+    isActive?: boolean; // To track active state
+    items?: SubMenuItem[];
 };
 
-export type SettingsMenuItem = {
-    icon: React.ElementType;
-    label: string;
-    href: string;
-    badge?: string;
-};
 
-export const publicMenuItems: AdminMenuItem[] = [
+export const publicMenuItems: MenuItem[] = [
     {
+        title: "Gestión PDF",
+        href: "#",
         icon: FileText,
-        label: "Gestión PDF",
-        href: "#",
         isCollapsible: true,
-        submenu: [
-            { icon: Minimize, label: "Optimizar Archivos", href: "/gestion-pdf/comprimir" },
-            { icon: FilePen, label: "Convertir a Word", href: "/gestion-pdf/convertir" },
-            { icon: Merge, label: "Dividir / Unir PDF", href: "/gestion-pdf/dividir-unir" },
+        items: [
+            { title: "Optimizar Archivos", href: "/gestion-pdf/comprimir", icon: Minimize },
+            { title: "Convertir a Word", href: "/gestion-pdf/convertir", icon: FilePen },
+            { title: "Dividir / Unir PDF", href: "/gestion-pdf/dividir-unir", icon: Merge },
         ]
     },
     {
+        title: "Gestión de Word",
+        href: "#",
         icon: FileSignature,
-        label: "Gestión de Word",
-        href: "#",
         isCollapsible: true,
-        submenu: [
-            { icon: FileSymlink, label: "Convertir a PDF", href: "/gestion-word/convertir-a-pdf" },
+        items: [
+            { title: "Convertir a PDF", href: "/gestion-word/convertir-a-pdf", icon: FileSymlink },
         ]
     },
     {
+        title: "Visualización",
+        href: "#",
         icon: BarChart3,
-        label: "Visualización",
-        href: "#",
         isCollapsible: true,
-        submenu: [
-            { icon: FileSearch, label: "Visor de Archivos", href: "/visualizacion/visor-de-archivos" },
-            { icon: GitCompareArrows, label: "Vista Comparativa", href: "/visualizacion/vista-comparativa" },
+        items: [
+            { title: "Visor de Archivos", href: "/visualizacion/visor-de-archivos", icon: FileSearch },
+            { title: "Vista Comparativa", href: "/visualizacion/vista-comparativa", icon: GitCompareArrows },
         ]
     },
     {
+        title: "Subir Excel",
+        href: "#",
         icon: FileUp,
-        label: "Subir Excel",
-        href: "#",
         isCollapsible: true,
-        submenu: [
-            { icon: UploadCloud, label: "Procesar Excel", href: "/subir-excel/procesar-excel" },
-            { icon: ClipboardCheck, label: "Validación de Formato", href: "/subir-excel/validacion-de-formato" },
-            { icon: Table2, label: "Conversión a Dataset", href: "/subir-excel/conversion-a-dataset" },
-            { icon: DatabaseZap, label: "Excel a API", href: "/subir-excel/excel-a-api" },
+        items: [
+            { title: "Procesar Excel", href: "/subir-excel/procesar-excel", icon: UploadCloud },
+            { title: "Validación de Formato", href: "/subir-excel/validacion-de-formato", icon: ClipboardCheck },
+            { title: "Conversión a Dataset", href: "/subir-excel/conversion-a-dataset", icon: Table2 },
+            { title: "Excel a API", href: "/subir-excel/excel-a-api", icon: DatabaseZap },
         ]
     },
 ];
 
-export const privateMenuItems: AdminMenuItem[] = [
-    { icon: LayoutDashboard, label: "Tablero", href: "/" },
+export const privateMenuItems: MenuItem[] = [
+    { title: "Tablero", href: "/", icon: LayoutDashboard },
     {
-        icon: BrainCircuit,
-        label: "Buscar con IA",
+        title: "Buscar con IA",
         href: "/buscar-con-ia/busqueda-semantica",
+        icon: BrainCircuit,
     },
     {
-        icon: AreaChart,
-        label: "Análisis de Datos",
+        title: "Análisis de Datos",
         href: "#",
+        icon: AreaChart,
         isCollapsible: true,
-        submenu: [
-             { icon: LayoutDashboard, label: "Dashboard de Análisis", href: "/analisis-de-datos/dashboard" },
-            { icon: Replace, label: "Transformación", href: "/analisis-de-datos/transformacion" },
+        items: [
+             { title: "Dashboard de Análisis", href: "/analisis-de-datos/dashboard", icon: LayoutDashboard },
+            { title: "Transformación", href: "/analisis-de-datos/transformacion", icon: Replace },
         ]
     },
     {
-        icon: Webhook,
-        label: "Extraer de APIs",
+        title: "Extraer de APIs",
         href: "#",
+        icon: Webhook,
         isCollapsible: true,
-        submenu: [
-            { icon: Globe, label: "API Personalizada", href: "/extraer-apis/api-personalizada" },
-            { icon: CalendarClock, label: "Sincronización Programada", href: "/extraer-apis/sincronizacion-programada" },
+        items: [
+            { title: "API Personalizada", href: "/extraer-apis/api-personalizada", icon: Globe },
+            { title: "Sincronización Programada", href: "/extraer-apis/sincronizacion-programada", icon: CalendarClock },
         ]
     },
 ];
 
-export const settingsMenuItems: SettingsMenuItem[] = [
-    { icon: User, label: "Perfil", href: "/profile" },
-    { icon: Settings, label: "Configuración", href: "/settings" },
+export const settingsMenuItems: SubMenuItem[] = [
+    { title: "Perfil", href: "/profile", icon: User },
+    { title: "Configuración", href: "/settings", icon: Settings },
 ];
