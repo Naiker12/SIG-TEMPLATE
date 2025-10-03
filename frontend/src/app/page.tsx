@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
 import { AnalyticsView } from "@/components/dashboard/analytics-view";
 import { getUserFiles, type File as RecentFile } from "@/services/fileService";
+import { DashboardSidebar } from "@/components/dashboard/sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 
 export default function Home() {
   const { isLoggedIn } = useAuthStore();
@@ -29,9 +31,11 @@ export default function Home() {
   }, [isLoggedIn]);
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <DashboardSidebar />
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <TopBar />
-        <main className="flex-1 items-start gap-4 p-4 sm:px-6 sm:py-4 md:gap-8">
+        <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             {!isLoggedIn ? (
               <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
                 <div className="text-center max-w-lg">
@@ -84,6 +88,7 @@ export default function Home() {
               </div>
             )}
         </main>
+      </div>
     </div>
   );
 }

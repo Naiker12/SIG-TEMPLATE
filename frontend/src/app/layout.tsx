@@ -8,6 +8,7 @@ import { AuthModalProvider } from '@/components/auth-modal';
 import { PageLoader } from '@/components/ui/page-loader';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -39,17 +40,14 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning className={inter.variable}>
       <head />
-      <body className={cn("flex min-h-screen font-body antialiased", inter.variable)}>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            <AuthModalProvider />
-            <PageLoader />
-            <div className="flex w-full">
-                <DashboardSidebar />
-                <div className="flex-1">
-                  {children}
-                </div>
-            </div>
-            <Toaster />
+            <SidebarProvider>
+                <AuthModalProvider />
+                <PageLoader />
+                {children}
+                <Toaster />
+            </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>
