@@ -1,276 +1,213 @@
+"use client"
 
-"use client";
-
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
+import * as React from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
-  LogOut,
-  Moon,
-  Sun,
   ChevronDown,
-} from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarSeparator,
-  SidebarTrigger,
-  useSidebar,
-  Sheet,
-  SheetContent,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-} from "@/components/ui/sidebar";
-import { Switch } from "@/components/ui/switch";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { useAuthStore } from "@/hooks/useAuthStore";
-import { cn } from "@/lib/utils";
-import { platformMenu, toolsMenu, settingsMenuItems, type MenuItem, type MenuGroup } from "./sidebar-data";
+  ChevronRight,
+  PanelLeft,
+} from "lucide-react"
 
-const NavItem = ({ item, setOpenMobile }: { item: MenuItem; setOpenMobile: (open: boolean) => void }) => {
-  const pathname = usePathname();
-  const { state } = useSidebar();
-  const isChildActive = item.href === pathname || (item.items?.some(sub => pathname === sub.href) ?? false);
-  const [isOpen, setIsOpen] = useState(isChildActive);
+import { useAuthStore } from "@/hooks/useAuthStore"
+import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button"
+import { Sidebar } from "@/components/ui/sidebar"
+import { menuItems, settingsMenuItems, type MenuItem } from "./sidebar-data"
 
-  useEffect(() => {
-    if (state === 'collapsed') {
-      setIsOpen(false);
-    } else if (isChildActive) {
-      setIsOpen(true);
-    }
-  }, [state, isChildActive]);
+function NavItem({
+  item,
+  isCollapsed,
+}: {
+  item: MenuItem
+  isCollapsed: boolean
+}) {
+  const pathname = usePathname()
+  const isChildActive =
+    item.href === pathname || (item.items?.some((sub) => pathname === sub.href) ?? false)
 
   if (item.isCollapsible && item.items) {
     return (
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton
-            tooltip={item.title}
-            isActive={isChildActive && !isOpen}
-            className="w-full"
-          >
-            <item.icon />
-            <span>{item.title}</span>
-            <ChevronDown
-              className={cn(
-                "ml-auto size-4 transition-transform",
-                "group-data-[state=collapsed]:hidden",
-                isOpen && "rotate-180"
-              )}
-            />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            {item.items.map((subItem) => (
-              <SidebarMenuSubItem key={subItem.href}>
-                <SidebarMenuSubButton
-                  asChild
-                  size="sm"
-                  isActive={pathname === subItem.href}
-                  onClick={() => setOpenMobile(false)}
-                >
-                  <Link href={subItem.href}>
-                    {subItem.icon && <subItem.icon />}
-                    <span>{subItem.title}</span>
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </Collapsible>
-    );
+      <CollapsibleNavItem
+        item={item}
+        isCollapsed={isCollapsed}
+        isChildActive={isChildActive}
+      />
+    )
   }
 
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        asChild
-        isActive={pathname === item.href}
-        tooltip={item.title}
-        onClick={() => setOpenMobile(false)}
-      >
-        <Link href={item.href}>
-          <item.icon />
-          <span>{item.title}</span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
-};
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            asChild
+            variant={isChildActive ? "default" : "ghost"}
+            className={cn(
+              "h-10 w-full justify-start",
+              isCollapsed && "h-10 w-10 justify-center p-2"
+            )}
+          >
+            <Link href={item.href}>
+              <item.icon className={cn("size-5", !isCollapsed && "mr-4")} />
+              <span className={cn(isCollapsed && "sr-only")}>{item.title}</span>
+            </Link>
+          </Button>
+        </TooltipTrigger>
+        {isCollapsed && (
+          <TooltipContent side="right">{item.title}</TooltipContent>
+        )}
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
 
-const UserMenu = ({ setOpenMobile }: { setOpenMobile: (open: boolean) => void }) => {
-  const { user, clearSession } = useAuthStore();
-  const pathname = usePathname();
+function CollapsibleNavItem({
+  item,
+  isCollapsed,
+  isChildActive,
+}: {
+  item: MenuItem
+  isCollapsed: boolean
+  isChildActive: boolean
+}) {
+  const pathname = usePathname()
+  const [isOpen, setIsOpen] = React.useState(isChildActive)
 
-  if (!user) return null;
+  React.useEffect(() => {
+    if (isCollapsed) {
+      setIsOpen(false)
+    } else if (isChildActive) {
+      setIsOpen(true)
+    }
+  }, [isCollapsed, isChildActive])
+
+  if (isCollapsed) {
+    return (
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              asChild
+              variant={isChildActive ? "default" : "ghost"}
+              className="h-10 w-10 justify-center p-2"
+            >
+              <Link href={item.items?.[0]?.href ?? item.href}>
+                <item.icon className="size-5" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">{item.title}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
 
   return (
-     <SidebarGroup>
-        <SidebarGroupLabel asChild>
-          <div className="flex items-center justify-between">
-            <span>{user.name}</span>
-          </div>
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {settingsMenuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                 <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.title} onClick={() => setOpenMobile(false)}>
-                    <Link href={item.href}>
-                      {item.icon && <item.icon/>}
-                      <span>{item.title}</span>
-                    </Link>
-                 </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-             <SidebarMenuItem>
-                <SidebarMenuButton onClick={clearSession} tooltip="Cerrar Sesión">
-                    <LogOut />
-                    <span>Cerrar Sesión</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+    <div>
+      <Button
+        variant={isChildActive && !isOpen ? "default" : "ghost"}
+        className="h-10 w-full justify-start"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <item.icon className="mr-4 size-5" />
+        {item.title}
+        {isOpen ? (
+          <ChevronDown className="ml-auto size-4" />
+        ) : (
+          <ChevronRight className="ml-auto size-4" />
+        )}
+      </Button>
+      <div
+        className={cn(
+          "my-1 ml-4 space-y-1 border-l-2 border-l-border pl-5",
+          !isOpen && "hidden"
+        )}
+      >
+        {item.items?.map((subItem) => (
+          <Button
+            key={subItem.title}
+            asChild
+            variant={pathname === subItem.href ? "secondary" : "ghost"}
+            className="h-9 w-full justify-start"
+          >
+            <Link href={subItem.href}>{subItem.title}</Link>
+          </Button>
+        ))}
+      </div>
+    </div>
   )
 }
 
 export function DashboardSidebar() {
-  const { theme, setTheme } = useTheme();
-  const { openMobile, setOpenMobile } = useSidebar();
-  const { isLoggedIn } = useAuthStore();
-  const [isClient, setIsClient] = useState(false);
+  const { isLoggedIn } = useAuthStore()
+  const [isCollapsed, setIsCollapsed] = React.useState(false)
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const isDark = theme === "dark";
-  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
-  
-  const menuGroups: MenuGroup[] = isLoggedIn
-    ? [platformMenu, toolsMenu]
-    : [toolsMenu];
-
-  const SidebarItems = () => (
-    <div className="flex-1 overflow-y-auto">
-      {menuGroups.map((group) => (
-        <SidebarGroup key={group.label}>
-          <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {group.items.map((item) => (
-                <NavItem key={item.title} item={item} setOpenMobile={setOpenMobile} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ))}
-    </div>
-  );
-
-  const SidebarBottomContent = () => (
-    <div className="flex flex-col gap-4">
-      {isLoggedIn && isClient && (
-        <>
-          <SidebarSeparator />
-          <UserMenu setOpenMobile={setOpenMobile} />
-        </>
-      )}
-      {isClient && (
-        <div className="flex items-center justify-center group-data-[state=collapsed]:justify-start">
-          <div className="hidden items-center gap-2 group-data-[state=expanded]:flex">
-            <Sun className="size-5" />
-            <Switch
-              checked={isDark}
-              onCheckedChange={toggleTheme}
-              aria-label="Toggle theme"
-            />
-            <Moon className="size-5" />
-          </div>
-          <div className="hidden group-data-[state=collapsed]:flex">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={toggleTheme}
-                  tooltip={isDark ? "Modo Claro" : "Modo Oscuro"}
-                  variant="ghost"
-                  className="size-10 p-2"
-                >
-                  {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const MobileSidebarContent = () => (
-     <div className="flex h-full flex-col">
-        <SidebarHeader className="border-b p-4">
-            <div className="flex items-center gap-2">
-                <Image src="/png/logo-256.png" alt="SIG Logo" width={24} height={24} />
-                <span className="text-xl font-semibold">SIG</span>
-            </div>
-        </SidebarHeader>
-        <SidebarContent className="flex-1 overflow-y-auto p-4 flex flex-col justify-between">
-            {isClient && <SidebarItems />}
-            <div className="mt-auto">
-              <SidebarBottomContent />
-            </div>
-        </SidebarContent>
-    </div>
-  );
+  const menuToRender = isLoggedIn ? menuItems : []
 
   return (
-    <>
-      {/* Mobile Sidebar */}
-      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-        <SheetContent side="left" className="w-[var(--sidebar-width-mobile)] p-0">
-          <MobileSidebarContent />
-        </SheetContent>
-      </Sheet>
+    <div
+      className={cn(
+        "sticky top-0 h-svh border-r",
+        isCollapsed ? "w-16" : "w-64"
+      )}
+    >
+      <Sidebar
+        collapsed={isCollapsed}
+        className="flex h-full flex-col justify-between p-2"
+      >
+        <div className="flex flex-col gap-2">
+          {/* Top section */}
+          <div
+            className={cn(
+              "flex h-12 items-center",
+              isCollapsed ? "justify-center" : "justify-start px-2"
+            )}
+          >
+            <Image
+              src="/png/logo-256.png"
+              alt="SIG Logo"
+              width={isCollapsed ? 32 : 24}
+              height={isCollapsed ? 32 : 24}
+            />
+          </div>
 
-      {/* Desktop Sidebar */}
-      <Sidebar collapsible="icon">
-        <SidebarHeader className="p-4 flex justify-center items-center group-data-[state=collapsed]:p-2 group-data-[state=collapsed]:bg-primary/10 rounded-lg">
-            <div className="flex items-center justify-between group-data-[state=collapsed]:justify-center w-full">
-                <div className="flex items-center gap-2">
-                    <Image src="/png/logo-256.png" alt="SIG Logo" width={24} height={24} />
-                    <span className="text-xl font-semibold group-data-[state=collapsed]:hidden">SIG</span>
-                </div>
-                <SidebarTrigger className="hidden group-data-[state=expanded]:block" />
-            </div>
-        </SidebarHeader>
+          {/* Main navigation */}
+          <nav className="flex flex-col gap-1">
+            {menuToRender.map((item) => (
+              <NavItem key={item.title} item={item} isCollapsed={isCollapsed} />
+            ))}
+          </nav>
+        </div>
 
-        <SidebarContent className="flex-1 px-4 flex flex-col justify-between">
-            {isClient && <SidebarItems />}
-            <div className="mt-auto">
-              {isClient && <SidebarBottomContent />}
-            </div>
-        </SidebarContent>
-
+        {/* Bottom section */}
+        <div className="flex flex-col gap-1">
+          {isLoggedIn &&
+            settingsMenuItems.map((item) => (
+              <NavItem key={item.title} item={item} isCollapsed={isCollapsed} />
+            ))}
+          <Button
+            variant="ghost"
+            className={cn(
+              "h-10 w-full justify-start",
+              isCollapsed && "h-10 w-10 justify-center p-2"
+            )}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            <PanelLeft className="size-5" />
+            <span className={cn("ml-4", isCollapsed && "sr-only")}>
+              Colapsar
+            </span>
+          </Button>
+        </div>
       </Sidebar>
-    </>
-  );
+    </div>
+  )
 }

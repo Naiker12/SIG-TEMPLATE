@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "next-themes";
 import { AuthModalProvider } from '@/components/auth-modal';
 import { PageLoader } from '@/components/ui/page-loader';
+import { cn } from '@/lib/utils';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -37,8 +38,8 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning className={inter.variable}>
       <head />
-      <body className="font-body antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <body className={cn("flex min-h-screen font-body antialiased", inter.variable)}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <AuthModalProvider />
           <PageLoader />
           {children}
