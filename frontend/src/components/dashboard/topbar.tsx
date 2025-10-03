@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Bell, Menu, LogIn } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import Link from "next/link";
+import { useSidebarStore } from "@/hooks/use-sidebar-store";
 
 export function TopBar() {
   const [date, setDate] = useState("");
-  const { toggleSidebar, state } = useSidebar();
+  const { toggle, isOpen } = useSidebarStore();
   const [isClient, setIsClient] = useState(false);
   const authModal = useAuthModal();
   const { isLoggedIn, user } = useAuthStore();
@@ -31,12 +31,12 @@ export function TopBar() {
   return (
     <header className="flex h-20 items-center justify-between border-b bg-card px-4 sm:px-6 lg:px-8 sticky top-0 z-30">
       <div className="flex flex-1 items-center gap-4 min-w-0">
-        <Button variant="ghost" size="icon" className="md:hidden flex-shrink-0" onClick={toggleSidebar}>
+        <Button variant="ghost" size="icon" className="md:hidden flex-shrink-0" onClick={toggle}>
             <Menu className="h-6 w-6" />
             <span className="sr-only">Toggle Sidebar</span>
         </Button>
-        {isClient && state === 'collapsed' && (
-          <Button variant="ghost" size="icon" className="hidden md:flex flex-shrink-0" onClick={toggleSidebar}>
+        {isClient && !isOpen && (
+          <Button variant="ghost" size="icon" className="hidden md:flex flex-shrink-0" onClick={toggle}>
             <Menu className="h-6 w-6" />
             <span className="sr-only">Toggle Sidebar</span>
           </Button>
