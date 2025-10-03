@@ -1,175 +1,30 @@
-
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+import Link from 'next/link';
 import Image from "next/image"
-import { usePathname } from "next/navigation"
 
 import {
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-  Settings,
-  User,
-} from "lucide-react"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { menuItems, type MenuItem } from "./sidebar-data"
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  NavItem,
+  CollapsibleNavItem,
+} from "@/components/ui/sidebar"
 import { useSidebarStore } from "@/hooks/use-sidebar-store"
-import { useAuthStore } from "@/hooks/useAuthStore"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { useTheme } from "next-themes"
+import { menuItems } from "./sidebar-data";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { Button } from "../ui/button";
+import { ChevronsLeft, Settings, User } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Switch } from "../ui/switch";
+import { Label } from "../ui/label";
 
-function NavLink({
-  link,
-  isPending,
-}: {
-  link: MenuItem
-  isPending: boolean
-}) {
-  const pathname = usePathname()
-  const { isOpen } = useSidebarStore()
-
-  const isChildActive =
-    link.href === pathname ||
-    (link.items?.some((sub) => pathname === sub.href) ?? false)
-
-  if (link.isCollapsible && link.items) {
-    return (
-      <CollapsibleNavItem
-        link={link}
-        isChildActive={isChildActive}
-        isPending={isPending}
-      />
-    )
-  }
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            asChild
-            variant={link.href === pathname ? "secondary" : "ghost"}
-            className={cn(
-              "h-12 justify-start",
-              isOpen ? "w-full" : "size-12",
-              link.href === pathname &&
-                "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
-            )}
-          >
-            <Link href={link.href}>
-              <link.icon
-                className={cn(
-                  "size-6 transition-all",
-                  isOpen ? "mr-4" : "mx-auto"
-                )}
-              />
-              <span className={cn(isOpen ? "inline" : "hidden")}>
-                {link.title}
-              </span>
-            </Link>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent
-          side="right"
-          className={cn(isOpen ? "hidden" : "flex")}
-        >
-          {link.title}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )
-}
-
-function CollapsibleNavItem({
-  link,
-  isChildActive,
-  isPending,
-}: {
-  link: MenuItem
-  isChildActive: boolean
-  isPending: boolean
-}) {
-  const { isOpen: isSidebarOpen } = useSidebarStore()
-  const pathname = usePathname()
-  const [isOpen, setIsOpen] = React.useState(isChildActive)
-
-  if (!isSidebarOpen) {
-    return (
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              asChild
-              variant={isChildActive ? "secondary" : "ghost"}
-              className={cn(
-                "size-12 justify-start",
-                isChildActive &&
-                  "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
-              )}
-            >
-              <Link href={link.href}>
-                <link.icon className="size-6 transition-all" />
-              </Link>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">{link.title}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    )
-  }
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-      <CollapsibleTrigger asChild>
-        <Button
-          variant={isChildActive && !isOpen ? "secondary" : "ghost"}
-          className="h-12 w-full justify-start"
-        >
-          <link.icon className="mr-4 size-6" />
-          {link.title}
-          <ChevronRight
-            className={cn(
-              "ml-auto size-4 transition-all",
-              isOpen && "rotate-90"
-            )}
-          />
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="space-y-2 py-2 pl-12 pr-2">
-        {link.items?.map((item) => (
-          <Button
-            key={item.href}
-            asChild
-            variant={pathname === item.href ? "secondary" : "ghost"}
-            className="h-10 w-full justify-start"
-          >
-            <Link href={item.href}>{item.title}</Link>
-          </Button>
-        ))}
-      </CollapsibleContent>
-    </Collapsible>
-  )
-}
-
-function UserMenu() {
+function NavUser() {
   const { user } = useAuthStore()
-  const { isOpen } = useSidebarStore()
+  const { isCollapsed } = useSidebarStore()
+
   if (!user) return null
 
   return (
@@ -183,115 +38,103 @@ function UserMenu() {
             height={40}
             className="rounded-full"
           />
-          <div
-            className={cn(
-              "flex flex-col transition-all",
-              isOpen ? "w-auto opacity-100" : "w-0 opacity-0"
-            )}
-          >
-            <p className="line-clamp-1 text-sm font-semibold">{user.name}</p>
-            <p className="line-clamp-1 text-xs text-muted-foreground">
-              {user.email}
-            </p>
-          </div>
+          {!isCollapsed && (
+            <div className="flex flex-col">
+              <p className="line-clamp-1 text-sm font-semibold">{user.name}</p>
+              <p className="line-clamp-1 text-xs text-muted-foreground">
+                {user.email}
+              </p>
+            </div>
+          )}
         </div>
       </Link>
-      <Button
-        variant="ghost"
-        className={cn(
-          "h-12 transition-all",
-          isOpen ? "w-12 opacity-100" : "w-0 opacity-0"
-        )}
-        asChild
-      >
-        <Link href="/settings">
-          <MoreHorizontal className="size-6" />
-        </Link>
-      </Button>
     </div>
   )
 }
 
-function ThemeToggle() {
-    const { theme, setTheme } = useTheme()
-    const { isOpen } = useSidebarStore()
-    const isDark = theme === "dark"
-    
-    const toggleTheme = () => {
-        setTheme(isDark ? "light" : "dark")
-    }
+function SidebarToggle() {
+  const { isOpen, setOpen } = useSidebarStore();
+  const isCollapsed = !isOpen;
 
-    if (!isOpen) return null
-
-    return (
-        <div className="p-4 flex items-center justify-between">
-            <Label htmlFor="theme-switch">Modo Oscuro</Label>
-            <Switch id="theme-switch" checked={isDark} onCheckedChange={toggleTheme} />
-        </div>
-    )
+  return (
+    <Button
+      variant="ghost"
+      className={cn("h-12 w-full justify-start", isCollapsed && "justify-center size-12")}
+      onClick={() => setOpen(!isOpen)}
+    >
+      <ChevronsLeft
+        className={cn(
+          "size-6 transition-all",
+          !isCollapsed ? "mr-4" : ""
+        )}
+      />
+      <span className={cn(!isCollapsed ? "inline" : "hidden")}>Colapsar</span>
+    </Button>
+  );
 }
 
 export function DashboardSidebar() {
-  const { isOpen, setOpen } = useSidebarStore()
   const { isLoggedIn } = useAuthStore()
-  const [isPending, startTransition] = React.useTransition()
-  const pathname = usePathname()
+  const { isCollapsed } = useSidebarStore();
 
-  const menuToRender = isLoggedIn ? menuItems : []
+  const renderNavItems = (items: typeof menuItems) => {
+    return items.map((item) => {
+      if (item.isCollapsible && item.items) {
+        return (
+          <CollapsibleNavItem
+            key={item.href}
+            title={item.title}
+            icon={React.createElement(item.icon, { className: "size-6" })}
+            aria-label={item.title}
+            items={item.items.map(subItem => ({
+              href: subItem.href,
+              "aria-label": subItem.title,
+            }))}
+          >
+            <div className="flex items-center gap-x-4">
+              <item.icon className="size-6" />
+              <span>{item.title}</span>
+            </div>
+          </CollapsibleNavItem>
+        )
+      } else {
+        return (
+          <NavItem key={item.href} href={item.href} aria-label={item.title}>
+            <item.icon className="size-6" />
+            {!isCollapsed && <span className="font-medium">{item.title}</span>}
+          </NavItem>
+        )
+      }
+    });
+  };
+
+  if (!isLoggedIn) return null;
 
   return (
-    <aside
-      className={cn(
-        "group fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-background transition-all",
-        isOpen ? "w-72" : "w-20"
-      )}
-    >
-      <div className="flex h-20 items-center justify-between p-4">
-        <Link href="/" className="flex items-center gap-4">
-          <Image
-            src="/png/logo-256.png"
-            alt="SIG Logo"
-            width={40}
-            height={40}
-            className={cn(
-              "transition-all",
-              !isOpen && "group-hover:rotate-[20deg]"
-            )}
-          />
-          <h1
-            className={cn(
-              "text-xl font-bold transition-all",
-              isOpen ? "inline" : "hidden"
-            )}
-          >
-            SIG IA
-          </h1>
-        </Link>
-      </div>
+    <Sidebar collapsible="button">
+        <SidebarHeader>
+            <Link href="/" className="flex items-center gap-4 px-1.5">
+              <Image
+                src="/png/logo-256.png"
+                alt="SIG Logo"
+                width={40}
+                height={40}
+                className="transition-all"
+              />
+              {!isCollapsed && <h1 className="text-xl font-bold">SIG IA</h1>}
+            </Link>
+        </SidebarHeader>
 
-      <nav className="flex flex-1 flex-col gap-y-2 px-4">
-        {menuToRender.map((link) => (
-          <NavLink key={link.href} link={link} isPending={isPending} />
-        ))}
-      </nav>
+        <SidebarContent className="flex-1 overflow-y-auto">
+            <NavMain>
+                {renderNavItems(menuItems)}
+            </NavMain>
+        </SidebarContent>
 
-      <div className="mt-auto flex flex-col gap-y-2 p-4">
-        {isLoggedIn && <UserMenu />}
-        <ThemeToggle />
-        <Button
-          variant="ghost"
-          className={cn("h-12 w-full justify-start")}
-          onClick={() => setOpen(!isOpen)}
-        >
-          <ChevronLeft
-            className={cn(
-              "size-6 transition-all",
-              isOpen ? "mr-4" : "mx-auto rotate-180"
-            )}
-          />
-          <span className={cn(isOpen ? "inline" : "hidden")}>Colapsar</span>
-        </Button>
-      </div>
-    </aside>
+        <SidebarFooter>
+            <NavUser />
+            <SidebarToggle />
+        </SidebarFooter>
+    </Sidebar>
   )
 }

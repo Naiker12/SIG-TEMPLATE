@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthModalProvider } from '@/components/auth-modal';
 import { PageLoader } from '@/components/ui/page-loader';
 import { cn } from '@/lib/utils';
+import { DashboardSidebar } from '@/components/dashboard/sidebar';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,10 +41,15 @@ export default function RootLayout({
       <head />
       <body className={cn("flex min-h-screen font-body antialiased", inter.variable)}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <AuthModalProvider />
-          <PageLoader />
-          {children}
-          <Toaster />
+            <AuthModalProvider />
+            <PageLoader />
+            <div className="flex w-full">
+                <DashboardSidebar />
+                <div className="flex-1">
+                  {children}
+                </div>
+            </div>
+            <Toaster />
         </ThemeProvider>
       </body>
     </html>

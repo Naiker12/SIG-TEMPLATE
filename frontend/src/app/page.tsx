@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Bot, Download, Calendar as CalendarIcon, Loader2 } from "lucide-react";
@@ -30,11 +29,9 @@ export default function Home() {
   }, [isLoggedIn]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <DashboardSidebar />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+    <div className="flex flex-col w-full">
         <TopBar />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <main className="flex-1 items-start gap-4 p-4 sm:px-6 sm:py-4 md:gap-8">
             {!isLoggedIn ? (
               <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
                 <div className="text-center max-w-lg">
@@ -87,7 +84,6 @@ export default function Home() {
               </div>
             )}
         </main>
-      </div>
     </div>
   );
 }

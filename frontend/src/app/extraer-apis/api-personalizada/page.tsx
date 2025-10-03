@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -159,97 +158,94 @@ export default function CustomApiPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-        <DashboardSidebar />
-        <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-            <TopBar />
-            <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-              <div className="max-w-7xl mx-auto w-full">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                  <header>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">API Personalizada</h1>
-                    <p className="text-muted-foreground mt-2 max-w-3xl">
-                      Conéctate a cualquier punto final de API para extraer y visualizar datos en tiempo real.
-                    </p>
-                  </header>
-                  <div className="flex-shrink-0">
-                      <RequestModal />
-                  </div>
-                </div>
-
-                {/* Response Viewer */}
-                <Card className="shadow-lg min-h-[600px] border-2 border-accent">
-                  <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                      <div>
-                          <CardTitle>Resultados de la Petición</CardTitle>
-                          <CardDescription>Visualiza los datos extraídos de la API.</CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                          {response && <DownloadButton />}
-                      </div>
-                  </CardHeader>
-                  <CardContent>
-                    {!response && !isLoading && (
-                       <div className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
-                          <div className="text-center text-muted-foreground p-4">
-                              <p className="text-lg font-semibold mb-2">Esperando petición</p>
-                              <p className="max-w-xs mx-auto">Usa el botón "Configurar Petición" para empezar a extraer datos de una API.</p>
-                          </div>
-                       </div>
-                    )}
-                    {response && (
-                      <Tabs defaultValue="cards" value={activeTab} onValueChange={setActiveTab} className="mt-4">
-                        <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid md:grid-cols-3">
-                          <TabsTrigger value="cards"><View className="mr-2"/>Tarjetas</TabsTrigger>
-                          <TabsTrigger value="table"><TableIcon className="mr-2"/>Tabla</TabsTrigger>
-                          <TabsTrigger value="json"><Code className="mr-2"/>JSON</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="cards" className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-x-auto">
-                            {response.data.map((item: any) => (
-                              <Card key={item.id} className="hover:border-primary/50 transition-colors">
-                                <CardHeader>
-                                  <CardTitle className="text-lg">{item.product}</CardTitle>
-                                  <CardDescription>{item.category}</CardDescription>
-                                </CardHeader>
-                                <CardContent className="grid grid-cols-2 gap-2 text-sm">
-                                    <p className="text-muted-foreground">Stock:</p><p className="font-medium">{item.stock}</p>
-                                    <p className="text-muted-foreground">Precio:</p><p className="font-medium">${item.price}</p>
-                                </CardContent>
-                              </Card>
-                            ))}
-                        </TabsContent>
-                        <TabsContent value="table" className="mt-4">
-                          <div className="border rounded-lg overflow-x-auto">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  {tableHeaders.map(header => <TableHead key={header}>{header.charAt(0).toUpperCase() + header.slice(1)}</TableHead>)}
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                 {response.data.map((row: any) => (
-                                    <TableRow key={row.id}>
-                                      {tableHeaders.map(header => <TableCell key={`${row.id}-${header}`}>{row[header]}</TableCell>)}
-                                    </TableRow>
-                                 ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </TabsContent>
-                        <TabsContent value="json" className="mt-4">
-                          <Textarea 
-                              readOnly
-                              value={JSON.stringify(response, null, 2)}
-                              className="min-h-[400px] bg-muted/50 font-mono text-xs"
-                          />
-                        </TabsContent>
-                      </Tabs>
-                    )}
-                  </CardContent>
-                </Card>
+    <div className="flex flex-col w-full">
+        <TopBar />
+        <main className="flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+          <div className="max-w-7xl mx-auto w-full">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <header>
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">API Personalizada</h1>
+                <p className="text-muted-foreground mt-2 max-w-3xl">
+                  Conéctate a cualquier punto final de API para extraer y visualizar datos en tiempo real.
+                </p>
+              </header>
+              <div className="flex-shrink-0">
+                  <RequestModal />
               </div>
-            </main>
-        </div>
+            </div>
+
+            {/* Response Viewer */}
+            <Card className="shadow-lg min-h-[600px] border-2 border-accent">
+              <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                      <CardTitle>Resultados de la Petición</CardTitle>
+                      <CardDescription>Visualiza los datos extraídos de la API.</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                      {response && <DownloadButton />}
+                  </div>
+              </CardHeader>
+              <CardContent>
+                {!response && !isLoading && (
+                   <div className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
+                      <div className="text-center text-muted-foreground p-4">
+                          <p className="text-lg font-semibold mb-2">Esperando petición</p>
+                          <p className="max-w-xs mx-auto">Usa el botón "Configurar Petición" para empezar a extraer datos de una API.</p>
+                      </div>
+                   </div>
+                )}
+                {response && (
+                  <Tabs defaultValue="cards" value={activeTab} onValueChange={setActiveTab} className="mt-4">
+                    <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid md:grid-cols-3">
+                      <TabsTrigger value="cards"><View className="mr-2"/>Tarjetas</TabsTrigger>
+                      <TabsTrigger value="table"><TableIcon className="mr-2"/>Tabla</TabsTrigger>
+                      <TabsTrigger value="json"><Code className="mr-2"/>JSON</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="cards" className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-x-auto">
+                        {response.data.map((item: any) => (
+                          <Card key={item.id} className="hover:border-primary/50 transition-colors">
+                            <CardHeader>
+                              <CardTitle className="text-lg">{item.product}</CardTitle>
+                              <CardDescription>{item.category}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-2 gap-2 text-sm">
+                                <p className="text-muted-foreground">Stock:</p><p className="font-medium">{item.stock}</p>
+                                <p className="text-muted-foreground">Precio:</p><p className="font-medium">${item.price}</p>
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </TabsContent>
+                    <TabsContent value="table" className="mt-4">
+                      <div className="border rounded-lg overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              {tableHeaders.map(header => <TableHead key={header}>{header.charAt(0).toUpperCase() + header.slice(1)}</TableHead>)}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                             {response.data.map((row: any) => (
+                                <TableRow key={row.id}>
+                                  {tableHeaders.map(header => <TableCell key={`${row.id}-${header}`}>{row[header]}</TableCell>)}
+                                </TableRow>
+                             ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="json" className="mt-4">
+                      <Textarea 
+                          readOnly
+                          value={JSON.stringify(response, null, 2)}
+                          className="min-h-[400px] bg-muted/50 font-mono text-xs"
+                      />
+                    </TabsContent>
+                  </Tabs>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </main>
     </div>
   );
 }
