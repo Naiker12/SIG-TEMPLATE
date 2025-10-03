@@ -1,22 +1,40 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Bell, Menu, LogIn } from "lucide-react";
+import { Search, Bell, LogIn } from "lucide-react";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import Link from "next/link";
-import { useSidebarStore } from "@/hooks/use-sidebar-store";
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
+function DateDisplay() {
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    // Esto se ejecuta solo en el cliente para evitar errores de hidratación
+    setCurrentDate(format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es }));
+  }, []);
+
+  if (!currentDate) {
+    // Placeholder o estado de carga mientras se monta el cliente
+    return <div className="h-9 w-48 rounded-md bg-muted animate-pulse" />;
+  }
+  
+  return (
+    <Button variant="outline" className="hidden sm:flex">
+      {currentDate}
+    </Button>
+  );
+}
 
 export function TopBar() {
   const [isClient, setIsClient] = useState(false);
   const authModal = useAuthModal();
   const { isLoggedIn, user } = useAuthStore();
-  const { toggle } = useSidebarStore();
   
   useEffect(() => {
     setIsClient(true);
@@ -24,20 +42,19 @@ export function TopBar() {
   
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-      <Button onClick={toggle} variant="ghost" size="icon" className="sm:hidden">
-        <Menu />
-        <span className="sr-only">Toggle Sidebar</span>
-      </Button>
-       <div className="relative ml-auto flex-1 md:grow-0">
+       <div className="relative flex-1 md:grow-0">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input placeholder="Buscar..." className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]" />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-auto">
         {isClient && isLoggedIn && (
+          <>
+            <DateDisplay />
             <Button variant="ghost" size="icon">
                 <Bell className="h-5 w-5" />
                 <span className="sr-only">Notificaciones</span>
             </Button>
+          </>
         )}
 
         {isClient && isLoggedIn && user ? (
