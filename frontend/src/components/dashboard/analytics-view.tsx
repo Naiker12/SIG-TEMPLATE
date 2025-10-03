@@ -1,10 +1,10 @@
 
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend, Cell } from 'recharts';
-import { ArrowDown, ArrowUp, Info, MoreHorizontal } from 'lucide-react';
+import { ArrowDown, ArrowUp, Info, MoreHorizontal, TrendingUp } from 'lucide-react';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -35,14 +35,20 @@ const trafficSourceData = [
 const customersData = [
     { month: 'Jan', customers: 4000 },
     { month: 'Feb', customers: 3000 },
-    { month: 'Mar', customers: 5000 },
-    { month: 'Apr', customers: 4500 },
-    { month: 'May', customers: 6000 },
-    { month: 'Jun', customers: 5500 },
+    { month: 'Mar', customers: 2000 },
+    { month: 'Apr', customers: 2780 },
+    { month: 'May', customers: 1890 },
+    { month: 'Jun', customers: 2390 },
+    { month: 'Jul', customers: 3490 },
 ]
 
 const buyersData = [{ name: 'Buyers', value: 200, fill: 'hsl(var(--chart-2))' }];
 const totalBuyers = 300;
+
+const buyersProfileData = [
+    { name: 'buyers', value: 200, fill: 'hsl(var(--chart-2))' },
+    { name: 'remaining', value: 100, fill: 'hsl(var(--muted))' }
+]
 
 export function AnalyticsView() {
   return (
@@ -94,37 +100,6 @@ export function AnalyticsView() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-             <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Traffic Source</CardTitle>
-                <CardDescription>Gain insights into where your visitors are coming from.</CardDescription>
-              </div>
-              <Tabs defaultValue="month" className="w-auto">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="month">Month</TabsTrigger>
-                  <TabsTrigger value="week">Week</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          </CardHeader>
-          <CardContent className="h-64">
-             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={trafficSourceData} layout="vertical" margin={{ left: 10 }}>
-                    <XAxis type="number" hide />
-                    <YAxis dataKey="source" type="category" tickLine={false} axisLine={false} width={80} fontSize={14} />
-                    <Tooltip cursor={{fill: 'hsla(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
-                    <Bar dataKey="value" barSize={30} radius={[0, 4, 4, 0]}>
-                        {trafficSourceData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                    </Bar>
-                </BarChart>
-             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
@@ -187,78 +162,111 @@ export function AnalyticsView() {
             </div>
           </CardContent>
         </Card>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle>Customers</CardTitle>
-                        <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
-                    </div>
-                    <CardDescription>Customer performance and growth trends.</CardDescription>
-                </CardHeader>
-                <CardContent className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={customersData}>
-                            <defs>
-                                <linearGradient id="fillCustomers" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <XAxis dataKey="month" hide/>
-                            <YAxis hide domain={['dataMin - 1000', 'dataMax + 500']}/>
-                            <Tooltip contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
-                            <Line type="monotone" dataKey="customers" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </CardContent>
-            </Card>
-            <Card>
-                 <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle>Buyers Profile</CardTitle>
-                        <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
-                    </div>
-                    <CardDescription>Discover key insights into the buyer's preferences</CardDescription>
-                </CardHeader>
-                <CardContent className="h-48 flex items-center justify-center">
-                    <div className="relative h-40 w-40">
-                         <ResponsiveContainer width="100%" height="100%">
-                            <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                                <Pie 
-                                    data={buyersData} 
-                                    dataKey="value"
-                                    startAngle={90} 
-                                    endAngle={-270} 
-                                    innerRadius="75%" 
-                                    outerRadius="100%"
-                                    cy="50%"
-                                    strokeWidth={0}
-                                />
-                                <Pie 
-                                    data={[{value: totalBuyers}]}
-                                    dataKey="value"
-                                    cy="50%"
-                                    stroke="hsl(var(--muted))"
-                                    fill="hsl(var(--muted))"
-                                    innerRadius="75%" 
-                                    outerRadius="100%"
-                                    startAngle={90}
-                                    endAngle={-270}
-                                    isAnimationActive={false}
-                                />
-                            </RechartsPieChart>
-                        </ResponsiveContainer>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                           <p className="text-3xl font-bold">200</p>
-                           <p className="text-sm text-muted-foreground">Buyers</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
       </div>
+
+       {/* Fila Inferior */}
+        <div className="lg:col-span-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                        <div>
+                            <CardTitle>Traffic Source</CardTitle>
+                            <CardDescription>Gain insights into where your visitors are coming from.</CardDescription>
+                        </div>
+                        <Tabs defaultValue="month" className="w-auto">
+                            <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="month">Month</TabsTrigger>
+                            <TabsTrigger value="week">Week</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={trafficSourceData} layout="vertical" margin={{ left: 10 }}>
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="source" type="category" tickLine={false} axisLine={false} width={80} fontSize={14} />
+                                <Tooltip cursor={{fill: 'hsla(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
+                                <Bar dataKey="value" barSize={30} radius={[0, 4, 4, 0]}>
+                                    {trafficSourceData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <CardTitle>Customers</CardTitle>
+                             <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
+                        </div>
+                        <CardDescription>Customer performance and growth trends.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-48">
+                         <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={customersData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="fillCustomers" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <XAxis dataKey="month" hide/>
+                                <YAxis hide domain={['dataMin - 1000', 'dataMax + 500']}/>
+                                <Tooltip contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
+                                <Area type="monotone" dataKey="customers" stroke="hsl(var(--chart-1))" fill="url(#fillCustomers)" strokeWidth={2} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                     <CardFooter className="flex justify-center text-sm text-muted-foreground">
+                        <TrendingUp className="w-4 h-4 mr-1"/>
+                        Trending up by 5.2% this month
+                    </CardFooter>
+                </Card>
+                <Card>
+                     <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <CardTitle>Buyers Profile</CardTitle>
+                            <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
+                        </div>
+                        <CardDescription>Discover key insights into the buyer's preferences</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-48 flex items-center justify-center">
+                        <div className="relative h-40 w-40">
+                             <ResponsiveContainer width="100%" height="100%">
+                                <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                    <Pie 
+                                        data={buyersProfileData} 
+                                        dataKey="value"
+                                        startAngle={90} 
+                                        endAngle={-270} 
+                                        innerRadius="75%" 
+                                        outerRadius="100%"
+                                        cy="50%"
+                                        strokeWidth={0}
+                                        isAnimationActive={false}
+                                    >
+                                        <Cell key="buyers" fill="hsl(var(--chart-2))" />
+                                        <Cell key="remaining" fill="hsl(var(--muted))" />
+                                    </Pie>
+                                </RechartsPieChart>
+                            </ResponsiveContainer>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <p className="text-3xl font-bold">200</p>
+                                <p className="text-sm text-muted-foreground">Buyers</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-center text-sm text-muted-foreground">
+                        <TrendingUp className="w-4 h-4 mr-1"/>
+                        Trending up by 5.2% this month
+                    </CardFooter>
+                </Card>
+            </div>
+        </div>
     </div>
   );
 }
