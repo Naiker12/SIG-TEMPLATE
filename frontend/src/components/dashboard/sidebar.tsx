@@ -195,7 +195,7 @@ export function DashboardSidebar() {
   const SidebarItems = () => (
     <SidebarMenu>
       {allMenuItems.map((item) => (
-        <NavItem key={item.href} item={item} setOpenMobile={setOpenMobile} />
+        <NavItem key={item.title} item={item} setOpenMobile={setOpenMobile} />
       ))}
     </SidebarMenu>
   );
