@@ -141,14 +141,18 @@ function NavItem({ item, isOpen, pathname }: { item: MenuItem, isOpen: boolean, 
                     </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="py-1 pl-8">
-                    <div className="flex flex-col space-y-1">
-                        {item.items?.map((subItem) => (
-                            <Link key={subItem.href} href={subItem.href}>
-                                <Button variant={pathname === subItem.href ? "secondary" : "ghost"} size="sm" className="w-full justify-start">
-                                    {subItem.title}
-                                </Button>
-                            </Link>
-                        ))}
+                    <div className="flex flex-col space-y-1 relative before:absolute before:left-0 before:top-0 before:h-full before:w-px before:bg-border">
+                        {item.items?.map((subItem) => {
+                            const isSubActive = pathname === subItem.href;
+                            return (
+                                <Link key={subItem.href} href={subItem.href}>
+                                    <Button variant={isSubActive ? "secondary" : "ghost"} size="sm" className="w-full justify-start relative">
+                                        {isSubActive && <div className="absolute -left-4 h-full w-0.5 bg-primary rounded-r-full"></div>}
+                                        {subItem.title}
+                                    </Button>
+                                </Link>
+                            )
+                        })}
                     </div>
                 </CollapsibleContent>
             </Collapsible>

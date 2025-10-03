@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -12,7 +13,6 @@ import { useSidebarStore } from "@/hooks/use-sidebar-store";
 
 
 export function TopBar() {
-  const [date, setDate] = useState("");
   const [isClient, setIsClient] = useState(false);
   const authModal = useAuthModal();
   const { isLoggedIn, user } = useAuthStore();
@@ -20,12 +20,6 @@ export function TopBar() {
   
   useEffect(() => {
     setIsClient(true);
-    const now = new Date();
-    setDate(now.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    }));
   }, []);
   
   return (
