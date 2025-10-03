@@ -5,12 +5,12 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const sidebarVariants = cva(
-  "fixed top-0 left-0 h-full z-50 flex flex-col bg-sidebar border-r transition-all duration-300 ease-in-out",
+  "fixed top-0 left-0 h-full z-40 flex flex-col bg-sidebar border-r transition-all duration-300 ease-in-out",
   {
     variants: {
       state: {
-        open: "w-64",
-        closed: "w-14",
+        open: "w-60",
+        closed: "w-16",
       },
     },
     defaultVariants: {
@@ -54,7 +54,7 @@ SidebarContent.displayName = "SidebarContent"
 const SidebarFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn("p-4 mt-auto", className)} {...props} />
+      <div ref={ref} className={cn("p-4 mt-auto border-t", className)} {...props} />
     )
   }
 )
@@ -64,7 +64,7 @@ SidebarFooter.displayName = "SidebarFooter"
 const SidebarGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn("py-2", className)} {...props} />
+      <div ref={ref} className={cn("py-2 px-3", className)} {...props} />
     )
   }
 )
@@ -74,8 +74,8 @@ const SidebarGroupLabel = React.forwardRef<HTMLParagraphElement, React.HTMLAttri
   ({ className, isOpen, ...props }, ref) => {
     return (
       <p ref={ref} className={cn(
-        "px-4 text-xs font-semibold uppercase text-muted-foreground transition-opacity duration-200",
-        !isOpen && "opacity-0 h-0",
+        "px-2 py-1 text-xs font-semibold uppercase text-muted-foreground tracking-wider transition-opacity duration-200",
+        !isOpen && "opacity-0 h-0 p-0",
         className
       )} {...props} />
     )
@@ -87,7 +87,7 @@ SidebarGroupLabel.displayName = "SidebarGroupLabel"
 const SidebarGroupContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn("mt-2 space-y-1", className)} {...props} />
+      <div ref={ref} className={cn("mt-1 space-y-1", className)} {...props} />
     )
   }
 )

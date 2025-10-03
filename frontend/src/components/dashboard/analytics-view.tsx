@@ -27,9 +27,9 @@ const visitorsChartData = [
 ];
 
 const trafficSourceData = [
-    { source: 'Directo', value: 237, fill: 'var(--color-chart-3)' },
-    { source: 'Social', value: 305, fill: 'var(--color-chart-2)' },
-    { source: 'Google', value: 186, fill: 'var(--color-chart-1)' },
+    { source: 'Directo', value: 237, fill: 'hsl(var(--chart-3))' },
+    { source: 'Social', value: 305, fill: 'hsl(var(--chart-2))' },
+    { source: 'Google', value: 186, fill: 'hsl(var(--chart-1))' },
 ];
 
 const customersData = [

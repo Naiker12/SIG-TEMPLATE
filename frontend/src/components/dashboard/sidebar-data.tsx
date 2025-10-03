@@ -22,41 +22,38 @@ export type MenuItem = {
     href: string;
     icon: React.ElementType;
     isCollapsible?: boolean;
-    isActive?: boolean; // This might be calculated dynamically
+    isActive?: boolean;
     items?: SubMenuItem[];
-    variant: "default" | "ghost";
 };
 
-
-export const menuItems: MenuItem[] = [
+export const platformItems: MenuItem[] = [
     {
         title: "Tablero",
         href: "/",
         icon: LayoutDashboard,
-        variant: "default",
     },
     {
         title: "Buscar con IA",
         href: "/buscar-con-ia/busqueda-semantica",
         icon: BrainCircuit,
-        variant: "ghost",
     },
     {
         title: "Análisis de Datos",
         href: "/analisis-de-datos/dashboard",
         icon: AreaChart,
-        variant: "ghost",
         isCollapsible: true,
         items: [
             { title: "Dashboard", href: "/analisis-de-datos/dashboard" },
             { title: "Transformación", href: "/analisis-de-datos/transformacion" },
         ]
     },
+];
+
+export const toolsItems: MenuItem[] = [
     {
         title: "Extraer de APIs",
         href: "/extraer-apis/api-personalizada",
         icon: Webhook,
-        variant: "ghost",
         isCollapsible: true,
         items: [
             { title: "API Personalizada", href: "/extraer-apis/api-personalizada" },
@@ -67,7 +64,6 @@ export const menuItems: MenuItem[] = [
         title: "Gestión PDF",
         href: "/gestion-pdf/comprimir",
         icon: FileText,
-        variant: "ghost",
         isCollapsible: true,
         items: [
             { title: "Optimizar", href: "/gestion-pdf/comprimir" },
@@ -79,28 +75,15 @@ export const menuItems: MenuItem[] = [
         title: "Gestión Word",
         href: "/gestion-word/convertir-a-pdf",
         icon: FileSignature,
-        variant: "ghost",
         isCollapsible: true,
         items: [
             { title: "Convertir a PDF", href: "/gestion-word/convertir-a-pdf" },
         ]
     },
     {
-        title: "Visualización",
-        href: "/visualizacion/visor-de-archivos",
-        icon: BarChart3,
-        variant: "ghost",
-        isCollapsible: true,
-        items: [
-            { title: "Visor de Archivos", href: "/visualizacion/visor-de-archivos" },
-            { title: "Vista Comparativa", href: "/visualizacion/vista-comparativa" },
-        ]
-    },
-    {
         title: "Gestión Excel",
         href: "/subir-excel/procesar-excel",
         icon: FileUp,
-        variant: "ghost",
         isCollapsible: true,
         items: [
             { title: "Procesar", href: "/subir-excel/procesar-excel" },
@@ -109,9 +92,19 @@ export const menuItems: MenuItem[] = [
             { title: "A API", href: "/subir-excel/excel-a-api" },
         ]
     },
+    {
+        title: "Visualización",
+        href: "/visualizacion/visor-de-archivos",
+        icon: BarChart3,
+        isCollapsible: true,
+        items: [
+            { title: "Visor de Archivos", href: "/visualizacion/visor-de-archivos" },
+            { title: "Vista Comparativa", href: "/visualizacion/vista-comparativa" },
+        ]
+    },
 ];
 
-export const settingsMenuItems: MenuItem[] = [
-    { title: "Perfil", href: "/profile", icon: User, variant: "ghost" },
-    { title: "Configuración", href: "/settings", icon: Settings, variant: "ghost" },
+export const userMenuItems: MenuItem[] = [
+    { title: "Perfil", href: "/profile", icon: User },
+    { title: "Configuración", href: "/settings", icon: Settings },
 ];

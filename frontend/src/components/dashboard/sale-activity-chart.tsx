@@ -31,7 +31,7 @@ export function SaleActivityChart() {
     <Card>
       <CardHeader>
         <CardTitle>Actividad de Ventas - Mensual</CardTitle>
-        <CardDescription>Mostrando ventas totales de los últimos 6 meses</CardDescription>
+        <CardDescription>Mostrando ventas y suscripciones de los últimos 6 meses</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-64 w-full">

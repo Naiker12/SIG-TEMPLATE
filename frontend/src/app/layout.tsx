@@ -40,10 +40,10 @@ export default function RootLayout({
       <head />
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-              <AuthModalProvider />
-              <PageLoader />
-              {children}
-              <Toaster />
+          <AuthModalProvider />
+          <PageLoader />
+          {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
