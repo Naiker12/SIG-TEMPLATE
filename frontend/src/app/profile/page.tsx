@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Camera, Loader2, LogOut } from "lucide-react";
@@ -122,15 +121,11 @@ export default function ProfilePage() {
     }
 
   return (
-    <SidebarProvider>
-      <Sidebar variant="sidebar" collapsible="icon">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <DashboardSidebar />
-      </Sidebar>
-      <SidebarInset>
-        <main className="min-h-screen bg-background">
-          <TopBar />
-          <div className="p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+            <TopBar />
+            <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                <header className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Mi Perfil</h1>
               </header>
@@ -225,10 +220,8 @@ export default function ProfilePage() {
                   </form>
                 </div>
               </div>
-            </div>
-          </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+            </main>
+        </div>
+    </div>
   );
 }

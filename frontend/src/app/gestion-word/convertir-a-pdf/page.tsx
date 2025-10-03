@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
@@ -104,127 +103,123 @@ export default function ConvertWordToPdfPage() {
 
   return (
     <>
-      <SidebarProvider>
-        <Sidebar variant="sidebar" collapsible="icon">
-          <DashboardSidebar />
-        </Sidebar>
-        <SidebarInset>
-          <main className="min-h-screen bg-background">
-            <TopBar />
-            <div className="p-4 sm:p-6 lg:p-8">
-              <div className="max-w-4xl mx-auto">
-                <header className="mb-8 text-center">
-                  <h1 className="text-4xl font-bold tracking-tight">Convertir Word a PDF</h1>
-                  <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-                    Sube tus archivos de Word (.docx) para convertirlos a formato PDF de alta calidad.
-                  </p>
-                </header>
+      <div className="flex min-h-screen w-full flex-col bg-muted/40">
+        <DashboardSidebar />
+        <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+          <TopBar />
+          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+            <div className="max-w-4xl mx-auto w-full">
+              <header className="mb-8 text-center">
+                <h1 className="text-4xl font-bold tracking-tight">Convertir Word a PDF</h1>
+                <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
+                  Sube tus archivos de Word (.docx) para convertirlos a formato PDF de alta calidad.
+                </p>
+              </header>
 
-                <Card className='shadow-lg border-2 border-accent'>
-                  <CardContent className='p-6'>
-                    {files.length === 0 && !convertedInfo && (
-                      <FileUploadForm 
-                        onFilesSelected={handleFilesSelected}
-                        allowMultiple={true}
-                        acceptedFileTypes={{
-                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                        }}
-                        uploadHelpText="Sube archivos DOCX de hasta 20MB."
-                      />
-                    )}
+              <Card className='shadow-lg border-2 border-accent'>
+                <CardContent className='p-6'>
+                  {files.length === 0 && !convertedInfo && (
+                    <FileUploadForm 
+                      onFilesSelected={handleFilesSelected}
+                      allowMultiple={true}
+                      acceptedFileTypes={{
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                      }}
+                      uploadHelpText="Sube archivos DOCX de hasta 20MB."
+                    />
+                  )}
 
-                    {files.length > 0 && !convertedInfo && (
-                       <div className='space-y-6'>
-                          <div className='flex justify-end'>
-                             <FileUploadForm 
-                                onFilesSelected={handleFilesSelected}
-                                allowMultiple={true}
-                                acceptedFileTypes={{
-                                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                                }}
-                                isButton={true}
-                             />
-                          </div>
-                        
-                        <div className="space-y-3 pt-6 border-t">
-                            <h3 className='text-lg font-medium text-muted-foreground'>Archivos para convertir:</h3>
-                             {files.map((file, index) => (
-                              <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
-                                <div className="flex items-center gap-4 min-w-0">
-                                  <FileText className="w-6 h-6 text-primary flex-shrink-0" />
-                                  <div className="min-w-0">
-                                    <p className="font-semibold truncate">{file.name}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {formatBytes(file.size)}
-                                    </p>
-                                  </div>
-                                </div>
-                                <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
-                                  <X className="w-5 h-5 text-destructive" />
-                                  <span className="sr-only">Remove file</span>
-                                </Button>
-                              </div>
-                            ))}
+                  {files.length > 0 && !convertedInfo && (
+                     <div className='space-y-6'>
+                        <div className='flex justify-end'>
+                           <FileUploadForm 
+                              onFilesSelected={handleFilesSelected}
+                              allowMultiple={true}
+                              acceptedFileTypes={{
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                              }}
+                              isButton={true}
+                           />
                         </div>
+                      
+                      <div className="space-y-3 pt-6 border-t">
+                          <h3 className='text-lg font-medium text-muted-foreground'>Archivos para convertir:</h3>
+                           {files.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                              <div className="flex items-center gap-4 min-w-0">
+                                <FileText className="w-6 h-6 text-primary flex-shrink-0" />
+                                <div className="min-w-0">
+                                  <p className="font-semibold truncate">{file.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatBytes(file.size)}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
+                                <X className="w-5 h-5 text-destructive" />
+                                <span className="sr-only">Remove file</span>
+                              </Button>
+                            </div>
+                          ))}
+                      </div>
 
-                         <div className="flex justify-end pt-6 border-t">
+                       <div className="flex justify-end pt-6 border-t">
+                        <Button 
+                          size="lg" 
+                          className="w-full sm:w-auto" 
+                          disabled={files.length === 0}
+                          onClick={handleConvert}
+                        >
+                          Convertir {files.length} {files.length === 1 ? 'Archivo' : 'Archivos'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {convertedInfo && (
+                    <div className="text-center py-8">
+                      <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
+                      <h2 className="text-2xl font-bold mb-2">Conversión Completa</h2>
+                      <CardDescription className="mb-6">
+                        Tus archivos Word se han convertido a PDF con éxito.
+                      </CardDescription>
+
+                       <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
+                          <p className="text-sm text-muted-foreground">
+                            {isZip ? 'Tamaño del archivo ZIP' : 'Tamaño del archivo'}
+                          </p>
+                          <p className="text-xl font-bold">{formatBytes(convertedInfo.blob.size)}</p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
+                          <Button 
+                            size="lg" 
+                            variant="outline"
+                            className="w-full sm:w-auto"
+                            onClick={() => {
+                              setFiles([]);
+                              setConvertedInfo(null);
+                            }}
+                          >
+                            Convertir Nuevos Archivos
+                          </Button>
                           <Button 
                             size="lg" 
                             className="w-full sm:w-auto" 
-                            disabled={files.length === 0}
-                            onClick={handleConvert}
+                            onClick={handleDownload}
                           >
-                            Convertir {files.length} {files.length === 1 ? 'Archivo' : 'Archivos'}
+                            <Download className="mr-2" /> 
+                            {isZip ? 'Descargar ZIP' : 'Descargar PDF'}
                           </Button>
                         </div>
-                      </div>
-                    )}
-
-                    {convertedInfo && (
-                      <div className="text-center py-8">
-                        <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold mb-2">Conversión Completa</h2>
-                        <CardDescription className="mb-6">
-                          Tus archivos Word se han convertido a PDF con éxito.
-                        </CardDescription>
-
-                         <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
-                            <p className="text-sm text-muted-foreground">
-                              {isZip ? 'Tamaño del archivo ZIP' : 'Tamaño del archivo'}
-                            </p>
-                            <p className="text-xl font-bold">{formatBytes(convertedInfo.blob.size)}</p>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
-                            <Button 
-                              size="lg" 
-                              variant="outline"
-                              className="w-full sm:w-auto"
-                              onClick={() => {
-                                setFiles([]);
-                                setConvertedInfo(null);
-                              }}
-                            >
-                              Convertir Nuevos Archivos
-                            </Button>
-                            <Button 
-                              size="lg" 
-                              className="w-full sm:w-auto" 
-                              onClick={handleDownload}
-                            >
-                              <Download className="mr-2" /> 
-                              {isZip ? 'Descargar ZIP' : 'Descargar PDF'}
-                            </Button>
-                          </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </main>
-        </SidebarInset>
-      </SidebarProvider>
+        </div>
+      </div>
 
       <AnimatePresence>
         {conversionProgress !== null && (
