@@ -2,11 +2,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname } from 'next/navigation';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Bell, Menu, LogIn, User } from "lucide-react";
+import { Search, Bell, Menu, LogIn } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -64,7 +63,7 @@ export function TopBar() {
 
         {isClient && isLoggedIn && user ? (
             <Link href="/profile">
-                <Avatar className="h-9 w-9 border-2 border-muted cursor-pointer">
+                <Avatar className="h-9 w-9 border-2 border-border cursor-pointer">
                     <AvatarImage src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={`Avatar de ${user.name}`} />
                     <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
