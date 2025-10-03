@@ -4,12 +4,14 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Bell, LogIn } from "lucide-react";
+import { Search, Bell, LogIn, Menu } from "lucide-react";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import Link from "next/link";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useSidebarStore } from "@/hooks/use-sidebar-store";
+import { cn } from "@/lib/utils";
 
 function DateDisplay() {
   const [currentDate, setCurrentDate] = useState('');
@@ -33,6 +35,7 @@ export function TopBar() {
   const [isClient, setIsClient] = useState(false);
   const authModal = useAuthModal();
   const { isLoggedIn, user } = useAuthStore();
+  const { isOpen, toggle } = useSidebarStore();
   
   useEffect(() => {
     setIsClient(true);
@@ -40,6 +43,15 @@ export function TopBar() {
   
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6">
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn("sm:hidden", isOpen && "hidden")}
+        onClick={toggle}
+      >
+        <Menu className="h-5 w-5" />
+        <span className="sr-only">Toggle Menu</span>
+      </Button>
        <div className="relative flex-1 md:grow-0">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input placeholder="Buscar..." className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]" />

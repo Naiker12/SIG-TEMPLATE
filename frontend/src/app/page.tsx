@@ -29,11 +29,11 @@ export default function Home() {
   }, [isLoggedIn]);
 
   return (
-    <div className="min-h-screen w-full flex flex-col">
+    <div className="flex min-h-screen w-full">
       <DashboardSidebar />
-      <main className="pl-16 transition-[padding-left] duration-300 ease-in-out">
+      <div className="flex flex-col w-full">
         <TopBar />
-        <div className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
           {!isLoggedIn ? (
             <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
               <div className="text-center max-w-lg">
@@ -85,8 +85,8 @@ export default function Home() {
               </Tabs>
             </div>
           )}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

@@ -13,11 +13,11 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 
 export default function SettingsPage() {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full">
         <DashboardSidebar />
-        <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+        <div className="flex flex-col w-full">
             <TopBar />
-            <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+            <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
               <div className="max-w-6xl mx-auto w-full">
                 <header className="mb-8">
                   <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
