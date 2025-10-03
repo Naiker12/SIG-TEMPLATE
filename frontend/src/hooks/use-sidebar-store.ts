@@ -6,23 +6,40 @@ import { persist, createJSONStorage } from "zustand/middleware"
 
 interface SidebarStore {
   isOpen: boolean;
-  isCollapsed: boolean;
+  isHovered: boolean;
+  isClosing: boolean;
   setOpen: (isOpen: boolean) => void;
   toggle: () => void;
+  setIsHovered: (isHovered: boolean) => void;
+  setIsClosing: (isClosing: boolean) => void;
 }
 
 export const useSidebarStore = create(
   persist<SidebarStore>(
     (set, get) => ({
       isOpen: true,
-      isCollapsed: false,
+      isHovered: false,
+      isClosing: false,
       setOpen: (isOpen) => {
-        set({ isOpen, isCollapsed: !isOpen })
+        set({ isOpen })
       },
       toggle: () => {
-        const currentIsOpen = get().isOpen
-        set({ isOpen: !currentIsOpen, isCollapsed: currentIsOpen })
+        const currentIsOpen = get().isOpen;
+        if (currentIsOpen) {
+          set({ isClosing: true });
+          setTimeout(() => {
+            set({ isOpen: false, isClosing: false });
+          }, 300); // Match this with your animation duration
+        } else {
+          set({ isOpen: true });
+        }
       },
+      setIsHovered: (isHovered) => {
+        set({ isHovered });
+      },
+      setIsClosing: (isClosing) => {
+        set({ isClosing });
+      }
     }),
     {
       name: "sidebar-storage",

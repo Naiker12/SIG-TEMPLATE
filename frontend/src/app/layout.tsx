@@ -7,7 +7,6 @@ import { ThemeProvider } from "next-themes";
 import { AuthModalProvider } from '@/components/auth-modal';
 import { PageLoader } from '@/components/ui/page-loader';
 import { cn } from '@/lib/utils';
-import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const inter = Inter({
@@ -43,10 +42,10 @@ export default function RootLayout({
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <SidebarProvider>
-                <AuthModalProvider />
-                <PageLoader />
-                {children}
-                <Toaster />
+              <AuthModalProvider />
+              <PageLoader />
+              {children}
+              <Toaster />
             </SidebarProvider>
         </ThemeProvider>
       </body>

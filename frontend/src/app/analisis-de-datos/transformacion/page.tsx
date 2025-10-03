@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from '@/lib/utils';
 import { useLoadingStore } from '@/hooks/use-loading-store';
+import { DashboardSidebar } from '@/components/dashboard/sidebar';
 
 const transformationOptions = [
     { id: "standardize-names", label: "Estandarizar nombres propios" },
@@ -110,122 +111,125 @@ export default function DataTransformationPage() {
     );
 
     return (
-        <div className="flex flex-col w-full">
-            <TopBar />
-            <main className="flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="max-w-full mx-auto w-full">
-                    <header className="mb-8">
-                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Transformación y Estandarización</h1>
-                        <p className="text-muted-foreground mt-2 max-w-3xl">
-                            Carga, limpia y estandariza tus archivos de datos en un flujo de trabajo guiado.
-                        </p>
-                    </header>
+        <div className="flex h-screen w-full">
+            <DashboardSidebar />
+            <div className="flex flex-1 flex-col">
+                <TopBar />
+                <main className="flex-1 overflow-y-auto p-4 sm:px-6">
+                    <div className="max-w-full mx-auto w-full">
+                        <header className="mb-8">
+                            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Transformación y Estandarización</h1>
+                            <p className="text-muted-foreground mt-2 max-w-3xl">
+                                Carga, limpia y estandariza tus archivos de datos en un flujo de trabajo guiado.
+                            </p>
+                        </header>
 
-                    {!file && !data.length ? (
-                        <Card className="shadow-lg max-w-4xl mx-auto border-2 border-accent min-h-[450px]">
-                            <CardContent className="h-full flex flex-col justify-center items-center p-6">
-                                <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center flex-1 w-full">
-                                    <FileUp className="w-16 h-16 text-muted-foreground mb-4" />
-                                    <h3 className="text-xl font-semibold mb-2">Arrastra y suelta tus archivos aquí</h3>
-                                    <p className="text-muted-foreground mb-4">o</p>
-                                    <Button asChild variant="default">
-                                        <Label htmlFor="file-upload" className="cursor-pointer">
-                                            Seleccionar Archivo
-                                        </Label>
-                                    </Button>
-                                    <Input id="file-upload" type="file" onChange={handleFileChange} accept=".csv, .xlsx, .xls" className="hidden" />
-                                    <p className="text-muted-foreground text-sm mt-4">Formatos soportados: .csv, .xlsx, .xls</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <div className='space-y-8'>
-                            {data.length > 0 && (
-                                <>
-                                    <Card className="border-2 border-accent shadow-lg">
-                                        <CardHeader>
-                                            <div className='flex justify-between items-center'>
-                                                <div>
-                                                  <CardTitle>Visualización de Datos</CardTitle>
-                                                  <CardDescription>Revisa tus datos y selecciona las transformaciones a aplicar.</CardDescription>
-                                                </div>
-                                                <div className='flex items-center gap-4'>
-                                                    {file && (
-                                                      <div className='flex items-center gap-2 text-sm font-medium p-2 rounded-lg bg-muted'>
-                                                          <FileSpreadsheet className="w-5 h-5" />
-                                                          <span>{file.name}</span>
-                                                      </div>
-                                                    )}
-                                                    <Button variant="destructive" size="icon" onClick={handleRemoveFile}>
-                                                        <X className="w-5 h-5"/>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="overflow-x-auto">
-                                            <DataTable columns={columns} data={data} />
-                                        </CardContent>
-                                    </Card>
-
-                                    <Collapsible open={isOptionsOpen} onOpenChange={setIsOptionsOpen}>
+                        {!file && !data.length ? (
+                            <Card className="shadow-lg max-w-4xl mx-auto border-2 border-accent min-h-[450px]">
+                                <CardContent className="h-full flex flex-col justify-center items-center p-6">
+                                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center flex-1 w-full">
+                                        <FileUp className="w-16 h-16 text-muted-foreground mb-4" />
+                                        <h3 className="text-xl font-semibold mb-2">Arrastra y suelta tus archivos aquí</h3>
+                                        <p className="text-muted-foreground mb-4">o</p>
+                                        <Button asChild variant="default">
+                                            <Label htmlFor="file-upload" className="cursor-pointer">
+                                                Seleccionar Archivo
+                                            </Label>
+                                        </Button>
+                                        <Input id="file-upload" type="file" onChange={handleFileChange} accept=".csv, .xlsx, .xls" className="hidden" />
+                                        <p className="text-muted-foreground text-sm mt-4">Formatos soportados: .csv, .xlsx, .xls</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <div className='space-y-8'>
+                                {data.length > 0 && (
+                                    <>
                                         <Card className="border-2 border-accent shadow-lg">
-                                            <CollapsibleTrigger asChild>
-                                                <div className='flex justify-between items-center p-6 cursor-pointer'>
-                                                   <div>
-                                                    <CardTitle>Opciones de Transformación</CardTitle>
-                                                     <CardDescription>Selecciona las reglas de limpieza a aplicar.</CardDescription>
+                                            <CardHeader>
+                                                <div className='flex justify-between items-center'>
+                                                    <div>
+                                                      <CardTitle>Visualización de Datos</CardTitle>
+                                                      <CardDescription>Revisa tus datos y selecciona las transformaciones a aplicar.</CardDescription>
                                                     </div>
-                                                    <Button variant="ghost" size="icon">
-                                                        <ChevronDown className={cn("h-5 w-5 transition-transform", isOptionsOpen && 'rotate-180')}/>
-                                                    </Button>
+                                                    <div className='flex items-center gap-4'>
+                                                        {file && (
+                                                          <div className='flex items-center gap-2 text-sm font-medium p-2 rounded-lg bg-muted'>
+                                                              <FileSpreadsheet className="w-5 h-5" />
+                                                              <span>{file.name}</span>
+                                                          </div>
+                                                        )}
+                                                        <Button variant="destructive" size="icon" onClick={handleRemoveFile}>
+                                                            <X className="w-5 h-5"/>
+                                                        </Button>
+                                                    </div>
                                                 </div>
-                                            </CollapsibleTrigger>
-                                            <CollapsibleContent>
-                                                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {transformationOptions.map(option => (
-                                                        <div key={option.id} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border hover:border-primary/50 transition-colors">
-                                                            <Checkbox id={option.id} defaultChecked={option.id === 'remove-duplicates'} />
-                                                            <Label htmlFor={option.id} className="text-sm font-normal leading-tight cursor-pointer flex-1">{option.label}</Label>
-                                                        </div>
-                                                    ))}
-                                                </CardContent>
-                                            </CollapsibleContent>
+                                            </CardHeader>
+                                            <CardContent className="overflow-x-auto">
+                                                <DataTable columns={columns} data={data} />
+                                            </CardContent>
                                         </Card>
-                                    </Collapsible>
-                                    
-                                    <Card className="border-2 border-accent shadow-lg">
-                                        <CardHeader>
-                                            <CardTitle>Exportar Datos Limpios</CardTitle>
-                                            <CardDescription>Elige el formato final para tus datos transformados.</CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <RadioGroup defaultValue={exportFormat} onValueChange={setExportFormat} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                {['CSV', 'Excel', 'JSON', 'SQL'].map(format => {
-                                                    const value = format.toLowerCase().includes('excel') ? 'xlsx' : format.toLowerCase();
-                                                    return (
-                                                        <div key={format}>
-                                                            <RadioGroupItem value={value} id={format} className="peer sr-only" />
-                                                            <Label htmlFor={format} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-colors">
-                                                                {format}
-                                                            </Label>
+
+                                        <Collapsible open={isOptionsOpen} onOpenChange={setIsOptionsOpen}>
+                                            <Card className="border-2 border-accent shadow-lg">
+                                                <CollapsibleTrigger asChild>
+                                                    <div className='flex justify-between items-center p-6 cursor-pointer'>
+                                                       <div>
+                                                        <CardTitle>Opciones de Transformación</CardTitle>
+                                                         <CardDescription>Selecciona las reglas de limpieza a aplicar.</CardDescription>
                                                         </div>
-                                                    )
-                                                })}
-                                            </RadioGroup>
-                                        </CardContent>
-                                        <CardFooter className="flex flex-col sm:flex-row gap-4 border-t pt-6 mt-6">
-                                            <PreviewModal />
-                                            <Button size="lg" disabled={!data.length}>
-                                                <Sparkles className="mr-2" /> Procesar y Exportar
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
-                                </>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </main>
+                                                        <Button variant="ghost" size="icon">
+                                                            <ChevronDown className={cn("h-5 w-5 transition-transform", isOptionsOpen && 'rotate-180')}/>
+                                                        </Button>
+                                                    </div>
+                                                </CollapsibleTrigger>
+                                                <CollapsibleContent>
+                                                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                        {transformationOptions.map(option => (
+                                                            <div key={option.id} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border hover:border-primary/50 transition-colors">
+                                                                <Checkbox id={option.id} defaultChecked={option.id === 'remove-duplicates'} />
+                                                                <Label htmlFor={option.id} className="text-sm font-normal leading-tight cursor-pointer flex-1">{option.label}</Label>
+                                                            </div>
+                                                        ))}
+                                                    </CardContent>
+                                                </CollapsibleContent>
+                                            </Card>
+                                        </Collapsible>
+                                        
+                                        <Card className="border-2 border-accent shadow-lg">
+                                            <CardHeader>
+                                                <CardTitle>Exportar Datos Limpios</CardTitle>
+                                                <CardDescription>Elige el formato final para tus datos transformados.</CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <RadioGroup defaultValue={exportFormat} onValueChange={setExportFormat} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    {['CSV', 'Excel', 'JSON', 'SQL'].map(format => {
+                                                        const value = format.toLowerCase().includes('excel') ? 'xlsx' : format.toLowerCase();
+                                                        return (
+                                                            <div key={format}>
+                                                                <RadioGroupItem value={value} id={format} className="peer sr-only" />
+                                                                <Label htmlFor={format} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-colors">
+                                                                    {format}
+                                                                </Label>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </RadioGroup>
+                                            </CardContent>
+                                            <CardFooter className="flex flex-col sm:flex-row gap-4 border-t pt-6 mt-6">
+                                                <PreviewModal />
+                                                <Button size="lg" disabled={!data.length}>
+                                                    <Sparkles className="mr-2" /> Procesar y Exportar
+                                                </Button>
+                                            </CardFooter>
+                                        </Card>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </main>
+            </div>
         </div>
     );
 }

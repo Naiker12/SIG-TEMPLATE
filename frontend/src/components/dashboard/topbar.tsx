@@ -9,11 +9,11 @@ import { Search, Bell, Menu, LogIn } from "lucide-react";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import Link from "next/link";
-import { useSidebarStore } from "@/hooks/use-sidebar-store";
+import { SidebarTrigger } from "../ui/sidebar";
+
 
 export function TopBar() {
   const [date, setDate] = useState("");
-  const { toggle } = useSidebarStore();
   const [isClient, setIsClient] = useState(false);
   const authModal = useAuthModal();
   const { isLoggedIn, user } = useAuthStore();
@@ -31,10 +31,7 @@ export function TopBar() {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-x-4 border-b bg-background px-4 sm:px-6">
       <div className="flex flex-1 items-center gap-4 min-w-0">
-        <Button variant="ghost" size="icon" className="md:hidden flex-shrink-0" onClick={toggle}>
-            <Menu className="h-6 w-6" />
-            <span className="sr-only">Toggle Sidebar</span>
-        </Button>
+        <SidebarTrigger />
          <div className="relative w-full max-w-md hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar..." className="w-full pl-10 bg-background rounded-lg" />
