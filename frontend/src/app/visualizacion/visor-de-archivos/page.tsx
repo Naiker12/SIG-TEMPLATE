@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -22,11 +21,11 @@ export default function FileViewerPage() {
     const [selectedDoc, setSelectedDoc] = useState<any>(null);
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <DashboardSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
             <TopBar />
-            <main className="flex-1 overflow-y-auto p-4 sm:px-6">
+            <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="w-full">
                     <header className="px-0 py-4 border-b">
                         <h1 className="text-2xl font-bold tracking-tight">Visor de Archivos</h1>

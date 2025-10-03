@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -55,11 +54,11 @@ export default function FormatValidationPage() {
     }
 
     return (
-        <div className="flex h-screen w-full">
+        <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <DashboardSidebar />
-            <div className="flex flex-1 flex-col">
+            <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
                 <TopBar />
-                <main className="flex-1 overflow-y-auto p-4 sm:px-6">
+                <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                     <div className="max-w-7xl mx-auto w-full">
                         <header className="mb-8">
                             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Validación de Formato</h1>

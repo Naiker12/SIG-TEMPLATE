@@ -29,25 +29,16 @@ export function TopBar() {
   }, []);
   
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-x-4 border-b bg-background px-4 sm:px-6">
-      <div className="flex flex-1 items-center gap-4 min-w-0">
-        <Button onClick={toggle} variant="ghost" size="icon" className="sm:hidden">
-          <Menu />
-          <span className="sr-only">Toggle Sidebar</span>
-        </Button>
-         <div className="relative w-full max-w-md hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar..." className="w-full pl-10 bg-background rounded-lg" />
-        </div>
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <Button onClick={toggle} variant="ghost" size="icon" className="sm:hidden">
+        <Menu />
+        <span className="sr-only">Toggle Sidebar</span>
+      </Button>
+       <div className="relative ml-auto flex-1 md:grow-0">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Buscar..." className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]" />
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {isClient && <span className="hidden font-semibold text-muted-foreground md:inline-block bg-background px-4 py-2 rounded-lg text-sm">
-          {date}
-        </span>}
-        <Button variant="ghost" size="icon" className="md:hidden">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Buscar</span>
-        </Button>
+      <div className="flex items-center gap-2">
         {isClient && isLoggedIn && (
             <Button variant="ghost" size="icon">
                 <Bell className="h-5 w-5" />
