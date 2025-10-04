@@ -4,18 +4,21 @@
 import { useState } from 'react';
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, X, Download, CheckCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { FileText, X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { convertFilesToPdf, type ConversionResult } from '@/services/conversionService';
 import { useToast } from '@/hooks/use-toast';
 import { saveAs } from 'file-saver';
-import { useLoadingStore } from '@/hooks/use-loading-store';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+
 
 export default function ConvertWordToPdfPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [convertedInfo, setConvertedInfo] = useState<ConversionResult | null>(null);
-  const { setIsLoading } = useLoadingStore();
+  const [isConverting, setIsConverting] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState(0);
   const { toast } = useToast();
 
   const handleFilesSelected = (newFiles: File[]) => {
@@ -44,10 +47,24 @@ export default function ConvertWordToPdfPage() {
   const handleConvert = async () => {
     if (files.length === 0) return;
     setConvertedInfo(null);
-    setIsLoading(true);
+    setIsConverting(true);
+    setConversionProgress(0);
+
+    const progressInterval = setInterval(() => {
+        setConversionProgress(prev => {
+            if (prev >= 95) {
+                clearInterval(progressInterval);
+                return 95;
+            }
+            return prev + 5;
+        });
+    }, 200);
 
     try {
       const result = await convertFilesToPdf(files);
+      
+      clearInterval(progressInterval);
+      setConversionProgress(100);
       
       setConvertedInfo(result);
       toast({
@@ -63,7 +80,8 @@ export default function ConvertWordToPdfPage() {
         description: "Hubo un problema al convertir los archivos. Inténtalo de nuevo.",
       });
     } finally {
-      setIsLoading(false);
+      clearInterval(progressInterval);
+      setIsConverting(false);
     }
   };
   
@@ -93,7 +111,7 @@ export default function ConvertWordToPdfPage() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
+      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 pb-8">
         <div className="max-w-4xl mx-auto w-full">
           <header className="mb-8 text-center">
             <h1 className="text-4xl font-bold tracking-tight">Convertir Word a PDF</h1>
@@ -102,104 +120,113 @@ export default function ConvertWordToPdfPage() {
             </p>
           </header>
 
-          <Card className='shadow-lg border-2 border-accent'>
-            <CardContent className='p-6'>
-              {files.length === 0 && !convertedInfo && (
-                <FileUploadForm 
-                  onFilesSelected={handleFilesSelected}
-                  allowMultiple={true}
-                  acceptedFileTypes={{
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                  }}
-                  uploadHelpText="Sube archivos DOCX de hasta 20MB."
-                />
-              )}
-
-              {files.length > 0 && !convertedInfo && (
-                 <div className='space-y-6'>
-                    <div className='flex justify-end'>
-                       <FileUploadForm 
+          <Card className='shadow-lg border-2 border-accent min-h-[400px]'>
+            <CardContent className='p-6 flex items-center justify-center'>
+               <AnimatePresence mode="wait">
+                  {isConverting ? (
+                      <motion.div
+                          key="progress"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="w-full flex flex-col items-center justify-center text-center"
+                      >
+                          <CircularProgressBar progress={conversionProgress} message="Convirtiendo a PDF..."/>
+                      </motion.div>
+                  ) : files.length === 0 && !convertedInfo ? (
+                      <motion.div key="upload" className="w-full">
+                        <FileUploadForm 
                           onFilesSelected={handleFilesSelected}
                           allowMultiple={true}
                           acceptedFileTypes={{
                             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
                           }}
-                          isButton={true}
-                       />
-                    </div>
-                  
-                  <div className="space-y-3 pt-6 border-t">
-                      <h3 className='text-lg font-medium text-muted-foreground'>Archivos para convertir:</h3>
-                       {files.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
-                          <div className="flex items-center gap-4 min-w-0">
-                            <FileText className="w-6 h-6 text-primary flex-shrink-0" />
-                            <div className="min-w-0">
-                              <p className="font-semibold truncate">{file.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {formatBytes(file.size)}
-                              </p>
+                          uploadHelpText="Sube archivos DOCX de hasta 20MB."
+                        />
+                      </motion.div>
+                  ) : !convertedInfo ? (
+                     <motion.div key="files" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-6">
+                        <div className='flex justify-end'>
+                           <FileUploadForm 
+                              onFilesSelected={handleFilesSelected}
+                              allowMultiple={true}
+                              acceptedFileTypes={{
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                              }}
+                              isButton={true}
+                           />
+                        </div>
+                      
+                      <div className="space-y-3 pt-6 border-t">
+                          <h3 className='text-lg font-medium text-muted-foreground'>Archivos para convertir:</h3>
+                           {files.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                              <div className="flex items-center gap-4 min-w-0">
+                                <FileText className="w-6 h-6 text-primary flex-shrink-0" />
+                                <div className="min-w-0">
+                                  <p className="font-semibold truncate">{file.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatBytes(file.size)}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
+                                <X className="w-5 h-5 text-destructive" />
+                                <span className="sr-only">Remove file</span>
+                              </Button>
                             </div>
-                          </div>
-                          <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
-                            <X className="w-5 h-5 text-destructive" />
-                            <span className="sr-only">Remove file</span>
+                          ))}
+                      </div>
+
+                       <div className="flex justify-end pt-6 border-t">
+                        <Button 
+                          size="lg" 
+                          className="w-full sm:w-auto" 
+                          disabled={files.length === 0}
+                          onClick={handleConvert}
+                        >
+                          Convertir {files.length} {files.length === 1 ? 'Archivo' : 'Archivos'}
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
+                      <h2 className="text-2xl font-bold mb-2">Conversión Completa</h2>
+                      <p className="text-muted-foreground mb-6">
+                        Tus archivos Word se han convertido a PDF con éxito.
+                      </p>
+
+                       <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
+                          <p className="text-sm text-muted-foreground">
+                            {isZip ? 'Tamaño del archivo ZIP' : 'Tamaño del archivo'}
+                          </p>
+                          <p className="text-xl font-bold">{formatBytes(convertedInfo.blob.size)}</p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
+                          <Button 
+                            size="lg" 
+                            variant="outline"
+                            className="w-full sm:w-auto"
+                            onClick={() => {
+                              setFiles([]);
+                              setConvertedInfo(null);
+                            }}
+                          >
+                            Convertir Nuevos Archivos
+                          </Button>
+                          <Button 
+                            size="lg" 
+                            className="w-full sm:w-auto" 
+                            onClick={handleDownload}
+                          >
+                            <Download className="mr-2" /> 
+                            {isZip ? 'Descargar ZIP' : 'Descargar PDF'}
                           </Button>
                         </div>
-                      ))}
-                  </div>
-
-                   <div className="flex justify-end pt-6 border-t">
-                    <Button 
-                      size="lg" 
-                      className="w-full sm:w-auto" 
-                      disabled={files.length === 0}
-                      onClick={handleConvert}
-                    >
-                      Convertir {files.length} {files.length === 1 ? 'Archivo' : 'Archivos'}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {convertedInfo && (
-                <div className="text-center py-8">
-                  <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">Conversión Completa</h2>
-                  <CardDescription className="mb-6">
-                    Tus archivos Word se han convertido a PDF con éxito.
-                  </CardDescription>
-
-                   <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
-                      <p className="text-sm text-muted-foreground">
-                        {isZip ? 'Tamaño del archivo ZIP' : 'Tamaño del archivo'}
-                      </p>
-                      <p className="text-xl font-bold">{formatBytes(convertedInfo.blob.size)}</p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
-                      <Button 
-                        size="lg" 
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        onClick={() => {
-                          setFiles([]);
-                          setConvertedInfo(null);
-                        }}
-                      >
-                        Convertir Nuevos Archivos
-                      </Button>
-                      <Button 
-                        size="lg" 
-                        className="w-full sm:w-auto" 
-                        onClick={handleDownload}
-                      >
-                        <Download className="mr-2" /> 
-                        {isZip ? 'Descargar ZIP' : 'Descargar PDF'}
-                      </Button>
-                    </div>
-                </div>
-              )}
+                    </motion.div>
+                  )}
+              </AnimatePresence>
             </CardContent>
           </Card>
         </div>
