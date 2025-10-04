@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription } from '@/components/ui/card';
 import { FileText, X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { convertPdfToWord, type ConversionResult } from '@/services/conversionService';
@@ -213,20 +213,24 @@ export default function ConvertPdfToWordPage() {
                       </div>
                     </motion.div>
                   ) : (
-                    <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
-                      <h2 className="text-2xl font-bold mb-2">Conversión Completa</h2>
-                      <p className="text-muted-foreground mb-6">
-                        Tus archivos han sido convertidos a Word con éxito.
-                      </p>
+                    <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8 w-full">
+                       <h2 className="text-2xl font-bold mb-2">Conversión Completa</h2>
+                        <CardDescription className="mb-6">
+                          Tus archivos se han convertido a Word con éxito.
+                        </CardDescription>
 
-                       <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
-                          <p className="text-sm text-muted-foreground">
-                            {isZip ? 'Tamaño del archivo ZIP' : 'Tamaño del archivo'}
-                          </p>
-                          <p className="text-xl font-bold">{formatBytes(convertedInfo.blob.size)}</p>
-                      </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center my-6 max-w-md mx-auto">
+                            <div className="bg-muted p-4 rounded-lg">
+                                <p className="text-sm text-muted-foreground">Archivos Convertidos</p>
+                                <p className="text-xl font-bold">{files.length}</p>
+                            </div>
+                            <div className="bg-muted p-4 rounded-lg">
+                                <p className="text-sm text-muted-foreground">Tamaño Final</p>
+                                <p className="text-xl font-bold">{formatBytes(convertedInfo.blob.size)}</p>
+                            </div>
+                        </div>
 
-                      <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
+                        <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
                           <Button 
                             size="lg" 
                             variant="outline"

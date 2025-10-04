@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { TopBar } from "@/components/dashboard/topbar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Button } from "@/components/ui/button";
@@ -181,13 +181,21 @@ export default function SplitMergePdfPage() {
     }
     if (processResult) {
         return (
-             <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
+             <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8 w-full">
                 <h2 className="text-2xl font-bold mb-2">Proceso Completado</h2>
-                <p className="text-muted-foreground mb-6">Tu archivo ha sido procesado con éxito.</p>
-                 <div className="bg-muted p-4 rounded-lg max-w-sm mx-auto">
-                    <p className="text-sm text-muted-foreground">Tamaño del archivo final</p>
-                    <p className="text-xl font-bold">{formatBytes(processResult.size)}</p>
+                <CardDescription className="mb-6">Tu archivo ha sido procesado con éxito.</CardDescription>
+                
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center my-6 max-w-md mx-auto">
+                    <div className="bg-muted p-4 rounded-lg">
+                        <p className="text-sm text-muted-foreground">Archivos Procesados</p>
+                        <p className="text-xl font-bold">{activeTab === 'split' ? 1 : mergeFiles.length}</p>
+                    </div>
+                     <div className="bg-muted p-4 rounded-lg">
+                        <p className="text-sm text-muted-foreground">Tamaño Final</p>
+                        <p className="text-xl font-bold">{formatBytes(processResult.size)}</p>
+                    </div>
                 </div>
+
                 <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
                    <Button size="lg" variant="outline" onClick={resetState}>Empezar de Nuevo</Button>
                    <Button size="lg" onClick={handleDownload}><Download className="mr-2"/>Descargar Archivo</Button>
