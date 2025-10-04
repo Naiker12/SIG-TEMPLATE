@@ -1,13 +1,20 @@
 
 import { DollarSign, ShoppingCart, Users, TrendingUp } from "lucide-react";
 
+export const availableColumns = [
+    'month', 'categoria', 'pais', 'ingresos', 'costos', 'unidades_vendidas', 'fuente_trafico'
+];
+
+export const categoricalColumns = ['month', 'categoria', 'pais', 'fuente_trafico'];
+export const numericalColumns = ['ingresos', 'costos', 'unidades_vendidas'];
+
 export const mockData = [
-    { month: 'Enero', category: 'Electrónica', country: 'Colombia', sales: 4500, source: 'Web' },
-    { month: 'Febrero', category: 'Electrónica', country: 'Colombia', sales: 5200, source: 'Web' },
-    { month: 'Marzo', category: 'Ropa', country: 'México', sales: 4100, source: 'TikTok' },
-    { month: 'Abril', category: 'Hogar', country: 'Colombia', sales: 3100, source: 'Pinterest' },
-    { month: 'Mayo', category: 'Electrónica', country: 'México', sales: 7500, source: 'Web' },
-    { month: 'Junio', category: 'Hogar', country: 'México', sales: 3900, source: 'Pinterest' },
+    { month: 'Ene', categoria: 'Electrónica', pais: 'Colombia', ingresos: 4500, costos: 2800, unidades_vendidas: 120, fuente_trafico: 'Web' },
+    { month: 'Feb', categoria: 'Electrónica', pais: 'Colombia', ingresos: 5200, costos: 3100, unidades_vendidas: 150, fuente_trafico: 'Web' },
+    { month: 'Mar', categoria: 'Ropa', pais: 'México', ingresos: 4100, costos: 2000, unidades_vendidas: 350, fuente_trafico: 'TikTok' },
+    { month: 'Abr', categoria: 'Hogar', pais: 'Colombia', ingresos: 3100, costos: 1500, unidades_vendidas: 200, fuente_trafico: 'Pinterest' },
+    { month: 'May', categoria: 'Electrónica', pais: 'México', ingresos: 7500, costos: 4500, unidades_vendidas: 210, fuente_trafico: 'Web' },
+    { month: 'Jun', categoria: 'Hogar', pais: 'México', ingresos: 3900, costos: 1900, unidades_vendidas: 250, fuente_trafico: 'Pinterest' },
 ];
 
 export const mockKpis = [
@@ -77,3 +84,5 @@ export const successRateData = [
     { name: 'success', value: 92 },
     { name: 'remaining', value: 8 }
 ];
+
+    

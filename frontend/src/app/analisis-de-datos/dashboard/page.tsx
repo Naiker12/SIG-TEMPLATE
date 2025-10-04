@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Loader2, FileUp, Settings2, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,12 +14,18 @@ import { useAuthStore } from '@/hooks/useAuthStore';
 import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
 import { ChartConfigSheet } from '@/components/analisis-de-datos/ChartConfigSheet';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
-import { mockData, mockKpis, mockSalesOverTime, mockSalesByCategory, dailyTasksData, successRateData, toolUsageData } from '@/components/analisis-de-datos/mock-data.tsx';
+import { mockData, mockKpis, mockSalesOverTime, mockSalesByCategory, dailyTasksData, successRateData, toolUsageData, availableColumns } from '@/components/analisis-de-datos/mock-data';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Legend, PieChart, Pie, Cell } from "recharts";
+import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+
+// --- Type Definitions for Chart Configuration ---
+export type ChartConfigState = {
+  area: { xAxis: string; yAxis: string; };
+  pie: { labelKey: string; valueKey: string; };
+};
 
 // --- MAIN COMPONENT ---
 export default function DataAnalysisPage() {
@@ -29,6 +35,11 @@ export default function DataAnalysisPage() {
     const { isLoggedIn } = useAuthStore(state => ({ isLoggedIn: state.isLoggedIn }));
     const router = useRouter();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+    const [chartConfig, setChartConfig] = useState<ChartConfigState>({
+      area: { xAxis: 'month', yAxis: 'ingresos' },
+      pie: { labelKey: 'categoria', valueKey: 'unidades_vendidas' },
+    });
 
     useEffect(() => {
         if (useAuthStore.persist.hasHydrated()) {
@@ -59,6 +70,26 @@ export default function DataAnalysisPage() {
             setIsLoading(false);
         }, 2000);
     }
+
+    const aggregatedPieData = useMemo(() => {
+        if (!data.length) return [];
+        const { labelKey, valueKey } = chartConfig.pie;
+        
+        const aggregation = data.reduce((acc, item) => {
+            const label = item[labelKey];
+            const value = item[valueKey];
+            if (label && typeof value === 'number') {
+                if (!acc[label]) {
+                    acc[label] = 0;
+                }
+                acc[label] += value;
+            }
+            return acc;
+        }, {} as Record<string, number>);
+
+        return Object.entries(aggregation).map(([name, value]) => ({ name, value }));
+
+    }, [data, chartConfig.pie]);
     
     // --- RENDER ---
     if (isCheckingAuth) {
@@ -107,7 +138,10 @@ export default function DataAnalysisPage() {
                         </div>
                     ) : (
                         <div className="space-y-8">
-                            <DataFilters />
+                            <DataFilters 
+                                chartConfig={chartConfig}
+                                setChartConfig={setChartConfig}
+                            />
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                {mockKpis.map((kpi, index) => <KpiCard key={index} {...kpi} />)}
@@ -116,35 +150,37 @@ export default function DataAnalysisPage() {
                             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                                 <Card className="lg:col-span-3">
                                     <CardHeader>
-                                        <CardTitle>Ingresos por Mes</CardTitle>
+                                        <CardTitle>Análisis de Métrica Principal</CardTitle>
+                                        <CardDescription>Visualización del eje Y: <span className='font-semibold text-primary'>{chartConfig.area.yAxis}</span> por <span className='font-semibold text-primary'>{chartConfig.area.xAxis}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
                                         <ChartContainer config={{}} className='w-full h-full'>
-                                            <AreaChart data={mockSalesOverTime} margin={{left: -20, right: 10, top: 10, bottom: 0}}>
+                                            <AreaChart data={mockData} margin={{left: -20, right: 10, top: 10, bottom: 0}}>
                                                 <defs>
                                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                                                         <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
                                                         <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
                                                     </linearGradient>
                                                 </defs>
-                                                <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false}/>
-                                                <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${Number(value) / 1000}k`}/>
+                                                <XAxis dataKey={chartConfig.area.xAxis} fontSize={12} tickLine={false} axisLine={false}/>
+                                                <YAxis dataKey={chartConfig.area.yAxis} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${Number(value) / 1000}k`}/>
                                                 <ChartTooltip cursor={true} content={<ChartTooltipContent indicator="line" />}/>
-                                                <Area type="monotone" dataKey="sales" stroke="hsl(var(--chart-1))" fill="url(#colorSales)" strokeWidth={2} />
+                                                <Area type="monotone" dataKey={chartConfig.area.yAxis} stroke="hsl(var(--chart-1))" fill="url(#colorSales)" strokeWidth={2} />
                                             </AreaChart>
                                         </ChartContainer>
                                     </CardContent>
                                 </Card>
                                 <Card className="lg:col-span-2">
                                     <CardHeader>
-                                        <CardTitle>Ventas por Categoría</CardTitle>
+                                        <CardTitle>Distribución por Categoría</CardTitle>
+                                        <CardDescription>Mostrando <span className='font-semibold text-primary'>{chartConfig.pie.valueKey}</span> por <span className='font-semibold text-primary'>{chartConfig.pie.labelKey}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
                                          <ChartContainer config={{}} className='w-full h-full'>
                                             <PieChart>
                                                 <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                                                <Pie data={mockSalesByCategory} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${(percent * 100).toFixed(0)}%`}>
-                                                    {mockSalesByCategory.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                                <Pie data={aggregatedPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${(percent * 100).toFixed(0)}%`}>
+                                                    {aggregatedPieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                                 </Pie>
                                                 <ChartLegend content={<ChartLegendContent />} />
                                             </PieChart>
@@ -248,3 +284,5 @@ export default function DataAnalysisPage() {
         </>
     );
 }
+
+    
