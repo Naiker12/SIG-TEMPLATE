@@ -1,6 +1,6 @@
 # /backend/db/supabase_client.py
 
-from supabase_py import create_client, Client
+from supabase import create_client, Client
 from app.core.config import settings
 
 # Crea una instancia única del cliente de Supabase para ser usada en toda la aplicación.
