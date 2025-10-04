@@ -8,16 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, Settings, Download, CloudUpload, Table2, Trash2 } from "lucide-react";
+import { UploadCloud, Settings, Download, CloudUpload, Table2, FileSpreadsheet, Trash2 } from "lucide-react";
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { useLoadingStore } from '@/hooks/use-loading-store';
+import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 
 
 export default function ConvertToDatasetPage() {
     const [file, setFile] = useState<File | null>(null);
-    const { setIsLoading } = useLoadingStore();
+    const [isConverting, setIsConverting] = useState(false);
+    const [conversionProgress, setConversionProgress] = useState(0);
     const [dataset, setDataset] = useState<any>(null);
     
     const mockProcessedInfo = file ? {
@@ -35,10 +36,23 @@ export default function ConvertToDatasetPage() {
     
     const handleConvert = () => {
         if (!file) return;
-        setIsLoading(true);
+        setIsConverting(true);
+        setConversionProgress(0);
         setDataset(null);
 
+        const progressInterval = setInterval(() => {
+            setConversionProgress(prev => {
+                if (prev >= 95) {
+                    clearInterval(progressInterval);
+                    return 95;
+                }
+                return prev + 10;
+            });
+        }, 200);
+
         setTimeout(() => {
+            clearInterval(progressInterval);
+            setConversionProgress(100);
             setDataset({
                 name: `Dataset de ${file.name.split('.')[0]}`,
                 description: 'Dataset consolidado de las ventas trimestrales del año 2023.',
@@ -55,11 +69,19 @@ export default function ConvertToDatasetPage() {
                     { field: 'Region', type: 'string' },
                 ]
             });
-            setIsLoading(false);
+            setIsConverting(false);
         }, 2500);
     }
     
     const renderResultContent = () => {
+        if (isConverting) {
+            return (
+                 <motion.div key="progress" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+                    <CircularProgressBar progress={conversionProgress} message="Convirtiendo a Dataset..." />
+                 </motion.div>
+            )
+        }
+
         if (dataset) {
             return (
                  <motion.div key="dataset-info" initial={{opacity: 0}} animate={{opacity: 1}} className="space-y-4 w-full">
@@ -208,9 +230,9 @@ export default function ConvertToDatasetPage() {
                        </AnimatePresence>
                     </CardContent>
                     <div className="p-6 border-t space-y-3">
-                        <Button size="lg" className="w-full" onClick={handleConvert} disabled={!file}>
+                        <Button size="lg" className="w-full" onClick={handleConvert} disabled={!file || isConverting}>
                             <Settings className="mr-2"/>
-                            {dataset ? 'Volver a Convertir' : 'Convertir a Dataset'}
+                            {isConverting ? 'Convirtiendo...' : (dataset ? 'Volver a Convertir' : 'Convertir a Dataset')}
                         </Button>
                         {dataset && (
                             <div className="grid grid-cols-2 gap-3">

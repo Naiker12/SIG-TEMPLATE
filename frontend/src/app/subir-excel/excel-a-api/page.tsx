@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { ActiveApisModal } from '@/components/excel-a-api/active-apis-modal';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useLoadingStore } from '@/hooks/use-loading-store';
+import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 
 const mockExcelData = [
     { id: "row-1", "ID Cliente": "C001", "Nombre": "Ana", "Apellido": "Torres", "Email": "ana.t@example.com", "País": "España", "Último Pedido": "2024-08-15" },
@@ -28,19 +28,32 @@ export default function ExcelToApiPage() {
     const [file, setFile] = useState<File | null>(null);
     const [data, setData] = useState<any[]>([]);
     const [isApiModalOpen, setIsApiModalOpen] = useState(false);
-    const { setIsLoading } = useLoadingStore();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [progress, setProgress] = useState(0);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             const newFile = event.target.files[0];
             setFile(newFile);
-            setIsLoading(true);
+            setIsProcessing(true);
+            setProgress(0);
             setData([]);
 
-            // Simulate processing
+            const progressInterval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev >= 95) {
+                        clearInterval(progressInterval);
+                        return 95;
+                    }
+                    return prev + 10;
+                });
+            }, 200);
+
             setTimeout(() => {
+                clearInterval(progressInterval);
+                setProgress(100);
                 setData(mockExcelData);
-                setIsLoading(false);
+                setIsProcessing(false);
             }, 2500);
         }
     };
@@ -103,7 +116,7 @@ export default function ExcelToApiPage() {
                     </div>
                     
                     <AnimatePresence mode="wait">
-                        {data.length === 0 ? (
+                        {data.length === 0 && !isProcessing ? (
                              <motion.div key="upload" className="w-full">
                                 <Card className="shadow-lg max-w-4xl mx-auto border-2 border-accent min-h-[450px]">
                                     <CardContent className="h-full flex flex-col justify-center items-center p-6">
@@ -124,32 +137,38 @@ export default function ExcelToApiPage() {
                             </motion.div>
                         ) : (
                             <motion.div key="data" className="w-full">
-                                <Card className="border-2 border-accent shadow-lg">
+                                <Card className="border-2 border-accent shadow-lg min-h-[450px]">
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
-                                            <FileSpreadsheet /> Vista Previa de Datos
+                                            <FileSpreadsheet /> {isProcessing ? 'Procesando Archivo' : 'Vista Previa de Datos'}
                                         </CardTitle>
                                         <CardDescription>
-                                            Los datos de tu archivo <span className="font-semibold text-primary">{file?.name}</span> están listos.
+                                            {isProcessing ? `Procesando el archivo ${file?.name}...` : `Los datos de tu archivo ${file?.name} están listos.`}
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent>
-                                        <Tabs defaultValue="table" className="w-full">
-                                            <TabsList>
-                                                <TabsTrigger value="table"><TableIcon className="mr-2" />Tabla</TabsTrigger>
-                                                <TabsTrigger value="json"><Code className="mr-2" />JSON</TabsTrigger>
-                                            </TabsList>
-                                            <TabsContent value="table" className="mt-4">
-                                                <DataTable columns={columns} data={data} />
-                                            </TabsContent>
-                                            <TabsContent value="json" className="mt-4 flex min-h-[500px]">
-                                                <Textarea
-                                                    readOnly
-                                                    value={JSON.stringify(data, null, 2)}
-                                                    className="flex-1 bg-muted/50 font-mono text-xs"
-                                                />
-                                            </TabsContent>
-                                        </Tabs>
+                                        {isProcessing ? (
+                                            <div className="flex items-center justify-center min-h-[300px]">
+                                                <CircularProgressBar progress={progress} message="Procesando..." />
+                                            </div>
+                                        ) : (
+                                            <Tabs defaultValue="table" className="w-full">
+                                                <TabsList>
+                                                    <TabsTrigger value="table"><TableIcon className="mr-2" />Tabla</TabsTrigger>
+                                                    <TabsTrigger value="json"><Code className="mr-2" />JSON</TabsTrigger>
+                                                </TabsList>
+                                                <TabsContent value="table" className="mt-4">
+                                                    <DataTable columns={columns} data={data} />
+                                                </TabsContent>
+                                                <TabsContent value="json" className="mt-4 flex min-h-[500px]">
+                                                    <Textarea
+                                                        readOnly
+                                                        value={JSON.stringify(data, null, 2)}
+                                                        className="flex-1 bg-muted/50 font-mono text-xs"
+                                                    />
+                                                </TabsContent>
+                                            </Tabs>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </motion.div>

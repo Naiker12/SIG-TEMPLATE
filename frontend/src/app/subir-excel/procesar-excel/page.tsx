@@ -20,7 +20,6 @@ import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef, type Row, type PaginationState } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview, duplicateExcelRow, downloadExcelFile } from '@/services/excelService';
-import { useLoadingStore } from '@/hooks/use-loading-store';
 import {
   Select,
   SelectContent,
@@ -29,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { saveAs } from 'file-saver';
+import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 
 
 type DuplicateModalState = {
@@ -40,7 +40,8 @@ export default function ProcessExcelPage() {
   const [file, setFile] = useState<File | null>(null);
   const [processedFileId, setProcessedFileId] = useState<string | null>(null);
   const [tableData, setTableData] = useState<ExcelPreview | null>(null);
-  const { setIsLoading } = useLoadingStore();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [selectedRows, setSelectedRows] = useState<Row<any>[]>([]);
   const [duplicateModal, setDuplicateModal] = useState<DuplicateModalState>({ isOpen: false, rowData: null });
   const [pagination, setPagination] = useState<PaginationState>({
@@ -74,7 +75,18 @@ export default function ProcessExcelPage() {
       return;
     }
     
-    setIsLoading(true);
+    setIsProcessing(true);
+    setProgress(0);
+
+    const progressInterval = setInterval(() => {
+        setProgress(prev => {
+            if (prev >= 95) {
+                clearInterval(progressInterval);
+                return 95;
+            }
+            return prev + 10;
+        });
+    }, 200);
 
     try {
       const { file_id } = await uploadAndProcessExcel(file);
@@ -85,7 +97,6 @@ export default function ProcessExcelPage() {
         description: "El backend ha procesado el archivo. Obteniendo vista previa...",
       });
       
-      // Fetch initial page
       await fetchPageData(file_id, 1, pagination.pageSize);
 
     } catch (error) {
@@ -96,7 +107,9 @@ export default function ProcessExcelPage() {
         description: error instanceof Error ? error.message : "No se pudo procesar el archivo.",
       });
     } finally {
-      setIsLoading(false);
+      clearInterval(progressInterval);
+      setProgress(100);
+      setIsProcessing(false);
     }
   };
 
@@ -219,7 +232,7 @@ export default function ProcessExcelPage() {
             </p>
           </header>
 
-          {!tableData ? (
+          {!tableData && !isProcessing ? (
             <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent">
                 <CardHeader>
                     <CardTitle>Cargar Archivo</CardTitle>
@@ -241,6 +254,12 @@ export default function ProcessExcelPage() {
                     <Button onClick={handleProcess} disabled={!file} className="w-full" size="lg">
                         Procesar Archivo
                     </Button>
+                </CardContent>
+            </Card>
+          ) : isProcessing ? (
+            <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent min-h-[400px]">
+                <CardContent className="flex items-center justify-center h-full p-6">
+                    <CircularProgressBar progress={progress} message="Procesando archivo..." />
                 </CardContent>
             </Card>
           ) : (

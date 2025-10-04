@@ -13,13 +13,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UploadCloud, PlusCircle, Trash2, Play, AlertTriangle, CheckCircle, FileSpreadsheet } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useLoadingStore } from '@/hooks/use-loading-store';
+import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 
 
 export default function FormatValidationPage() {
     const [file, setFile] = useState<File | null>(null);
+    const [isValidating, setIsValidating] = useState(false);
+    const [validationProgress, setValidationProgress] = useState(0);
     const [validationResult, setValidationResult] = useState<any>(null);
-    const { setIsLoading } = useLoadingStore();
 
     const [rules, setRules] = useState([
         { id: 1, column: "email", rule: "is_email", label: "Es un email válido" },
@@ -40,10 +41,23 @@ export default function FormatValidationPage() {
     
     const handleValidate = () => {
         if (!file) return;
-        setIsLoading(true);
+        setIsValidating(true);
+        setValidationProgress(0);
         setValidationResult(null);
         
+        const progressInterval = setInterval(() => {
+            setValidationProgress(prev => {
+                if (prev >= 95) {
+                    clearInterval(progressInterval);
+                    return 95;
+                }
+                return prev + 10;
+            });
+        }, 200);
+
         setTimeout(() => {
+            clearInterval(progressInterval);
+            setValidationProgress(100);
             setValidationResult({
                 summary: { totalRows: 100, validRows: 92, invalidRows: 8 },
                 errors: [
@@ -53,18 +67,26 @@ export default function FormatValidationPage() {
                     { row: 73, column: "email", value: "luis.g@", error: "No es un email válido" },
                 ]
             });
-            setIsLoading(false);
+            setIsValidating(false);
         }, 2500);
     }
 
     const renderContent = () => {
+        if (isValidating) {
+            return (
+                <motion.div key="progress" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+                    <CircularProgressBar progress={validationProgress} message="Validando archivo..." />
+                </motion.div>
+            );
+        }
+
         if (!validationResult) {
             return (
                 <motion.div
                   key="placeholder"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="w-full flex flex-col items-center justify-center text-center min-h-[400px] border-2 border-dashed rounded-xl bg-muted/30 p-8"
+                  className="w-full flex flex-col items-center justify-center text-center p-8"
                 >
                     <AlertTriangle className="h-20 w-20 text-muted-foreground mb-4"/>
                     <h3 className="text-xl font-semibold mb-2">Resultados del Análisis</h3>
@@ -239,8 +261,8 @@ export default function FormatValidationPage() {
                                             <CardTitle>Paso 3: Resultados de la Validación</CardTitle>
                                             <CardDescription>Resumen de la calidad de los datos.</CardDescription>
                                         </div>
-                                        <Button onClick={handleValidate} disabled={!file} size="lg">
-                                            <Play className="mr-2" /> {validationResult ? 'Validar de Nuevo' : 'Ejecutar Validación'}
+                                        <Button onClick={handleValidate} disabled={!file || isValidating} size="lg">
+                                            <Play className="mr-2" /> {isValidating ? 'Validando...' : (validationResult ? 'Validar de Nuevo' : 'Ejecutar Validación')}
                                         </Button>
                                     </div>
                                 </CardHeader>
