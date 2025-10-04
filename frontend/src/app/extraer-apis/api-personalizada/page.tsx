@@ -126,12 +126,12 @@ export default function CustomApiPage() {
                 </div>
 
                 <Collapsible open={hasHeaders} onOpenChange={setHasHeaders} className="space-y-4 pt-2">
-                    <CollapsibleTrigger asChild>
-                       <div className="flex items-center space-x-2">
-                           <Switch id="headers-switch" checked={hasHeaders} />
-                           <Label htmlFor="headers-switch" className="cursor-pointer">Añadir Cabeceras Personalizadas</Label>
-                       </div>
-                    </CollapsibleTrigger>
+                    <div className="flex items-center space-x-2">
+                        <Switch id="headers-switch" checked={hasHeaders} onCheckedChange={setHasHeaders} onClick={(e) => e.stopPropagation()} />
+                        <CollapsibleTrigger asChild>
+                            <Label htmlFor="headers-switch" className="cursor-pointer">Añadir Cabeceras Personalizadas</Label>
+                        </CollapsibleTrigger>
+                    </div>
                     <CollapsibleContent>
                        <div className="space-y-2">
                            <Label htmlFor="api-headers">Cabeceras (JSON)</Label>
