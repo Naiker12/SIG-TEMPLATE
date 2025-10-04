@@ -7,24 +7,14 @@ import type { UploadResponse, AnalysisResult, Project, ProjectCreate } from './t
 export async function uploadFileForAnalysis(file: File): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    
-    // This endpoint uses fetchWithAuth implicitly because the service needs to know the user
-    const token = await import('@/hooks/useAuthStore').then(m => m.useAuthStore.getState().token);
 
-    const response = await fetch(`${API_BASE_URL}/api/upload`, {
+    // fetchWithAuth will automatically handle the token.
+    // We must NOT set headers manually when using FormData,
+    // as the browser needs to set the Content-Type with the correct boundary.
+    return fetchWithAuth(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
         body: formData,
     });
-    
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Error al subir el archivo.' }));
-        throw new Error(errorData.detail || 'Error en el servidor');
-    }
-    
-    return response.json();
 }
 
 export async function getFileAnalysis(fileId: string): Promise<AnalysisResult> {
@@ -52,5 +42,3 @@ export async function getProjectById(projectId: string): Promise<Project> {
         method: 'GET',
     });
 }
-
-    

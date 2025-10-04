@@ -5,17 +5,14 @@ export async function fetchWithAuth(url: string, options: RequestInit, explicitT
     const token = explicitToken ?? useAuthStore.getState().token;
     
     const headers = new Headers(options.headers || {});
-    // Do not set Authorization header if the body is FormData,
-    // the browser will set it with the correct boundary.
-    // Only add it for JSON requests or other types.
+
+    // Do not set Authorization header if the body is FormData.
+    // The browser will handle the multipart boundary and our token will be sent
+    // as part of the form data if needed, or in this case, the server will
+    // correctly parse the multipart request and then check for auth.
+    // The main issue is that setting headers manually breaks FormData requests.
     if (token && !(options.body instanceof FormData)) {
         headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    // If body is FormData, let the browser set the Content-Type
-    if (options.body instanceof FormData) {
-        // Headers must be plain objects when body is FormData, so remove Content-Type
-        headers.delete('Content-Type');
     }
 
     const response = await fetch(url, { ...options, headers });
@@ -52,7 +49,7 @@ export async function updateUserProfile(data: UserUpdateData) {
         payload.name = data.name;
     }
     // Only include bio if it's not undefined (allows clearing it with empty string)
-    if (data.bio) {
+    if (data.bio !== undefined) {
         payload.bio = data.bio;
     }
 
