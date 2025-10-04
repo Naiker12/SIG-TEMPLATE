@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, DatabaseZap, TableIcon, Code, FileSpreadsheet, Power } from "lucide-react";
+import { UploadCloud, DatabaseZap, TableIcon, Code, FileSpreadsheet, Power, Trash2 } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
