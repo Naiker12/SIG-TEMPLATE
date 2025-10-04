@@ -54,7 +54,7 @@ body {
     --card-foreground: 220 13% 90%;
     --popover: 222 17% 12%;
     --popover-foreground: 220 13% 90%;
-    --primary: 221 83% 53%;
+    --primary: 217 91% 60%; /* #3B82F6 */
     --primary-foreground: 0 0% 100%;
     --secondary: 45 100% 43%;
     --secondary-foreground: 0 0% 13%;
@@ -70,19 +70,19 @@ body {
     --warning-foreground: 0 0% 13%;
     --border: 225 10% 19%;
     --input: 225 10% 19%;
-    --ring: 221 83% 53%;
+    --ring: 217 91% 60%;
 
-    --chart-1: 221 83% 53%;
+    --chart-1: 217 91% 60%;
     --chart-2: 142 71% 45%;
     --chart-3: 0 72% 51%;
     --chart-4: 42 95% 53%;
     --chart-5: 262 83% 60%;
 
-    --sidebar-background: 225 15% 8%;
-    --sidebar-foreground: 220 13% 90%;
-    --sidebar-muted: 225 10% 19%;
-    --sidebar-muted-foreground: 220 9% 64%;
-    --sidebar-border: 225 10% 15%;
+    --sidebar-background: 220 15% 8%; /* #111318 */
+    --sidebar-foreground: 220 13% 90%; /* #E4E6EB */
+    --sidebar-muted: 225 15% 12%; /* #1A1D24 - Hover/Active */
+    --sidebar-muted-foreground: 220 9% 64%; /* #9CA3AF */
+    --sidebar-border: 225 10% 15%; /* #2A2D35 */
   }
 }
 

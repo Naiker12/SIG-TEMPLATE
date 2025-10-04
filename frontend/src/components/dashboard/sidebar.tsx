@@ -44,15 +44,15 @@ export function DashboardSidebar() {
             <CollapsibleTrigger asChild>
               <Button
                 variant={isActive ? "secondary" : "ghost"}
-                className="w-full justify-start text-base px-3"
+                className="w-full justify-start text-base px-3 h-10"
               >
-                <item.icon className="mr-3 h-5 w-5" />
+                <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-primary" : "text-sidebar-muted-foreground")} />
                 {isOpen && item.title}
                 {isOpen && <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200" />}
               </Button>
             </CollapsibleTrigger>
             {isOpen && (
-              <CollapsibleContent className="pl-8 py-1 space-y-1 relative before:absolute before:left-3.5 before:top-0 before:h-full before:w-px before:bg-border/60">
+              <CollapsibleContent className="pl-8 py-1 space-y-1 relative before:absolute before:left-3.5 before:top-0 before:h-full before:w-px before:bg-sidebar-border/60">
                 {item.items.map((subItem) => {
                   const isSubItemActive = pathname === subItem.href;
                   return (
@@ -60,7 +60,7 @@ export function DashboardSidebar() {
                       key={subItem.href}
                       href={subItem.href}
                       className={cn(
-                        "group flex items-center rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground relative",
+                        "group flex items-center rounded-md px-3 py-1.5 text-sm text-sidebar-muted-foreground hover:bg-sidebar-muted hover:text-sidebar-foreground relative",
                         isSubItemActive && "bg-primary/10 text-primary"
                       )}
                     >
@@ -84,7 +84,7 @@ export function DashboardSidebar() {
             "w-full justify-start text-base px-3 h-10"
           )}
         >
-          <item.icon className="mr-3 h-5 w-5" />
+          <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-primary" : "text-sidebar-muted-foreground")} />
           {isOpen && item.title}
         </Link>
       );
@@ -93,7 +93,7 @@ export function DashboardSidebar() {
 
 
   return (
-    <aside className={cn("flex-col border-r bg-card transition-[width] duration-300 ease-in-out", isOpen ? "w-60" : "w-16", "hidden sm:flex")}>
+    <aside className={cn("flex-col border-r bg-sidebar transition-[width] duration-300 ease-in-out", isOpen ? "w-60" : "w-16", "hidden sm:flex")}>
       <div className="flex h-16 items-center px-4 shrink-0 justify-between">
         <Link href="/" className={cn("flex items-center gap-2.5", !isOpen && "w-10 justify-center")}>
           <Image
@@ -115,13 +115,13 @@ export function DashboardSidebar() {
         {isOpen ? (
             <>
                 <div>
-                    <p className="px-3 py-1 text-xs font-semibold uppercase text-muted-foreground/80 tracking-wider">
+                    <p className="px-3 py-1 text-xs font-semibold uppercase text-sidebar-muted-foreground/80 tracking-wider">
                         Plataforma
                     </p>
                     <div className="mt-2 space-y-1">{renderNavLinks(platformItems)}</div>
                 </div>
                  <div>
-                    <p className="px-3 py-1 text-xs font-semibold uppercase text-muted-foreground/80 tracking-wider">
+                    <p className="px-3 py-1 text-xs font-semibold uppercase text-sidebar-muted-foreground/80 tracking-wider">
                         Herramientas
                     </p>
                     <div className="mt-2 space-y-1">{renderNavLinks(toolsItems)}</div>
@@ -140,12 +140,12 @@ export function DashboardSidebar() {
         )}
       </div>
 
-       <div className="mt-auto p-3 space-y-2 border-t">
+       <div className="mt-auto p-3 space-y-2 border-t border-sidebar-border">
          {isOpen ? (
             <>
               {renderNavLinks(userMenuItems)}
-              <Separator />
-               <Button variant="ghost" className="w-full justify-start text-base px-3" onClick={handleLogout}>
+              <Separator className="bg-sidebar-border"/>
+               <Button variant="ghost" className="w-full justify-start text-base px-3 h-10 text-sidebar-muted-foreground" onClick={handleLogout}>
                 <LogOut className="mr-3 h-5 w-5" />
                 Cerrar Sesión
               </Button>
