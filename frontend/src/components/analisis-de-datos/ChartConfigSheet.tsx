@@ -1,7 +1,6 @@
 
 'use client';
 
-import type { Dispatch, SetStateAction } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -15,28 +14,23 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Settings2 } from 'lucide-react';
-import { availableColumns, categoricalColumns, numericalColumns } from './mock-data';
-import type { ChartConfigState } from '@/app/analisis-de-datos/dashboard/page';
+import { categoricalColumns, numericalColumns } from './mock-data';
+import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 
-type ChartConfigSheetProps = {
-  chartConfig: ChartConfigState;
-  setChartConfig: Dispatch<SetStateAction<ChartConfigState>>;
-};
-
-export function ChartConfigSheet({ chartConfig, setChartConfig }: ChartConfigSheetProps) {
+export function ChartConfigSheet() {
+  const { 
+    areaChartConfig, 
+    pieChartConfig,
+    setAreaChartConfig,
+    setPieChartConfig 
+  } = useChartConfigStore();
   
   const handleAreaChartChange = (key: 'xAxis' | 'yAxis', value: string) => {
-    setChartConfig(prev => ({
-      ...prev,
-      area: { ...prev.area, [key]: value }
-    }));
+    setAreaChartConfig({ ...areaChartConfig, [key]: value });
   };
   
   const handlePieChartChange = (key: 'labelKey' | 'valueKey', value: string) => {
-    setChartConfig(prev => ({
-      ...prev,
-      pie: { ...prev.pie, [key]: value }
-    }));
+    setPieChartConfig({ ...pieChartConfig, [key]: value });
   };
 
   return (
@@ -56,14 +50,14 @@ export function ChartConfigSheet({ chartConfig, setChartConfig }: ChartConfigShe
                  <h4 className='font-semibold'>Gráfico de Área</h4>
                  <div className="space-y-2">
                     <Label htmlFor="area-chart-x">Eje X (Categorías)</Label>
-                    <Select value={chartConfig.area.xAxis} onValueChange={(value) => handleAreaChartChange('xAxis', value)}>
+                    <Select value={areaChartConfig.xAxis} onValueChange={(value) => handleAreaChartChange('xAxis', value)}>
                         <SelectTrigger id="area-chart-x"><SelectValue /></SelectTrigger>
                         <SelectContent>{categoricalColumns.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="area-chart-y">Eje Y (Valores Numéricos)</Label>
-                     <Select value={chartConfig.area.yAxis} onValueChange={(value) => handleAreaChartChange('yAxis', value)}>
+                     <Select value={areaChartConfig.yAxis} onValueChange={(value) => handleAreaChartChange('yAxis', value)}>
                         <SelectTrigger id="area-chart-y"><SelectValue /></SelectTrigger>
                         <SelectContent>{numericalColumns.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
@@ -73,14 +67,14 @@ export function ChartConfigSheet({ chartConfig, setChartConfig }: ChartConfigShe
                  <h4 className='font-semibold'>Gráfico de Pastel</h4>
                  <div className="space-y-2">
                     <Label htmlFor="pie-chart-labels">Etiquetas (Categorías)</Label>
-                     <Select value={chartConfig.pie.labelKey} onValueChange={(value) => handlePieChartChange('labelKey', value)}>
+                     <Select value={pieChartConfig.labelKey} onValueChange={(value) => handlePieChartChange('labelKey', value)}>
                         <SelectTrigger id="pie-chart-labels"><SelectValue /></SelectTrigger>
                         <SelectContent>{categoricalColumns.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="pie-chart-values">Valores (Agregados)</Label>
-                     <Select value={chartConfig.pie.valueKey} onValueChange={(value) => handlePieChartChange('valueKey', value)}>
+                     <Select value={pieChartConfig.valueKey} onValueChange={(value) => handlePieChartChange('valueKey', value)}>
                         <SelectTrigger id="pie-chart-values"><SelectValue /></SelectTrigger>
                         <SelectContent>{numericalColumns.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
@@ -94,5 +88,3 @@ export function ChartConfigSheet({ chartConfig, setChartConfig }: ChartConfigShe
     </Sheet>
   );
 }
-
-    

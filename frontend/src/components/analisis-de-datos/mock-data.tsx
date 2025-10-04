@@ -48,22 +48,6 @@ export const mockKpis = [
   },
 ];
 
-export const mockSalesOverTime = [
-    { month: 'Ene', sales: 4500 },
-    { month: 'Feb', sales: 5200 },
-    { month: 'Mar', sales: 4100 },
-    { month: 'Abr', sales: 3100 },
-    { month: 'May', sales: 7500 },
-    { month: 'Jun', sales: 3900 },
-];
-
-export const mockSalesByCategory = [
-    { name: 'Electrónica', sales: 17200, fill: 'var(--color-electronics)' },
-    { name: 'Ropa', sales: 4100, fill: 'var(--color-clothing)' },
-    { name: 'Hogar', sales: 7000, fill: 'var(--color-home)' },
-];
-
-
 export const toolUsageData = [
   { name: 'PDF', usage: 237 },
   { name: 'Word', usage: 305 },
@@ -84,5 +68,3 @@ export const successRateData = [
     { name: 'success', value: 92 },
     { name: 'remaining', value: 8 }
 ];
-
-    

@@ -12,20 +12,14 @@ import { Label } from '@/components/ui/label';
 import { useLoadingStore } from '@/hooks/use-loading-store';
 import { useAuthStore } from '@/hooks/useAuthStore';
 import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
-import { ChartConfigSheet } from '@/components/analisis-de-datos/ChartConfigSheet';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
-import { mockData, mockKpis, mockSalesOverTime, mockSalesByCategory, dailyTasksData, successRateData, toolUsageData, availableColumns } from '@/components/analisis-de-datos/mock-data';
+import { mockData, mockKpis, dailyTasksData, successRateData, toolUsageData } from '@/components/analisis-de-datos/mock-data';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
+import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
-
-// --- Type Definitions for Chart Configuration ---
-export type ChartConfigState = {
-  area: { xAxis: string; yAxis: string; };
-  pie: { labelKey: string; valueKey: string; };
-};
 
 // --- MAIN COMPONENT ---
 export default function DataAnalysisPage() {
@@ -36,10 +30,7 @@ export default function DataAnalysisPage() {
     const router = useRouter();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-    const [chartConfig, setChartConfig] = useState<ChartConfigState>({
-      area: { xAxis: 'month', yAxis: 'ingresos' },
-      pie: { labelKey: 'categoria', valueKey: 'unidades_vendidas' },
-    });
+    const { areaChartConfig, pieChartConfig } = useChartConfigStore();
 
     useEffect(() => {
         if (useAuthStore.persist.hasHydrated()) {
@@ -73,7 +64,7 @@ export default function DataAnalysisPage() {
 
     const aggregatedPieData = useMemo(() => {
         if (!data.length) return [];
-        const { labelKey, valueKey } = chartConfig.pie;
+        const { labelKey, valueKey } = pieChartConfig;
         
         const aggregation = data.reduce((acc, item) => {
             const label = item[labelKey];
@@ -89,7 +80,7 @@ export default function DataAnalysisPage() {
 
         return Object.entries(aggregation).map(([name, value]) => ({ name, value }));
 
-    }, [data, chartConfig.pie]);
+    }, [data, pieChartConfig]);
     
     // --- RENDER ---
     if (isCheckingAuth) {
@@ -138,10 +129,7 @@ export default function DataAnalysisPage() {
                         </div>
                     ) : (
                         <div className="space-y-8">
-                            <DataFilters 
-                                chartConfig={chartConfig}
-                                setChartConfig={setChartConfig}
-                            />
+                            <DataFilters />
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                {mockKpis.map((kpi, index) => <KpiCard key={index} {...kpi} />)}
@@ -151,7 +139,7 @@ export default function DataAnalysisPage() {
                                 <Card className="lg:col-span-3">
                                     <CardHeader>
                                         <CardTitle>Análisis de Métrica Principal</CardTitle>
-                                        <CardDescription>Visualización del eje Y: <span className='font-semibold text-primary'>{chartConfig.area.yAxis}</span> por <span className='font-semibold text-primary'>{chartConfig.area.xAxis}</span>.</CardDescription>
+                                        <CardDescription>Visualización del eje Y: <span className='font-semibold text-primary'>{areaChartConfig.yAxis}</span> por <span className='font-semibold text-primary'>{areaChartConfig.xAxis}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
                                         <ChartContainer config={{}} className='w-full h-full'>
@@ -162,10 +150,10 @@ export default function DataAnalysisPage() {
                                                         <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
                                                     </linearGradient>
                                                 </defs>
-                                                <XAxis dataKey={chartConfig.area.xAxis} fontSize={12} tickLine={false} axisLine={false}/>
-                                                <YAxis dataKey={chartConfig.area.yAxis} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${Number(value) / 1000}k`}/>
+                                                <XAxis dataKey={areaChartConfig.xAxis} fontSize={12} tickLine={false} axisLine={false}/>
+                                                <YAxis dataKey={areaChartConfig.yAxis} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${Number(value) / 1000}k`}/>
                                                 <ChartTooltip cursor={true} content={<ChartTooltipContent indicator="line" />}/>
-                                                <Area type="monotone" dataKey={chartConfig.area.yAxis} stroke="hsl(var(--chart-1))" fill="url(#colorSales)" strokeWidth={2} />
+                                                <Area type="monotone" dataKey={areaChartConfig.yAxis} stroke="hsl(var(--chart-1))" fill="url(#colorSales)" strokeWidth={2} />
                                             </AreaChart>
                                         </ChartContainer>
                                     </CardContent>
@@ -173,7 +161,7 @@ export default function DataAnalysisPage() {
                                 <Card className="lg:col-span-2">
                                     <CardHeader>
                                         <CardTitle>Distribución por Categoría</CardTitle>
-                                        <CardDescription>Mostrando <span className='font-semibold text-primary'>{chartConfig.pie.valueKey}</span> por <span className='font-semibold text-primary'>{chartConfig.pie.labelKey}</span>.</CardDescription>
+                                        <CardDescription>Mostrando <span className='font-semibold text-primary'>{pieChartConfig.valueKey}</span> por <span className='font-semibold text-primary'>{pieChartConfig.labelKey}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
                                          <ChartContainer config={{}} className='w-full h-full'>
@@ -291,5 +279,3 @@ export default function DataAnalysisPage() {
         </>
     );
 }
-
-    

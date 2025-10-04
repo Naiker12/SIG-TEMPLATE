@@ -6,19 +6,13 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Download, Mail } from 'lucide-react';
 import { ChartConfigSheet } from './ChartConfigSheet';
-import type { ChartConfigState } from '@/app/analisis-de-datos/dashboard/page';
 
-type DataFiltersProps = {
-    chartConfig: ChartConfigState;
-    setChartConfig: React.Dispatch<React.SetStateAction<ChartConfigState>>;
-};
-
-export function DataFilters({ chartConfig, setChartConfig }: DataFiltersProps) {
+export function DataFilters() {
   return (
     <div className="flex flex-col md:flex-row gap-4 justify-between items-center p-4 border rounded-lg bg-card">
       <div className="flex flex-wrap items-center gap-4">
         <DateRangePicker />
-        <ChartConfigSheet chartConfig={chartConfig} setChartConfig={setChartConfig} />
+        <ChartConfigSheet />
       </div>
       <div className="flex items-center gap-2">
         <DropdownMenu>
@@ -38,5 +32,3 @@ export function DataFilters({ chartConfig, setChartConfig }: DataFiltersProps) {
     </div>
   );
 }
-
-    
