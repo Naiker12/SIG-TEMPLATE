@@ -3,12 +3,11 @@ import type {Metadata} from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
-import { ThemeProvider } from "next-themes";
 import { AuthModalProvider } from '@/components/auth-modal';
 import { PageLoader } from '@/components/ui/page-loader';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
-import { useSidebarStore } from '@/hooks/use-sidebar-store';
+import { MainContentWrapper } from '@/components/main-content-wrapper';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -41,15 +40,13 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning className={inter.variable}>
       <head />
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            <AuthModalProvider />
-            <PageLoader />
-            <DashboardSidebar />
-            <div className={cn("transition-[padding-left] duration-300 ease-in-out", useSidebarStore.getState().isOpen ? "sm:pl-60" : "sm:pl-16")}>
-              {children}
-            </div>
-            <Toaster />
-        </ThemeProvider>
+        <AuthModalProvider />
+        <PageLoader />
+        <DashboardSidebar />
+        <MainContentWrapper>
+          {children}
+        </MainContentWrapper>
+        <Toaster />
       </body>
     </html>
   );
