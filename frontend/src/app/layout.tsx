@@ -7,7 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthModalProvider } from '@/components/auth-modal';
 import { PageLoader } from '@/components/ui/page-loader';
 import { cn } from '@/lib/utils';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/hooks/use-sidebar-store';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
       { url: '/mobile/android-36.png', type: 'image/png', sizes: '36x36' },
       { url: '/mobile/android-48.png', type: 'image/png', sizes: '48x48' },
       { url: '/mobile/android-72.png', type: 'image/png', sizes: '72x72' },
-      { url: '/mobile/android-96.png', type: 'image/png', sizes: '96x96' },
+      { url: '/mobile/android-96.png', type 'image/png', sizes: '96x96' },
     ],
     apple: '/mobile/apple-touch-icon.png',
   }
@@ -41,12 +41,10 @@ export default function RootLayout({
       <head />
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <SidebarProvider>
             <AuthModalProvider />
             <PageLoader />
             {children}
             <Toaster />
-          </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>

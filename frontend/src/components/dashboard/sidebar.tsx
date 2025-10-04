@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils"
 import { platformItems, toolsItems, userMenuItems } from "./sidebar-data"
 import type { MenuItem } from "./sidebar-data"
-import { ChevronsRight, LogOut, ChevronDown } from "lucide-react"
+import { ChevronsLeft, LogOut, ChevronDown } from "lucide-react"
 
 export function DashboardSidebar() {
   const { isLoggedIn, user, clearSession } = useAuthStore()
@@ -104,8 +104,8 @@ export function DashboardSidebar() {
           {isOpen && <span className="text-lg font-bold">SIG IA</span>}
         </Link>
         {isOpen && (
-            <Button variant="ghost" size="icon" onClick={toggle} className={cn(!isOpen && "rotate-180")}>
-                <ChevronsRight className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={toggle}>
+                <ChevronsLeft className="h-5 w-5" />
             </Button>
         )}
       </div>
