@@ -10,75 +10,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- Modelos de Autenticación y Usuarios ---
 model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  name       String
-  password   String
-  bio        String?
-  createdAt  DateTime @default(now()) @map("createdAt")
-  updatedAt  DateTime @updatedAt @map("updatedAt")
-  roleId     String
-  role       Role     @relation(fields: [roleId], references: [id])
-  files      File[]
-  // Relaciones con los nuevos modelos de análisis
-  FileMetadata FileMetadata[]
-  Project    Project[]
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  bio           String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  roleId        String
+  role          Role           @relation(fields: [roleId], references: [id])
+  files         File[]
+  uploadedFiles FileMetadata[]
+  projects      Project[]
 
-  @@map("User")
+  @@map("Usuario")
 }
 
 model Role {
-  id    String @id @default(uuid())
-  name  String @unique
-  users User[]
+  id   String @id @default(uuid())
+  name String @unique
+  User User[]
 
   @@map("Role")
 }
 
-// --- Modelo de Archivos (Legado, para herramientas básicas) ---
 model File {
   id        String   @id @default(uuid())
   filename  String
   fileType  String
   size      Int
   status    String
-  createdAt DateTime @default(now()) @map("createdAt")
+  createdAt DateTime @default(now())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("File")
 }
 
-// --- Modelos para el Flujo de Análisis de Datos ---
-
 model FileMetadata {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   filename   String
   filetype   String
-  filepath   String   // Ruta física al archivo en el servidor
-  columns    String[] // Lista de columnas detectadas
+  filepath   String
+  columns    String[]
   rows_count Int
   size       Int
-  uploadedAt DateTime @default(now())
+  uploadedAt DateTime  @default(now())
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
   projects   Project[]
 
   @@map("FileMetadata")
 }
 
 model Project {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   name        String
   description String?
-  config      Json // Configuración del dashboard (gráficos, filtros, etc.)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
   fileId      String
+  config      Json
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
   file        FileMetadata @relation(fields: [fileId], references: [id])
 
   @@map("Project")
