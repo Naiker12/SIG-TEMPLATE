@@ -44,6 +44,16 @@ export function TopBar() {
   
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6">
+       <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggle}
+            className="flex sm:hidden"
+        >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Abrir/Cerrar Sidebar</span>
+        </Button>
+       
        {!isOpen && (
         <Button
             variant="ghost"

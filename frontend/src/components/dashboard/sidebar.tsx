@@ -95,8 +95,7 @@ export function DashboardSidebar() {
   return (
     <aside className={cn(
         "fixed top-0 left-0 h-screen flex flex-col border-r bg-sidebar-background transition-[width] duration-300 ease-in-out z-50", 
-        isOpen ? "w-60" : "w-16", 
-        "hidden sm:flex"
+        isOpen ? "w-60" : "w-16"
     )}>
       <div className="flex h-16 items-center px-4 shrink-0 justify-between">
         <Link href="/" className={cn("flex items-center gap-2.5", !isOpen && "w-10 justify-center")}>
