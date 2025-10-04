@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -43,17 +44,7 @@ export function TopBar() {
   
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6">
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn("sm:hidden", isOpen && "hidden")}
-        onClick={toggle}
-      >
-        <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle Menu</span>
-      </Button>
-      
-      {!isOpen && (
+       {!isOpen && (
         <Button
             variant="ghost"
             size="icon"
@@ -61,6 +52,7 @@ export function TopBar() {
             className="hidden sm:flex"
         >
             <Menu className="h-5 w-5" />
+            <span className="sr-only">Abrir Sidebar</span>
         </Button>
       )}
 

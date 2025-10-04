@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { FileUp, GitCompareArrows, Loader2 } from "lucide-react";
 import { useLoadingStore } from '@/hooks/use-loading-store';
-import { DashboardSidebar } from '@/components/dashboard/sidebar';
 
 const ComparisonPanel = ({ title, onFileSelect }: { title: string, onFileSelect: (file: File) => void }) => (
   <Card className="flex-1 flex flex-col border-2 border-accent">
@@ -43,47 +43,44 @@ export default function CompareViewPage() {
     }
 
   return (
-    <div className="flex min-h-screen w-full">
-        <DashboardSidebar />
-        <div className="flex flex-col w-full">
-            <TopBar />
-            <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
-              <div className="max-w-7xl mx-auto w-full">
-                <header className="mb-8">
-                  <h1 className="text-3xl font-bold tracking-tight">Vista Comparativa</h1>
-                  <p className="text-muted-foreground mt-1">
-                    Compara dos documentos para ver las diferencias entre ellos.
-                  </p>
-                </header>
+    <>
+      <TopBar />
+      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
+        <div className="max-w-7xl mx-auto w-full">
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">Vista Comparativa</h1>
+            <p className="text-muted-foreground mt-1">
+              Compara dos documentos para ver las diferencias entre ellos.
+            </p>
+          </header>
 
-                <div className="flex flex-col lg:flex-row gap-8 mb-8">
-                  <ComparisonPanel title="Documento Original" onFileSelect={setFile1} />
-                  <ComparisonPanel title="Documento Revisado" onFileSelect={setFile2}/>
-                </div>
-                
-                <div className="flex justify-center mb-8">
-                  <Button size="lg" onClick={handleCompare} disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin mr-2" /> : <GitCompareArrows className="mr-2" />}
-                    {isLoading ? 'Comparando...' : 'Comparar Documentos'}
-                  </Button>
-                </div>
+          <div className="flex flex-col lg:flex-row gap-8 mb-8">
+            <ComparisonPanel title="Documento Original" onFileSelect={setFile1} />
+            <ComparisonPanel title="Documento Revisado" onFileSelect={setFile2}/>
+          </div>
+          
+          <div className="flex justify-center mb-8">
+            <Button size="lg" onClick={handleCompare} disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin mr-2" /> : <GitCompareArrows className="mr-2" />}
+              {isLoading ? 'Comparando...' : 'Comparar Documentos'}
+            </Button>
+          </div>
 
-                <Card className="border-2 border-accent">
-                  <CardHeader>
-                    <CardTitle>Resultados de la Comparación</CardTitle>
-                    <CardDescription>Las diferencias detectadas se mostrarán aquí.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea 
-                      value={isLoading ? 'Analizando documentos...' : result || 'Esperando comparación...'}
-                      className="min-h-[200px] font-mono bg-muted/50" 
-                      readOnly 
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </main>
+          <Card className="border-2 border-accent">
+            <CardHeader>
+              <CardTitle>Resultados de la Comparación</CardTitle>
+              <CardDescription>Las diferencias detectadas se mostrarán aquí.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea 
+                value={isLoading ? 'Analizando documentos...' : result || 'Esperando comparación...'}
+                className="min-h-[200px] font-mono bg-muted/50" 
+                readOnly 
+              />
+            </CardContent>
+          </Card>
         </div>
-    </div>
+      </main>
+    </>
   );
 }

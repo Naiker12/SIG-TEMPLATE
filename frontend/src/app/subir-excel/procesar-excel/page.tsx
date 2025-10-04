@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -29,7 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { saveAs } from 'file-saver';
-import { DashboardSidebar } from '@/components/dashboard/sidebar';
 
 
 type DuplicateModalState = {
@@ -215,72 +215,67 @@ export default function ProcessExcelPage() {
 
   return (
     <>
-      <div className="flex min-h-screen w-full">
-        <DashboardSidebar />
-        <div className="flex flex-col w-full">
-            <TopBar />
-            <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
-              <div className="max-w-full mx-auto w-full">
-                <header className="mb-8">
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Procesar Documento Excel</h1>
-                  <p className="text-muted-foreground mt-2 max-w-3xl">
-                    Sube tu archivo, visualiza los datos y realiza transformaciones de forma sencilla.
-                  </p>
-                </header>
+      <TopBar />
+      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
+        <div className="max-w-full mx-auto w-full">
+          <header className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Procesar Documento Excel</h1>
+            <p className="text-muted-foreground mt-2 max-w-3xl">
+              Sube tu archivo, visualiza los datos y realiza transformaciones de forma sencilla.
+            </p>
+          </header>
 
-                {!tableData ? (
-                  <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent">
-                      <CardHeader>
-                          <CardTitle>Cargar Archivo</CardTitle>
-                          <CardDescription>Selecciona un archivo .xlsx o .xls para empezar.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                          <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center">
-                              <UploadCloud className="w-16 h-16 text-muted-foreground mb-4" />
-                              <Button asChild variant="outline">
-                                  <Label htmlFor="file-upload" className="cursor-pointer">
-                                    {file ? "Cambiar Archivo" : "Seleccionar Archivo"}
-                                  </Label>
-                              </Button>
-                              <Input id="file-upload" type="file" onChange={handleFileChange} accept=".xlsx, .xls" className="hidden" />
-                              <p className="text-muted-foreground text-sm mt-3">
-                                {file ? file.name : "Formatos soportados: .xlsx, .xls"}
-                              </p>
-                          </div>
-                          <Button onClick={handleProcess} disabled={!file} className="w-full" size="lg">
-                              Procesar Archivo
-                          </Button>
-                      </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                          <div className="flex items-center gap-2 text-lg font-semibold">
-                              <FileSpreadsheet className="text-primary" />
-                              Mostrando resultados para: <span className="text-primary">{file?.name}</span>
-                          </div>
-                          <div className="flex gap-2">
-                             <Button variant="outline" onClick={handleDownload}><Download className="mr-2 h-4 w-4" /> Descargar</Button>
-                             <Button onClick={() => { setFile(null); setTableData(null); setProcessedFileId(null)}}>
-                                Procesar otro archivo
-                             </Button>
-                          </div>
-                      </div>
-                      <DataTable 
-                          columns={columns} 
-                          data={tableData.data}
-                          pageCount={tableData.totalPages}
-                          pagination={pagination}
-                          onPaginationChange={handlePaginationChange}
-                          toolbarContent={tableToolbar}
-                          onRowSelectionChange={(rows) => setSelectedRows(rows)}
-                      />
-                  </div>
-                )}
-              </div>
-            </main>
+          {!tableData ? (
+            <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent">
+                <CardHeader>
+                    <CardTitle>Cargar Archivo</CardTitle>
+                    <CardDescription>Selecciona un archivo .xlsx o .xls para empezar.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center">
+                        <UploadCloud className="w-16 h-16 text-muted-foreground mb-4" />
+                        <Button asChild variant="outline">
+                            <Label htmlFor="file-upload" className="cursor-pointer">
+                              {file ? "Cambiar Archivo" : "Seleccionar Archivo"}
+                            </Label>
+                        </Button>
+                        <Input id="file-upload" type="file" onChange={handleFileChange} accept=".xlsx, .xls" className="hidden" />
+                        <p className="text-muted-foreground text-sm mt-3">
+                          {file ? file.name : "Formatos soportados: .xlsx, .xls"}
+                        </p>
+                    </div>
+                    <Button onClick={handleProcess} disabled={!file} className="w-full" size="lg">
+                        Procesar Archivo
+                    </Button>
+                </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-2 text-lg font-semibold">
+                        <FileSpreadsheet className="text-primary" />
+                        Mostrando resultados para: <span className="text-primary">{file?.name}</span>
+                    </div>
+                    <div className="flex gap-2">
+                       <Button variant="outline" onClick={handleDownload}><Download className="mr-2 h-4 w-4" /> Descargar</Button>
+                       <Button onClick={() => { setFile(null); setTableData(null); setProcessedFileId(null)}}>
+                          Procesar otro archivo
+                       </Button>
+                    </div>
+                </div>
+                <DataTable 
+                    columns={columns} 
+                    data={tableData.data}
+                    pageCount={tableData.totalPages}
+                    pagination={pagination}
+                    onPaginationChange={handlePaginationChange}
+                    toolbarContent={tableToolbar}
+                    onRowSelectionChange={(rows) => setSelectedRows(rows)}
+                />
+            </div>
+          )}
         </div>
-      </div>
+      </main>
       <AnimatePresence>
         {processingProgress !== null && (
             <motion.div
