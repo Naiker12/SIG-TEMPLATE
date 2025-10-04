@@ -61,7 +61,7 @@ export function DashboardOverview({ files }: DashboardOverviewProps) {
           </div>
 
           {/* Sidebar area */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 flex flex-col space-y-6">
               <RevenueChart />
               <SubscriptionsChart />
           </div>
