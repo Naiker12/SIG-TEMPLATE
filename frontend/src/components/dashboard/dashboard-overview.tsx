@@ -29,7 +29,7 @@ const metricCardData = [
     value: '1080',
     change: '+10.8%',
     isPositive: true,
-    icon: <DollarSign />,
+    icon: <BarChart />,
     chartData: [5, 6, 7, 8, 7, 6, 8],
   },
 ];
