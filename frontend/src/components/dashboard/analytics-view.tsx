@@ -4,50 +4,47 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend, Cell } from 'recharts';
-import { ArrowDown, ArrowUp, Info, MoreHorizontal, TrendingUp } from 'lucide-react';
+import { ArrowDown, ArrowUp, Info, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const salesChartData = [
-  { month: 'Ene', sales: 120000 },
-  { month: 'Feb', sales: 280000 },
-  { month: 'Mar', sales: 240000 },
-  { month: 'Abr', sales: 80000 },
-  { month: 'May', sales: 220000 },
-  { month: 'Jun', sales: 250000 },
+const toolUsageData = [
+  { month: 'Ene', usage: 120 },
+  { month: 'Feb', usage: 280 },
+  { month: 'Mar', usage: 240 },
+  { month: 'Abr', usage: 80 },
+  { month: 'May', usage: 220 },
+  { month: 'Jun', usage: 250 },
 ];
 
-const visitorsChartData = [
-    { month: 'Ene', new: 18000, returning: 1200 },
-    { month: 'Feb', new: 22000, returning: 1500 },
-    { month: 'Mar', new: 25000, returning: 1300 },
-    { month: 'Abr', new: 19000, returning: 1600 },
-    { month: 'May', new: 32000, returning: 1800 },
-    { month: 'Jun', new: 36786, returning: 467 },
+const userActivityData = [
+    { month: 'Ene', active: 180, sessions: 1200 },
+    { month: 'Feb', active: 220, sessions: 1500 },
+    { month: 'Mar', active: 250, sessions: 1300 },
+    { month: 'Abr', active: 190, sessions: 1600 },
+    { month: 'May', active: 320, sessions: 1800 },
+    { month: 'Jun', active: 367, sessions: 4670 },
 ];
 
-const trafficSourceData = [
-    { source: 'Directo', value: 237, fill: 'hsl(var(--chart-3))' },
-    { source: 'Social', value: 305, fill: 'hsl(var(--chart-2))' },
-    { source: 'Google', value: 186, fill: 'hsl(var(--chart-1))' },
+const fileTypeData = [
+    { source: 'PDF', value: 237, fill: 'hsl(var(--chart-3))' },
+    { source: 'Word', value: 305, fill: 'hsl(var(--chart-2))' },
+    { source: 'Excel', value: 186, fill: 'hsl(var(--chart-1))' },
 ];
 
-const customersData = [
-    { month: 'Ene', customers: 4000 },
-    { month: 'Feb', customers: 3000 },
-    { month: 'Mar', customers: 2000 },
-    { month: 'Abr', customers: 2780 },
-    { month: 'May', customers: 1890 },
-    { month: 'Jun', customers: 2390 },
-    { month: 'Jul', customers: 3490 },
+const dailyTasksData = [
+    { day: 'Lun', tasks: 40 },
+    { day: 'Mar', tasks: 30 },
+    { day: 'Mié', tasks: 20 },
+    { day: 'Jue', tasks: 27 },
+    { day: 'Vie', tasks: 18 },
+    { day: 'Sáb', tasks: 23 },
+    { day: 'Dom', tasks: 34 },
 ]
 
-const buyersData = [{ name: 'Buyers', value: 200, fill: 'hsl(var(--chart-2))' }];
-const totalBuyers = 300;
-
-const buyersProfileData = [
-    { name: 'buyers', value: 200, fill: 'hsl(var(--chart-2))' },
-    { name: 'remaining', value: 100, fill: 'hsl(var(--muted))' }
+const successRateData = [
+    { name: 'success', value: 92, fill: 'hsl(var(--chart-2))' },
+    { name: 'remaining', value: 8, fill: 'hsl(var(--muted))' }
 ]
 
 export function AnalyticsView() {
@@ -60,8 +57,8 @@ export function AnalyticsView() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Ventas</CardTitle>
-                <CardDescription>Visualiza las tendencias de rendimiento de ventas.</CardDescription>
+                <CardTitle>Uso de Herramientas</CardTitle>
+                <CardDescription>Visualiza las tendencias de uso de las herramientas.</CardDescription>
               </div>
               <Tabs defaultValue="month" className="w-auto">
                 <TabsList className="grid w-full grid-cols-2">
@@ -75,28 +72,28 @@ export function AnalyticsView() {
             <div className="space-y-4">
               <Card className="bg-muted/50 p-4">
                 <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm text-muted-foreground">Ventas Netas</p>
+                    <p className="text-sm text-muted-foreground">Procesamientos Totales</p>
                     <Info className="w-4 h-4 text-muted-foreground"/>
                 </div>
-                <p className="text-2xl font-bold">$4.567.820</p>
-                <p className="text-xs text-success flex items-center"><ArrowUp className="w-3 h-3 mr-1"/> 24,5% (+10)</p>
+                <p className="text-2xl font-bold">4,567</p>
+                <p className="text-xs text-success flex items-center"><ArrowUp className="w-3 h-3 mr-1"/> 24,5%</p>
               </Card>
               <Card className="bg-muted/50 p-4">
                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm text-muted-foreground">Órdenes</p>
+                    <p className="text-sm text-muted-foreground">Archivos Únicos</p>
                     <Info className="w-4 h-4 text-muted-foreground"/>
                 </div>
-                <p className="text-2xl font-bold">1246</p>
-                <p className="text-xs text-destructive flex items-center"><ArrowDown className="w-3 h-3 mr-1"/> 5,5% (-15)</p>
+                <p className="text-2xl font-bold">1,246</p>
+                <p className="text-xs text-destructive flex items-center"><ArrowDown className="w-3 h-3 mr-1"/> 5,5%</p>
               </Card>
             </div>
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesChartData}>
+                <BarChart data={toolUsageData}>
                   <XAxis dataKey="month" axisLine={false} tickLine={false} fontSize={12} />
-                  <YAxis axisLine={false} tickLine={false} fontSize={12} tickFormatter={(value) => `${Number(value)/1000}k`}/>
+                  <YAxis axisLine={false} tickLine={false} fontSize={12} tickFormatter={(value) => `${Number(value)}`}/>
                   <Tooltip cursor={{fill: 'hsla(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
-                  <Bar dataKey="sales" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="usage" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -110,8 +107,8 @@ export function AnalyticsView() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Visitantes</CardTitle>
-                <CardDescription>Información clave de los visitantes.</CardDescription>
+                <CardTitle>Actividad de Usuarios</CardTitle>
+                <CardDescription>Información clave de la actividad.</CardDescription>
               </div>
               <Tabs defaultValue="month" className="w-auto">
                 <TabsList className="grid w-full grid-cols-2">
@@ -125,38 +122,38 @@ export function AnalyticsView() {
             <div className="space-y-4">
               <Card className="bg-muted/50 p-4">
                 <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm text-muted-foreground">Nuevos Visitantes</p>
+                    <p className="text-sm text-muted-foreground">Usuarios Activos</p>
                     <Info className="w-4 h-4 text-muted-foreground"/>
                 </div>
-                <p className="text-2xl font-bold">36.786</p>
-                <p className="text-xs text-success flex items-center"><ArrowUp className="w-3 h-3 mr-1"/> 66,7% (+10)</p>
+                <p className="text-2xl font-bold">367</p>
+                <p className="text-xs text-success flex items-center"><ArrowUp className="w-3 h-3 mr-1"/> 12.7%</p>
               </Card>
               <Card className="bg-muted/50 p-4">
                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm text-muted-foreground">Recurrentes</p>
+                    <p className="text-sm text-muted-foreground">Sesiones Totales</p>
                     <Info className="w-4 h-4 text-muted-foreground"/>
                 </div>
-                <p className="text-2xl font-bold">467</p>
-                <p className="text-xs text-destructive flex items-center"><ArrowDown className="w-3 h-3 mr-1"/> 5,5% (-6)</p>
+                <p className="text-2xl font-bold">4,670</p>
+                <p className="text-xs text-destructive flex items-center"><ArrowDown className="w-3 h-3 mr-1"/> 2.1%</p>
               </Card>
             </div>
             <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={visitorsChartData}>
+                    <AreaChart data={userActivityData}>
                          <defs>
-                            <linearGradient id="fillNew" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="fillActive" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.5} />
                                 <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
                             </linearGradient>
-                            <linearGradient id="fillReturning" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="fillSessions" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.4} />
                                 <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.1} />
                             </linearGradient>
                         </defs>
                         <XAxis dataKey="month" axisLine={false} tickLine={false} fontSize={12} />
                         <Tooltip cursor={{stroke: 'hsl(var(--border))', strokeDasharray: '4 4'}} contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
-                        <Area type="monotone" dataKey="new" stroke="hsl(var(--chart-1))" fill="url(#fillNew)" stackId="1" />
-                        <Area type="monotone" dataKey="returning" stroke="hsl(var(--chart-2))" fill="url(#fillReturning)" stackId="1" />
+                        <Area type="monotone" dataKey="active" name="Activos" stroke="hsl(var(--chart-1))" fill="url(#fillActive)" stackId="1" />
+                        <Area type="monotone" dataKey="sessions" name="Sesiones" stroke="hsl(var(--chart-2))" fill="url(#fillSessions)" stackId="1" />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
@@ -171,8 +168,8 @@ export function AnalyticsView() {
                     <CardHeader>
                         <div className="flex justify-between items-center">
                         <div>
-                            <CardTitle>Fuentes de Tráfico</CardTitle>
-                            <CardDescription>De dónde vienen tus visitantes.</CardDescription>
+                            <CardTitle>Tipos de Archivo Procesados</CardTitle>
+                            <CardDescription>Qué formatos son los más comunes.</CardDescription>
                         </div>
                         <Tabs defaultValue="month" className="w-auto">
                             <TabsList className="grid w-full grid-cols-2">
@@ -184,12 +181,12 @@ export function AnalyticsView() {
                     </CardHeader>
                     <CardContent className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={trafficSourceData} layout="vertical" margin={{ left: 10 }}>
+                            <BarChart data={fileTypeData} layout="vertical" margin={{ left: 10 }}>
                                 <XAxis type="number" hide />
                                 <YAxis dataKey="source" type="category" tickLine={false} axisLine={false} width={80} fontSize={14} />
                                 <Tooltip cursor={{fill: 'hsla(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
                                 <Bar dataKey="value" barSize={30} radius={[0, 4, 4, 0]}>
-                                    {trafficSourceData.map((entry, index) => (
+                                    {fileTypeData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={entry.fill} />
                                     ))}
                                 </Bar>
@@ -200,46 +197,46 @@ export function AnalyticsView() {
                 <Card>
                     <CardHeader>
                         <div className="flex justify-between items-center">
-                            <CardTitle>Clientes</CardTitle>
+                            <CardTitle>Tareas por Día</CardTitle>
                              <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
                         </div>
-                        <CardDescription>Rendimiento y crecimiento de clientes.</CardDescription>
+                        <CardDescription>Volumen de tareas en la última semana.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-48">
                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={customersData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                            <AreaChart data={dailyTasksData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id="fillCustomers" x1="0" y1="0" x2="0" y2="1">
+                                    <linearGradient id="fillTasks" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis dataKey="month" hide/>
-                                <YAxis hide domain={['dataMin - 1000', 'dataMax + 500']}/>
+                                <XAxis dataKey="day" hide/>
+                                <YAxis hide domain={['dataMin - 10', 'dataMax + 5']}/>
                                 <Tooltip contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
-                                <Area type="monotone" dataKey="customers" stroke="hsl(var(--chart-1))" fill="url(#fillCustomers)" strokeWidth={2} />
+                                <Area type="monotone" dataKey="tasks" stroke="hsl(var(--chart-1))" fill="url(#fillTasks)" strokeWidth={2} />
                             </AreaChart>
                         </ResponsiveContainer>
                     </CardContent>
                      <CardFooter className="flex justify-center text-sm text-muted-foreground">
                         <TrendingUp className="w-4 h-4 mr-1"/>
-                        Creciendo un 5.2% este mes
+                        Creciendo un 5.2% esta semana
                     </CardFooter>
                 </Card>
                 <Card>
                      <CardHeader>
                         <div className="flex justify-between items-center">
-                            <CardTitle>Perfil del Comprador</CardTitle>
+                            <CardTitle>Tasa de Éxito</CardTitle>
                             <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
                         </div>
-                        <CardDescription>Insights clave de las preferencias del comprador.</CardDescription>
+                        <CardDescription>Procesos completados vs. errores.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-48 flex items-center justify-center">
                         <div className="relative h-40 w-40">
                              <ResponsiveContainer width="100%" height="100%">
                                 <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                                     <Pie 
-                                        data={buyersProfileData} 
+                                        data={successRateData} 
                                         dataKey="value"
                                         startAngle={90} 
                                         endAngle={-270} 
@@ -249,20 +246,20 @@ export function AnalyticsView() {
                                         strokeWidth={0}
                                         isAnimationActive={false}
                                     >
-                                        <Cell key="buyers" fill="hsl(var(--chart-2))" />
+                                        <Cell key="success" fill="hsl(var(--chart-2))" />
                                         <Cell key="remaining" fill="hsl(var(--muted))" />
                                     </Pie>
                                 </RechartsPieChart>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                <p className="text-3xl font-bold">200</p>
-                                <p className="text-sm text-muted-foreground">Compradores</p>
+                                <p className="text-3xl font-bold">92%</p>
+                                <p className="text-sm text-muted-foreground">Éxito</p>
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter className="flex justify-center text-sm text-muted-foreground">
-                        <TrendingUp className="w-4 h-4 mr-1"/>
-                        Creciendo un 5.2% este mes
+                    <CardFooter className="flex justify-center gap-4 text-sm text-muted-foreground">
+                        <div className='flex items-center text-green-500'><CheckCircle className="w-4 h-4 mr-1"/> Completados: 1,226</div>
+                        <div className='flex items-center text-red-500'><AlertCircle className="w-4 h-4 mr-1"/> Errores: 28</div>
                     </CardFooter>
                 </Card>
             </div>
@@ -270,3 +267,5 @@ export function AnalyticsView() {
     </div>
   );
 }
+
+    
