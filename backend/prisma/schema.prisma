@@ -1,77 +1,38 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+generator client {
+  provider = "prisma-client-py"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-py"
-}
-
-// Modelo de Usuario
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  bio       String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  roleId    String
-  role      Role     @relation(fields: [roleId], references: [id])
-
-  // Relaciones
-  files     FileMetadata[]
-  projects  Project[]
-}
-
-// Modelo de Roles
 model Role {
   id    String @id @default(uuid())
   name  String @unique
   users User[]
+
+  @@map("Role")
 }
 
-// --- Nuevos Modelos para Análisis ---
+model User {
+  id           String         @id @default(uuid())
+  name         String
+  email        String         @unique
+  password     String
+  bio          String?
+  roleId       String
+  role         Role           @relation(fields: [roleId], references: [id])
+  files        File[]
+  FileMetadata FileMetadata[]
+  Project      Project[]
 
-// Modelo para metadatos de archivos subidos
-model FileMetadata {
-  id         String   @id @default(uuid())
-  filename   String
-  filetype   String
-  filepath   String   @unique // Ruta donde se guarda el archivo físicamente
-  columns    Json // Lista de columnas como JSON
-  rows_count Int
-  size       Int // Tamaño en bytes
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String
-  uploadedAt DateTime @default(now())
-
-  // Relación: Un archivo puede tener múltiples análisis/proyectos guardados
-  projects Project[]
-
-  @@map("files_metadata")
+  @@map("User")
 }
 
-// Modelo para proyectos de análisis (configuración de dashboards)
-model Project {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  config      Json // Guardará la configuración del dashboard (gráficos, filtros, etc.)
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  file        FileMetadata @relation(fields: [fileId], references: [id])
-  fileId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("projects")
-}
-
-// Modelo para archivos procesados por herramientas (legado, podría fusionarse con FileMetadata a futuro)
 model File {
   id        String   @id @default(uuid())
   filename  String
@@ -79,7 +40,40 @@ model File {
   size      Int
   status    String
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  // No hay relación directa aquí para no romper el código existente,
-  // pero idealmente 'userId' debería relacionarse con 'User'.
+
+  @@map("File")
+}
+
+// --- Nuevos modelos para análisis ---
+model FileMetadata {
+  id         String    @id @default(uuid())
+  filename   String
+  filetype   String
+  filepath   String // Ruta al archivo guardado en el servidor
+  columns    String[]
+  rows_count Int
+  size       Int
+  uploadedAt DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  projects   Project[]
+
+  @@map("FileMetadata")
+}
+
+model Project {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  fileId      String
+  config      Json // configuración de gráficos, filtros, etc.
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+  file        FileMetadata @relation(fields: [fileId], references: [id])
+
+  @@map("Project")
 }
