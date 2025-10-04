@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.middleware import setup_cors
 from db.database import prisma
+from db.supabase_client import supabase
 
 from app.routers.compress_router import compress_router
 from app.routers.convert_to_pdf_router import convert_to_pdf_router
@@ -32,7 +33,7 @@ setup_cors(app)
 @app.on_event("startup")
 async def startup():
     """Event handler for application startup."""
-    # Crear directorios necesarios si no existen
+    # Crear directorios necesarios si no existen (para herramientas legadas)
     os.makedirs("uploads", exist_ok=True)
     os.makedirs("outputs", exist_ok=True)
     os.makedirs("temp_files", exist_ok=True)
