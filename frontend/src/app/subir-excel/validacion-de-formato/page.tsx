@@ -126,11 +126,11 @@ export default function FormatValidationPage() {
                                 <p className="text-2xl font-bold">{validationResult.summary.totalRows}</p>
                             </div>
                                 <div className="text-center p-3 bg-background rounded-lg">
-                                <p className="text-sm text-muted-foreground flex items-center justify-center"><CheckCircle className="h-4 w-4 mr-1 text-green-500"/>Filas Válidas</p>
+                                <p className="text-sm text-muted-foreground flex items-center justify-center gap-1"><CheckCircle className="h-4 w-4 text-green-500"/>Filas Válidas</p>
                                 <p className="text-2xl font-bold">{validationResult.summary.validRows}</p>
                             </div>
                                 <div className="text-center p-3 bg-background rounded-lg">
-                                <p className="text-sm text-muted-foreground flex items-center justify-center"><AlertTriangle className="h-4 w-4 mr-1 text-red-500"/>Filas Inválidas</p>
+                                <p className="text-sm text-muted-foreground flex items-center justify-center gap-1"><AlertTriangle className="h-4 w-4 text-red-500"/>Filas Inválidas</p>
                                 <p className="text-2xl font-bold">{validationResult.summary.invalidRows}</p>
                             </div>
                         </div>

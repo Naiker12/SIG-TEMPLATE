@@ -87,7 +87,7 @@ export const toolsItems: MenuItem[] = [
         isCollapsible: true,
         items: [
             { title: "Procesar", href: "/subir-excel/procesar-excel" },
-            { title: "Validación", href: "/subir-excel/validacion-de-formato" },
+            { title: "Validación de Formato", href: "/subir-excel/validacion-de-formato" },
             { title: "A Dataset", href: "/subir-excel/conversion-a-dataset" },
             { title: "A API", href: "/subir-excel/excel-a-api" },
         ]
