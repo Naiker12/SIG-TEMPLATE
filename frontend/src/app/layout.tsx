@@ -8,6 +8,7 @@ import { PageLoader } from '@/components/ui/page-loader';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { MainContentWrapper } from '@/components/main-content-wrapper';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,13 +41,20 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning className={inter.variable}>
       <head />
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
-        <AuthModalProvider />
-        <PageLoader />
-        <DashboardSidebar />
-        <MainContentWrapper>
-          {children}
-        </MainContentWrapper>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthModalProvider />
+          <PageLoader />
+          <DashboardSidebar />
+          <MainContentWrapper>
+            {children}
+          </MainContentWrapper>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

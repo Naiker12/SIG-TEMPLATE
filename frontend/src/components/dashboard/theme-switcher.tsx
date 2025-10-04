@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -33,7 +34,7 @@ export function ThemeSwitcher() {
 
   return (
     <div className="flex items-center justify-between rounded-lg p-2">
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center justify-center gap-2">
          <Sun className="h-5 w-5 text-sidebar-muted-foreground" />
          <Switch
             checked={isDark}
