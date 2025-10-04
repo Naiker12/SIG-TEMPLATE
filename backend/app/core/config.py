@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -6,9 +7,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # Nuevas variables para la conexión con Supabase Storage
-    SUPABASE_URL: str
-    SUPABASE_ANON_KEY: str
+    # Nuevas variables para la conexión con Supabase Storage (ahora opcionales)
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_ANON_KEY: Optional[str] = None
 
     class Config:
         env_file = "backend/.env" 
