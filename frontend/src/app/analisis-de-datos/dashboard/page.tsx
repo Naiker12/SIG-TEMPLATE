@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle, FolderOpen, UploadCloud } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,12 @@ import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
+const mockProjects = [
+    { id: 'proj_1', name: 'Análisis de Ventas Q1 2024', lastModified: '2024-04-15' },
+    { id: 'proj_2', name: 'Estudio de Mercado - Competencia', lastModified: '2024-03-22' },
+];
+
+
 // --- MAIN COMPONENT ---
 export default function DataAnalysisPage() {
     const [file, setFile] = useState<File | null>(null);
@@ -29,6 +35,8 @@ export default function DataAnalysisPage() {
     const { isLoggedIn } = useAuthStore(state => ({ isLoggedIn: state.isLoggedIn }));
     const router = useRouter();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [isProjectsModalOpen, setIsProjectsModalOpen] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
     const { areaChartConfig, pieChartConfig } = useChartConfigStore();
 
@@ -55,11 +63,21 @@ export default function DataAnalysisPage() {
     // --- HANDLERS ---
     const handleFileProcess = () => {
         if (!file) return;
+        setIsUploadModalOpen(false); // Close upload modal
         setIsLoading(true);
         setTimeout(() => {
             setData(mockData);
             setIsLoading(false);
         }, 2000);
+    }
+    
+    const handleLoadProject = (projectId: string) => {
+        setIsProjectsModalOpen(false);
+        setIsLoading(true);
+        setTimeout(() => {
+            setData(mockData); // Simulate loading project data
+            setIsLoading(false);
+        }, 1500)
     }
 
     const aggregatedPieData = useMemo(() => {
@@ -101,22 +119,14 @@ export default function DataAnalysisPage() {
                             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Dashboard de Análisis</h1>
                             <p className="text-muted-foreground mt-2 max-w-3xl">Visualiza y explora tus datos de forma interactiva.</p>
                         </header>
-                         <Dialog>
-                            <DialogTrigger asChild>
-                                <Button size="lg"><FileUp className="mr-2"/> Cargar Datos</Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>Cargar Archivo de Datos</DialogTitle>
-                                    <DialogDescription>Selecciona un archivo .xlsx o .csv para analizar.</DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4 py-4">
-                                    <Label htmlFor="data-file">Archivo de Datos</Label>
-                                    <Input id="data-file" type="file" accept=".csv, .xlsx" onChange={(e) => e.target.files && setFile(e.target.files[0])} />
-                                </div>
-                                 <Button onClick={handleFileProcess} disabled={!file} className="w-full">Analizar Archivo</Button>
-                            </DialogContent>
-                        </Dialog>
+                         <div className="flex items-center gap-2">
+                             <Button variant="outline" size="lg" onClick={() => setIsProjectsModalOpen(true)}>
+                                 <FolderOpen className="mr-2"/> Ver Proyectos
+                             </Button>
+                             <Button size="lg" onClick={() => setIsUploadModalOpen(true)}>
+                                <FileUp className="mr-2"/> Cargar Datos
+                             </Button>
+                         </div>
                     </div>
                     
                     {!data.length ? (
@@ -124,7 +134,7 @@ export default function DataAnalysisPage() {
                             <div className="text-center p-8">
                                 <LayoutDashboard className="h-20 w-20 mx-auto text-muted-foreground mb-4" />
                                 <h2 className="text-2xl font-semibold mb-2">Bienvenido al Dashboard de Análisis</h2>
-                                <p className="text-muted-foreground max-w-md mx-auto">Para empezar, carga un archivo de datos (CSV o Excel) usando el botón "Cargar Datos".</p>
+                                <p className="text-muted-foreground max-w-md mx-auto">Para empezar, carga un archivo de datos (CSV o Excel) o abre un proyecto guardado.</p>
                             </div>
                         </div>
                     ) : (
@@ -276,6 +286,64 @@ export default function DataAnalysisPage() {
                     )}
                 </div>
             </main>
+
+            {/* Upload Modal */}
+            <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Cargar Archivo de Datos</DialogTitle>
+                        <DialogDescription>Selecciona un archivo .xlsx o .csv para analizar.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <Label htmlFor="data-file">Archivo de Datos</Label>
+                        <Input id="data-file" type="file" accept=".csv, .xlsx" onChange={(e) => e.target.files && setFile(e.target.files[0])} />
+                    </div>
+                    <Button onClick={handleFileProcess} disabled={!file} className="w-full">Analizar Archivo</Button>
+                </DialogContent>
+            </Dialog>
+            
+            {/* Projects Modal */}
+            <Dialog open={isProjectsModalOpen} onOpenChange={setIsProjectsModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Mis Proyectos de Análisis</DialogTitle>
+                        <DialogDescription>Selecciona un proyecto guardado para cargarlo o crea uno nuevo.</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        {mockProjects.length > 0 ? (
+                            mockProjects.map(proj => (
+                                <Card 
+                                    key={proj.id} 
+                                    className="hover:border-primary transition-colors cursor-pointer"
+                                    onClick={() => handleLoadProject(proj.id)}
+                                >
+                                    <CardHeader>
+                                        <CardTitle className="text-base">{proj.name}</CardTitle>
+                                        <CardDescription>Última modificación: {proj.lastModified}</CardDescription>
+                                    </CardHeader>
+                                </Card>
+                            ))
+                        ) : (
+                            <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
+                                <FolderOpen className="h-12 w-12 mx-auto mb-4" />
+                                <p>No tienes proyectos guardados.</p>
+                            </div>
+                        )}
+                    </div>
+                     <div className='flex flex-col sm:flex-row gap-2 border-t pt-4'>
+                        <Button 
+                            variant="secondary" 
+                            className="w-full"
+                            onClick={() => {
+                                setIsProjectsModalOpen(false);
+                                setIsUploadModalOpen(true);
+                            }}
+                        >
+                            <UploadCloud className="mr-2"/> Cargar Nuevo Archivo
+                        </Button>
+                     </div>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
