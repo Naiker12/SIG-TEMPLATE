@@ -66,22 +66,25 @@ export default function ConvertWordToPdfPage() {
       clearInterval(progressInterval);
       setConversionProgress(100);
       
-      setConvertedInfo(result);
-      toast({
-        title: "Conversión Completa",
-        description: "Tus archivos Word han sido convertidos a PDF.",
-      });
+      setTimeout(() => {
+        setConvertedInfo(result);
+        toast({
+          title: "Conversión Completa",
+          description: "Tus archivos Word han sido convertidos a PDF.",
+        });
+        setIsConverting(false);
+      }, 500);
+
 
     } catch (error) {
       console.error(error);
+      clearInterval(progressInterval);
+      setIsConverting(false);
       toast({
         variant: "destructive",
         title: "Error de Conversión",
         description: "Hubo un problema al convertir los archivos. Inténtalo de nuevo.",
       });
-    } finally {
-      clearInterval(progressInterval);
-      setIsConverting(false);
     }
   };
   
@@ -111,7 +114,7 @@ export default function ConvertWordToPdfPage() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 pb-8">
+      <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 pb-8">
         <div className="max-w-4xl mx-auto w-full">
           <header className="mb-8 text-center">
             <h1 className="text-4xl font-bold tracking-tight">Convertir Word a PDF</h1>

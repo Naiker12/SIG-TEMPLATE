@@ -120,19 +120,21 @@ export default function SplitMergePdfPage() {
         clearInterval(progressInterval);
         setProcessingProgress(100);
 
-        setProcessResult({ blob, size: blob.size, fileName });
-        toast({ title: "Proceso Completo", description: "Tu archivo está listo para descargar." });
+        setTimeout(() => {
+          setProcessResult({ blob, size: blob.size, fileName });
+          toast({ title: "Proceso Completo", description: "Tu archivo está listo para descargar." });
+          setIsProcessing(false);
+        }, 500);
 
     } catch (error) {
         console.error(error);
+        clearInterval(progressInterval);
+        setIsProcessing(false);
         toast({
             variant: "destructive",
             title: "Error en el Proceso",
             description: error instanceof Error ? error.message : "Ocurrió un problema. Inténtalo de nuevo.",
         });
-    } finally {
-      clearInterval(progressInterval);
-      setIsProcessing(false);
     }
   }
 
@@ -281,7 +283,7 @@ export default function SplitMergePdfPage() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 pb-8">
+      <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 pb-8">
           <div className="max-w-4xl mx-auto w-full">
             <header className="mb-8 text-center">
               <h1 className="text-4xl font-bold tracking-tight">Dividir y Unir PDF</h1>
@@ -297,7 +299,7 @@ export default function SplitMergePdfPage() {
                 </TabsList>
                 
                 <Card className="shadow-lg mt-6 border-2 border-accent">
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 flex items-center justify-center">
                         <AnimatePresence mode="wait">
                             {renderContent()}
                         </AnimatePresence>

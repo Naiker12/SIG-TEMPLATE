@@ -122,26 +122,29 @@ export default function OptimizeFilePage() {
            })
       }
 
-      setCompressedInfo({
-          blob: zipBlob,
-          size: zipBlob.size,
-          originalSize,
-      });
-      toast({
-          title: "Optimización Completa",
-          description: "Tus archivos han sido comprimidos y están listos para descargar.",
-      });
+      setTimeout(() => {
+        setCompressedInfo({
+            blob: zipBlob,
+            size: zipBlob.size,
+            originalSize,
+        });
+        toast({
+            title: "Optimización Completa",
+            description: "Tus archivos han sido comprimidos y están listos para descargar.",
+        });
+        setIsOptimizing(false);
+      }, 500);
+
 
     } catch (error) {
       console.error(error);
+      clearInterval(progressInterval);
+      setIsOptimizing(false);
       toast({
         variant: "destructive",
         title: "Error de Optimización",
         description: error instanceof Error ? error.message : "Hubo un problema al comprimir los archivos. Inténtalo de nuevo.",
       });
-    } finally {
-      clearInterval(progressInterval);
-      setIsOptimizing(false);
     }
   };
 
@@ -179,7 +182,7 @@ export default function OptimizeFilePage() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 pb-8">
+      <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 pb-8">
         <div className="max-w-4xl mx-auto w-full">
           <header className="mb-8 text-center">
             <h1 className="text-4xl font-bold tracking-tight">Optimizar Archivos</h1>
@@ -284,7 +287,7 @@ export default function OptimizeFilePage() {
                       </div>
                     </motion.div>
                   ) : (
-                    <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
+                    <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8 w-full">
                        <h2 className="text-2xl font-bold mb-2">Optimización Completa</h2>
                         <CardDescription className="mb-6">
                           Tus archivos se han comprimido con éxito.
