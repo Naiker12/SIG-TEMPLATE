@@ -140,9 +140,11 @@ export default function DataAnalysisPage() {
                              <Button variant="outline" size="lg" onClick={() => setIsProjectsModalOpen(true)}>
                                  <FolderOpen className="mr-2"/> Ver Proyectos
                              </Button>
-                             <Button variant="outline" size="lg" onClick={handleSaveProject}>
-                                <Save className="mr-2 h-5 w-5"/> Guardar
-                             </Button>
+                             {data.length > 0 && (
+                                <Button variant="outline" size="lg" onClick={handleSaveProject}>
+                                    <Save className="mr-2 h-5 w-5"/> Guardar
+                                </Button>
+                             )}
                              <Button size="lg" onClick={() => setIsUploadModalOpen(true)}>
                                 <FileUp className="mr-2"/> Cargar Datos
                              </Button>
@@ -367,5 +369,7 @@ export default function DataAnalysisPage() {
         </>
     );
 }
+
+    
 
     
