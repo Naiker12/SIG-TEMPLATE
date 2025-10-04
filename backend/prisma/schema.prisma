@@ -10,27 +10,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String
+  password     String
+  bio          String?
+  roleId       String?
+  role         Role?         @relation(fields: [roleId], references: [id])
+  files        File[]
+  uploadedFiles FileMetadata[] @relation("UploadedBy")
+  projects      Project[]
+
+  @@map("User")
+}
+
 model Role {
   id    String @id @default(uuid())
   name  String @unique
   users User[]
 
   @@map("Role")
-}
-
-model User {
-  id           String         @id @default(uuid())
-  name         String
-  email        String         @unique
-  password     String
-  bio          String?
-  roleId       String
-  role         Role           @relation(fields: [roleId], references: [id])
-  files        File[]
-  FileMetadata FileMetadata[]
-  Project      Project[]
-
-  @@map("User")
 }
 
 model File {
@@ -40,40 +40,41 @@ model File {
   size      Int
   status    String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
+  user      User     @relation(fields: [userId], references: [id])
 
   @@map("File")
 }
 
-// --- Nuevos modelos para análisis ---
+// --- Modelos para el nuevo flujo de análisis ---
+
 model FileMetadata {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   filename   String
   filetype   String
-  filepath   String // Ruta al archivo guardado en el servidor
+  filepath   String   @unique // Ruta física al archivo en el servidor
   columns    String[]
   rows_count Int
   size       Int
-  uploadedAt DateTime  @default(now())
-  user       User      @relation(fields: [userId], references: [id])
+  uploadedAt DateTime @default(now())
   userId     String
+  user       User     @relation("UploadedBy", fields: [userId], references: [id])
   projects   Project[]
 
   @@map("FileMetadata")
 }
 
 model Project {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
   fileId      String
-  config      Json // configuración de gráficos, filtros, etc.
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
-  user        User       @relation(fields: [userId], references: [id])
   userId      String
-  file        FileMetadata @relation(fields: [fileId], references: [id])
+  config      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  file        FileMetadata @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("Project")
 }
