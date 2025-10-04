@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -49,7 +48,7 @@ export function DashboardSidebar() {
               >
                 <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-primary" : "text-sidebar-muted-foreground")} />
                 {isOpen && item.title}
-                {isOpen && <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200" />}
+                {isOpen && <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 data-[state=open]:rotate-180" />}
               </Button>
             </CollapsibleTrigger>
             {isOpen && (
@@ -95,7 +94,7 @@ export function DashboardSidebar() {
 
   return (
     <aside className={cn(
-        "fixed top-0 left-0 h-screen flex-col border-r bg-sidebar transition-[width] duration-300 ease-in-out", 
+        "fixed top-0 left-0 h-screen flex flex-col border-r bg-sidebar-background transition-[width] duration-300 ease-in-out z-50", 
         isOpen ? "w-60" : "w-16", 
         "hidden sm:flex"
     )}>
@@ -107,7 +106,7 @@ export function DashboardSidebar() {
             width={32}
             height={32}
           />
-          {isOpen && <span className="text-lg font-bold">SIG IA</span>}
+          {isOpen && <span className="text-lg font-bold text-sidebar-foreground">SIG IA</span>}
         </Link>
         {isOpen && (
             <Button variant="ghost" size="icon" onClick={toggle}>
@@ -145,34 +144,36 @@ export function DashboardSidebar() {
         )}
       </div>
 
-       <div className="mt-auto p-3 space-y-2 border-t border-sidebar-border">
-         {isOpen ? (
-            <>
-              {renderNavLinks(userMenuItems)}
-              <Separator className="bg-sidebar-border"/>
-               <ThemeSwitcher />
-               <Button variant="ghost" className="w-full justify-start text-base px-3 h-10 text-sidebar-muted-foreground" onClick={handleLogout}>
-                <LogOut className="mr-3 h-5 w-5" />
-                Cerrar Sesión
-              </Button>
-            </>
-         ): (
-            <>
-                 {userMenuItems.map((item, index) => (
-                     <Link key={index} href={item.href} className={cn(
-                         buttonVariants({ variant: pathname.startsWith(item.href) ? "secondary" : "ghost", size: "icon" }), "h-10 w-10")}>
-                         <item.icon className="h-5 w-5" />
-                         <span className="sr-only">{item.title}</span>
-                     </Link>
-                 ))}
-                 <Separator className="bg-sidebar-border"/>
-                 <ThemeSwitcher />
-                 <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleLogout}>
-                    <LogOut className="h-5 w-5" />
-                    <span className="sr-only">Cerrar Sesión</span>
+       <div className="mt-auto p-3 border-t border-sidebar-border">
+         <div className="space-y-2 pt-2">
+            {isOpen ? (
+                <>
+                {renderNavLinks(userMenuItems)}
+                <Separator className="bg-sidebar-border my-2"/>
+                <ThemeSwitcher />
+                <Button variant="ghost" className="w-full justify-start text-base px-3 h-10 text-sidebar-muted-foreground" onClick={handleLogout}>
+                    <LogOut className="mr-3 h-5 w-5" />
+                    Cerrar Sesión
                 </Button>
-            </>
-         )}
+                </>
+            ): (
+                <>
+                    {userMenuItems.map((item, index) => (
+                        <Link key={index} href={item.href} className={cn(
+                            buttonVariants({ variant: pathname.startsWith(item.href) ? "secondary" : "ghost", size: "icon" }), "h-10 w-10")}>
+                            <item.icon className="h-5 w-5" />
+                            <span className="sr-only">{item.title}</span>
+                        </Link>
+                    ))}
+                    <Separator className="bg-sidebar-border my-2"/>
+                    <ThemeSwitcher />
+                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleLogout}>
+                        <LogOut className="h-5 w-5" />
+                        <span className="sr-only">Cerrar Sesión</span>
+                    </Button>
+                </>
+            )}
+         </div>
       </div>
     </aside>
   )

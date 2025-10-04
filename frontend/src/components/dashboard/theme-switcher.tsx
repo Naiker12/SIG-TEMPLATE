@@ -1,11 +1,10 @@
-
 "use client"
 
 import * as React from "react"
 import { useTheme } from "next-themes"
 import { Moon, Sun } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { useSidebarStore } from "@/hooks/use-sidebar-store"
 import { cn } from "@/lib/utils"
 
@@ -14,39 +13,35 @@ export function ThemeSwitcher() {
   const { isOpen } = useSidebarStore();
   const isDark = theme === "dark"
 
-  const toggleTheme = () => {
-    setTheme(isDark ? "light" : "dark")
+  const toggleTheme = (checked: boolean) => {
+    setTheme(checked ? "dark" : "light")
   }
   
   if (!isOpen) {
       return (
-         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={toggleTheme}>
-            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            <span className="sr-only">Cambiar tema</span>
-        </Button>
+         <div className="flex items-center justify-center">
+            <button
+                className="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-sidebar-muted"
+                onClick={() => toggleTheme(!isDark)}
+            >
+                {isDark ? <Sun className="h-5 w-5 text-sidebar-muted-foreground" /> : <Moon className="h-5 w-5 text-sidebar-muted-foreground" />}
+                <span className="sr-only">Cambiar tema</span>
+            </button>
+         </div>
       )
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg border p-2 bg-sidebar-muted">
-      <Button 
-        variant={!isDark ? 'secondary' : 'ghost'} 
-        size="sm" 
-        className="flex-1"
-        onClick={() => setTheme("light")}
-      >
-        <Sun className="mr-2 h-4 w-4" />
-        Claro
-      </Button>
-      <Button 
-        variant={isDark ? 'secondary' : 'ghost'} 
-        size="sm" 
-        className="flex-1"
-        onClick={() => setTheme("dark")}
-      >
-        <Moon className="mr-2 h-4 w-4" />
-        Oscuro
-      </Button>
+    <div className="flex items-center justify-between rounded-lg p-2">
+      <div className="flex items-center gap-2">
+         <Sun className="h-5 w-5 text-sidebar-muted-foreground" />
+         <Switch
+            checked={isDark}
+            onCheckedChange={toggleTheme}
+            aria-label="Toggle theme"
+         />
+         <Moon className="h-5 w-5 text-sidebar-muted-foreground" />
+      </div>
     </div>
   )
 }
