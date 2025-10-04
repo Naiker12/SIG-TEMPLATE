@@ -49,11 +49,11 @@ export default function Home() {
           </div>
         ) : (
           <div className="w-full">
-            <div className="flex items-center justify-between border-b pb-6 mb-8">
+            <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Tablero</h1>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4"/> Seleccionar Fecha</Button>
                     <Button><Download className="mr-2 h-4 w-4"/> Descargar</Button>
+                    <Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4"/> Seleccionar Fecha</Button>
                 </div>
             </div>
             
