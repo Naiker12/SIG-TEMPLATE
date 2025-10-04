@@ -180,7 +180,14 @@ export default function DataAnalysisPage() {
                                             <PieChart>
                                                 <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
                                                 <Pie data={aggregatedPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${(percent * 100).toFixed(0)}%`}>
-                                                    {aggregatedPieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                                    {aggregatedPieData.map((entry, index) => (
+                                                        <Cell 
+                                                            key={`cell-${index}`} 
+                                                            fill={COLORS[index % COLORS.length]}
+                                                            stroke="hsl(var(--card))"
+                                                            strokeWidth={2}
+                                                        />
+                                                    ))}
                                                 </Pie>
                                                 <ChartLegend content={<ChartLegendContent />} />
                                             </PieChart>
