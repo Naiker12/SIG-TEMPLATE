@@ -177,7 +177,7 @@ export default function DataAnalysisPage() {
     return (
         <>
             <TopBar />
-            <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
+            <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 overflow-auto pb-8">
                 <div className="max-w-full mx-auto w-full">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <header>

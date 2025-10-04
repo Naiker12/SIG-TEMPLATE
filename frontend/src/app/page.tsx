@@ -31,7 +31,7 @@ export default function Home() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
+      <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 overflow-auto pb-8">
         {!isLoggedIn ? (
           <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
             <div className="text-center max-w-lg">
