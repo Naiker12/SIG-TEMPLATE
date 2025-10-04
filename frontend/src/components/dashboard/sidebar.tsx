@@ -32,20 +32,15 @@ export function DashboardSidebar() {
     setHasMounted(true);
   }, []);
 
-  if (!isLoggedIn || !user) {
-    return null
-  }
-  
   const handleLogout = () => {
     clearSession();
     router.push('/');
   }
   
-  // Prevents hydration mismatch by ensuring the initial server render matches the first client render.
-  if (!hasMounted) {
-    return null; 
+  if (!isLoggedIn || !user || !hasMounted) {
+    return null
   }
-
+  
   const renderNavLinks = (items: MenuItem[]) => {
     return items.map((item, index) => {
       const isActive = item.isCollapsible ? pathname.startsWith(item.href) : pathname === item.href;
@@ -104,13 +99,14 @@ export function DashboardSidebar() {
   }
 
   const sidebarClasses = cn(
-    "fixed top-0 left-0 h-screen flex flex-col border-r bg-sidebar-background transition-transform sm:transition-[width] duration-300 ease-in-out z-50",
+    "fixed top-0 left-0 h-screen flex flex-col border-r bg-sidebar-background transition-all duration-300 ease-in-out z-50",
     {
       // Desktop classes
       "sm:w-60": !isMobile && isOpen,
       "sm:w-16": !isMobile && !isOpen,
       // Mobile classes (overlay effect)
-      "w-60 translate-x-0": isMobile && isOpen,
+      "w-60": isMobile,
+      "translate-x-0": isMobile && isOpen,
       "-translate-x-full": isMobile && !isOpen,
     }
   );
@@ -135,8 +131,8 @@ export function DashboardSidebar() {
             />
             {isOpen && <span className="text-lg font-bold text-sidebar-foreground">SIG IA</span>}
           </Link>
-          {isOpen && (
-              <Button variant="ghost" size="icon" onClick={toggle} className="hidden sm:flex">
+          {isOpen && !isMobile && (
+              <Button variant="ghost" size="icon" onClick={toggle}>
                   <ChevronsLeft className="h-5 w-5" />
               </Button>
           )}
