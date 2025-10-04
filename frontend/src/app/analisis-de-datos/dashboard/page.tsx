@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Loader2, FileUp, Settings2 } from 'lucide-react';
+import { LayoutDashboard, Loader2, FileUp, Settings2, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,8 +14,8 @@ import { useAuthStore } from '@/hooks/useAuthStore';
 import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
 import { ChartConfigSheet } from '@/components/analisis-de-datos/ChartConfigSheet';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
-import { mockData, mockKpis, mockSalesOverTime, mockSalesByCategory } from '@/components/analisis-de-datos/mock-data.tsx';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { mockData, mockKpis, mockSalesOverTime, mockSalesByCategory, dailyTasksData, successRateData, toolUsageData } from '@/components/analisis-de-datos/mock-data.tsx';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Legend, PieChart, Pie, Cell } from "recharts";
 
@@ -142,13 +143,102 @@ export default function DataAnalysisPage() {
                                          <ChartContainer config={{}} className='w-full h-full'>
                                             <PieChart>
                                                 <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                                                <Pie data={mockSalesByCategory} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                                <Pie data={mockSalesByCategory} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${(percent * 100).toFixed(0)}%`}>
                                                     {mockSalesByCategory.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                                 </Pie>
                                                 <ChartLegend content={<ChartLegendContent />} />
                                             </PieChart>
                                         </ChartContainer>
                                     </CardContent>
+                                </Card>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Tipos de Archivo Procesados</CardTitle>
+                                        <CardDescription>Qué formatos son los más comunes.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-64">
+                                        <ChartContainer config={{}} className='w-full h-full'>
+                                            <BarChart data={toolUsageData} layout="vertical" margin={{ left: 10 }}>
+                                                <XAxis type="number" hide />
+                                                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={80} fontSize={14} />
+                                                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                                                <Bar dataKey="usage" radius={[0, 4, 4, 0]}>
+                                                    {toolUsageData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ChartContainer>
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex justify-between items-center">
+                                            <CardTitle>Tareas por Día</CardTitle>
+                                            <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
+                                        </div>
+                                        <CardDescription>Volumen de tareas en la última semana.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-48">
+                                        <ChartContainer config={{}} className='w-full h-full'>
+                                            <AreaChart data={dailyTasksData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="fillTasks" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <XAxis dataKey="day" hide/>
+                                                <YAxis hide domain={['dataMin - 10', 'dataMax + 5']}/>
+                                                <ChartTooltip content={<ChartTooltipContent />} />
+                                                <Area type="monotone" dataKey="tasks" stroke="hsl(var(--chart-2))" fill="url(#fillTasks)" strokeWidth={2} />
+                                            </AreaChart>
+                                        </ChartContainer>
+                                    </CardContent>
+                                    <CardFooter className="flex justify-center text-sm text-muted-foreground">
+                                        <TrendingUp className="w-4 h-4 mr-1"/>
+                                        Creciendo un 5.2% esta semana
+                                    </CardFooter>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex justify-between items-center">
+                                            <CardTitle>Tasa de Éxito</CardTitle>
+                                            <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
+                                        </div>
+                                        <CardDescription>Procesos completados vs. errores.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-48 flex items-center justify-center">
+                                        <div className="relative h-40 w-40">
+                                            <ChartContainer config={{}} className='w-full h-full'>
+                                                <PieChart>
+                                                    <Pie 
+                                                        data={successRateData} 
+                                                        dataKey="value"
+                                                        startAngle={90} 
+                                                        endAngle={-270} 
+                                                        innerRadius="75%" 
+                                                        outerRadius="100%"
+                                                        strokeWidth={0}
+                                                    >
+                                                        <Cell key="success" fill="hsl(var(--chart-2))" />
+                                                        <Cell key="remaining" fill="hsl(var(--muted))" />
+                                                    </Pie>
+                                                </PieChart>
+                                            </ChartContainer>
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                                <p className="text-3xl font-bold">92%</p>
+                                                <p className="text-sm text-muted-foreground">Éxito</p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="flex justify-center gap-4 text-sm text-muted-foreground">
+                                        <div className='flex items-center text-green-500'><CheckCircle className="w-4 h-4 mr-1"/> Completados: 1,226</div>
+                                        <div className='flex items-center text-red-500'><AlertCircle className="w-4 h-4 mr-1"/> Errores: 28</div>
+                                    </CardFooter>
                                 </Card>
                             </div>
                         </div>

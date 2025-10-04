@@ -55,3 +55,25 @@ export const mockSalesByCategory = [
     { name: 'Ropa', sales: 4100, fill: 'var(--color-clothing)' },
     { name: 'Hogar', sales: 7000, fill: 'var(--color-home)' },
 ];
+
+
+export const toolUsageData = [
+  { name: 'PDF', usage: 237 },
+  { name: 'Word', usage: 305 },
+  { name: 'Excel', usage: 186 },
+];
+
+export const dailyTasksData = [
+    { day: 'Lun', tasks: 40 },
+    { day: 'Mar', tasks: 30 },
+    { day: 'Mié', tasks: 20 },
+    { day: 'Jue', tasks: 27 },
+    { day: 'Vie', tasks: 18 },
+    { day: 'Sáb', tasks: 23 },
+    { day: 'Dom', tasks: 34 },
+];
+
+export const successRateData = [
+    { name: 'success', value: 92 },
+    { name: 'remaining', value: 8 }
+];
