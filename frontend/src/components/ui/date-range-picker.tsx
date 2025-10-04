@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { addDays, endOfMonth, format, startOfMonth, subMonths } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
 
@@ -14,6 +14,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export function DateRangePicker({
   className,
@@ -31,7 +38,7 @@ export function DateRangePicker({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[300px] justify-start text-left font-normal",
+              "w-[260px] justify-start text-left font-normal",
               !date && "text-muted-foreground"
             )}
           >
@@ -46,11 +53,38 @@ export function DateRangePicker({
                 format(date.from, "LLL dd, y")
               )
             ) : (
-              <span>Selecciona un rango de fechas</span>
+              <span>Selecciona un rango</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0 flex" align="start">
+           <div className="p-2 border-r">
+                <Select
+                  onValueChange={(value) => {
+                    const now = new Date();
+                    if (value === "this_month") {
+                       setDate({ from: startOfMonth(now), to: endOfMonth(now) });
+                    } else if (value === "last_month") {
+                       const lastMonth = subMonths(now, 1);
+                       setDate({ from: startOfMonth(lastMonth), to: endOfMonth(lastMonth) });
+                    } else {
+                       setDate({ from: addDays(now, -parseInt(value)), to: now });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Preselección" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Hoy</SelectItem>
+                    <SelectItem value="1">Ayer</SelectItem>
+                    <SelectItem value="6">Últimos 7 días</SelectItem>
+                    <SelectItem value="29">Últimos 30 días</SelectItem>
+                    <SelectItem value="this_month">Este mes</SelectItem>
+                    <SelectItem value="last_month">Mes pasado</SelectItem>
+                  </SelectContent>
+                </Select>
+            </div>
           <Calendar
             initialFocus
             mode="range"
