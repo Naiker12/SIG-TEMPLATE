@@ -8,17 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet, Settings, Download, CloudUpload, Table2, Trash2 } from "lucide-react";
+import { UploadCloud, Settings, Download, CloudUpload, Table2, Trash2 } from "lucide-react";
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+import { useLoadingStore } from '@/hooks/use-loading-store';
 
 
 export default function ConvertToDatasetPage() {
     const [file, setFile] = useState<File | null>(null);
-    const [isConverting, setIsConverting] = useState(false);
-    const [conversionProgress, setConversionProgress] = useState(0);
+    const { setIsLoading } = useLoadingStore();
     const [dataset, setDataset] = useState<any>(null);
     
     const mockProcessedInfo = file ? {
@@ -36,23 +35,10 @@ export default function ConvertToDatasetPage() {
     
     const handleConvert = () => {
         if (!file) return;
-        setIsConverting(true);
-        setConversionProgress(0);
+        setIsLoading(true);
         setDataset(null);
 
-        const progressInterval = setInterval(() => {
-            setConversionProgress(prev => {
-                if (prev >= 95) {
-                    clearInterval(progressInterval);
-                    return 95;
-                }
-                return prev + 10;
-            });
-        }, 200);
-
         setTimeout(() => {
-            clearInterval(progressInterval);
-            setConversionProgress(100);
             setDataset({
                 name: `Dataset de ${file.name.split('.')[0]}`,
                 description: 'Dataset consolidado de las ventas trimestrales del año 2023.',
@@ -69,25 +55,11 @@ export default function ConvertToDatasetPage() {
                     { field: 'Region', type: 'string' },
                 ]
             });
-            setTimeout(() => setIsConverting(false), 500);
-        }, 2000);
+            setIsLoading(false);
+        }, 2500);
     }
     
     const renderResultContent = () => {
-        if (isConverting) {
-            return (
-                 <motion.div
-                    key="progress"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="w-full flex flex-col items-center justify-center text-center"
-                >
-                    <CircularProgressBar progress={conversionProgress} message="Convirtiendo..." />
-                </motion.div>
-            )
-        }
-
         if (dataset) {
             return (
                  <motion.div key="dataset-info" initial={{opacity: 0}} animate={{opacity: 1}} className="space-y-4 w-full">
@@ -236,11 +208,11 @@ export default function ConvertToDatasetPage() {
                        </AnimatePresence>
                     </CardContent>
                     <div className="p-6 border-t space-y-3">
-                        <Button size="lg" className="w-full" onClick={handleConvert} disabled={!file || isConverting}>
+                        <Button size="lg" className="w-full" onClick={handleConvert} disabled={!file}>
                             <Settings className="mr-2"/>
-                            {isConverting ? 'Convirtiendo...' : (dataset ? 'Volver a Convertir' : 'Convertir a Dataset')}
+                            {dataset ? 'Volver a Convertir' : 'Convertir a Dataset'}
                         </Button>
-                        {dataset && !isConverting && (
+                        {dataset && (
                             <div className="grid grid-cols-2 gap-3">
                                 <Button variant="outline" className="w-full">
                                     <Download className="mr-2"/>

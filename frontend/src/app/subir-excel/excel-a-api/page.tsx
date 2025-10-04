@@ -14,9 +14,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { ActiveApisModal } from '@/components/excel-a-api/active-apis-modal';
-import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-
+import { useLoadingStore } from '@/hooks/use-loading-store';
 
 const mockExcelData = [
     { id: "row-1", "ID Cliente": "C001", "Nombre": "Ana", "Apellido": "Torres", "Email": "ana.t@example.com", "País": "España", "Último Pedido": "2024-08-15" },
@@ -29,34 +28,20 @@ export default function ExcelToApiPage() {
     const [file, setFile] = useState<File | null>(null);
     const [data, setData] = useState<any[]>([]);
     const [isApiModalOpen, setIsApiModalOpen] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [processingProgress, setProcessingProgress] = useState(0);
+    const { setIsLoading } = useLoadingStore();
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             const newFile = event.target.files[0];
             setFile(newFile);
-            setIsProcessing(true);
-            setProcessingProgress(0);
+            setIsLoading(true);
             setData([]);
-
-            const progressInterval = setInterval(() => {
-                setProcessingProgress(prev => {
-                    if (prev >= 95) {
-                        clearInterval(progressInterval);
-                        return 95;
-                    }
-                    return prev + 10;
-                });
-            }, 200);
 
             // Simulate processing
             setTimeout(() => {
-                clearInterval(progressInterval);
-                setProcessingProgress(100);
                 setData(mockExcelData);
-                setTimeout(() => setIsProcessing(false), 500);
-            }, 2000);
+                setIsLoading(false);
+            }, 2500);
         }
     };
     
@@ -109,7 +94,7 @@ export default function ExcelToApiPage() {
                             </p>
                         </header>
                          <div className="flex items-center gap-2">
-                            {data.length > 0 && !isProcessing && <UploadSheet />}
+                            {data.length > 0 && <UploadSheet />}
                             <Button size="lg" variant="outline" onClick={() => setIsApiModalOpen(true)}>
                                 <DatabaseZap className="mr-2" />
                                 Mis APIs Activas
@@ -118,15 +103,7 @@ export default function ExcelToApiPage() {
                     </div>
                     
                     <AnimatePresence mode="wait">
-                        {isProcessing ? (
-                             <motion.div key="progress" className="w-full">
-                                <Card className="shadow-lg max-w-4xl mx-auto border-2 border-accent min-h-[450px]">
-                                    <CardContent className="h-full flex flex-col justify-center items-center p-6">
-                                        <CircularProgressBar progress={processingProgress} message="Procesando archivo..." />
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        ) : data.length === 0 ? (
+                        {data.length === 0 ? (
                              <motion.div key="upload" className="w-full">
                                 <Card className="shadow-lg max-w-4xl mx-auto border-2 border-accent min-h-[450px]">
                                     <CardContent className="h-full flex flex-col justify-center items-center p-6">

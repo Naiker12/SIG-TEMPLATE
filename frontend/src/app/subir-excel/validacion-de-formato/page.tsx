@@ -13,14 +13,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UploadCloud, PlusCircle, Trash2, Play, AlertTriangle, CheckCircle, FileSpreadsheet } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+import { useLoadingStore } from '@/hooks/use-loading-store';
 
 
 export default function FormatValidationPage() {
     const [file, setFile] = useState<File | null>(null);
     const [validationResult, setValidationResult] = useState<any>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [processingProgress, setProcessingProgress] = useState(0);
+    const { setIsLoading } = useLoadingStore();
 
     const [rules, setRules] = useState([
         { id: 1, column: "email", rule: "is_email", label: "Es un email válido" },
@@ -41,23 +40,10 @@ export default function FormatValidationPage() {
     
     const handleValidate = () => {
         if (!file) return;
+        setIsLoading(true);
         setValidationResult(null);
-        setIsProcessing(true);
-        setProcessingProgress(0);
         
-        const progressInterval = setInterval(() => {
-            setProcessingProgress(prev => {
-                if (prev >= 95) {
-                    clearInterval(progressInterval);
-                    return 95;
-                }
-                return prev + 10;
-            });
-        }, 200);
-
         setTimeout(() => {
-            clearInterval(progressInterval);
-            setProcessingProgress(100);
             setValidationResult({
                 summary: { totalRows: 100, validRows: 92, invalidRows: 8 },
                 errors: [
@@ -67,25 +53,11 @@ export default function FormatValidationPage() {
                     { row: 73, column: "email", value: "luis.g@", error: "No es un email válido" },
                 ]
             });
-            setTimeout(() => setIsProcessing(false), 500);
-        }, 2000);
+            setIsLoading(false);
+        }, 2500);
     }
 
     const renderContent = () => {
-        if (isProcessing) {
-            return (
-                <motion.div
-                    key="progress"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="w-full flex flex-col items-center justify-center text-center"
-                >
-                    <CircularProgressBar progress={processingProgress} message="Validando archivo..." />
-                </motion.div>
-            )
-        }
-
         if (!validationResult) {
             return (
                 <motion.div
@@ -267,8 +239,8 @@ export default function FormatValidationPage() {
                                             <CardTitle>Paso 3: Resultados de la Validación</CardTitle>
                                             <CardDescription>Resumen de la calidad de los datos.</CardDescription>
                                         </div>
-                                        <Button onClick={handleValidate} disabled={!file || isProcessing} size="lg">
-                                            <Play className="mr-2" /> {isProcessing ? 'Validando...' : (validationResult ? 'Validar de Nuevo' : 'Ejecutar Validación')}
+                                        <Button onClick={handleValidate} disabled={!file} size="lg">
+                                            <Play className="mr-2" /> {validationResult ? 'Validar de Nuevo' : 'Ejecutar Validación'}
                                         </Button>
                                     </div>
                                 </CardHeader>
