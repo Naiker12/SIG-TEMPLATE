@@ -7,21 +7,21 @@ import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 import type { ChartConfig } from '@/components/ui/chart';
 
 const chartData = [
-  { month: 'Ene', sales: 186, subscriptions: 80 },
-  { month: 'Feb', sales: 305, subscriptions: 200 },
-  { month: 'Mar', sales: 237, subscriptions: 120 },
-  { month: 'Abr', sales: 73, subscriptions: 190 },
-  { month: 'May', sales: 209, subscriptions: 130 },
-  { month: 'Jun', sales: 214, subscriptions: 140 },
+  { month: 'Ene', processed: 186, errors: 80 },
+  { month: 'Feb', processed: 305, errors: 200 },
+  { month: 'Mar', processed: 237, errors: 120 },
+  { month: 'Abr', processed: 73, errors: 190 },
+  { month: 'May', processed: 209, errors: 130 },
+  { month: 'Jun', processed: 214, errors: 140 },
 ];
 
 const chartConfig = {
-  sales: {
-    label: 'Ventas',
+  processed: {
+    label: 'Procesados',
     color: 'hsl(var(--chart-1))',
   },
-  subscriptions: {
-    label: 'Suscripciones',
+  errors: {
+    label: 'Errores',
     color: 'hsl(var(--chart-2))',
   },
 } satisfies ChartConfig;
@@ -30,8 +30,8 @@ export function SaleActivityChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Actividad de Ventas - Mensual</CardTitle>
-        <CardDescription>Mostrando ventas y suscripciones de los últimos 6 meses</CardDescription>
+        <CardTitle>Actividad de Procesamiento - Mensual</CardTitle>
+        <CardDescription>Mostrando documentos procesados y errores de los últimos 6 meses</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-64 w-full">
@@ -44,13 +44,13 @@ export function SaleActivityChart() {
             }}
           >
             <defs>
-              <linearGradient id="fillSales" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-sales)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-sales)" stopOpacity={0.1} />
+              <linearGradient id="fillProcessed" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-processed)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--color-processed)" stopOpacity={0.1} />
               </linearGradient>
-              <linearGradient id="fillSubscriptions" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-subscriptions)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-subscriptions)" stopOpacity={0.1} />
+              <linearGradient id="fillErrors" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-errors)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--color-errors)" stopOpacity={0.1} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
@@ -63,14 +63,14 @@ export function SaleActivityChart() {
             />
             <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
             <Area
-              dataKey="subscriptions"
+              dataKey="errors"
               type="natural"
-              fill="url(#fillSubscriptions)"
+              fill="url(#fillErrors)"
               fillOpacity={0.4}
-              stroke="var(--color-subscriptions)"
+              stroke="var(--color-errors)"
               stackId="a"
             />
-            <Area dataKey="sales" type="natural" fill="url(#fillSales)" fillOpacity={0.4} stroke="var(--color-sales)" stackId="a" />
+            <Area dataKey="processed" type="natural" fill="url(#fillProcessed)" fillOpacity={0.4} stroke="var(--color-processed)" stackId="a" />
           </AreaChart>
         </ChartContainer>
       </CardContent>

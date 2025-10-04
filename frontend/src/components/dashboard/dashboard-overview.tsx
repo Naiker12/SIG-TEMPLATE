@@ -1,5 +1,5 @@
 
-import { DollarSign, ShoppingBag, Users, BarChart } from 'lucide-react';
+import { Bot, FileCheck, AlertTriangle, BarChart } from 'lucide-react';
 import { MetricCard } from './metric-card';
 import { SaleActivityChart } from './sale-activity-chart';
 import { RevenueChart } from './revenue-chart';
@@ -9,28 +9,28 @@ import { type File as RecentFile } from '@/services/fileService';
 
 const metricCardData = [
   {
-    title: 'Nuevas Suscripciones',
+    title: 'Tokens de IA Usados',
     value: '4,682',
     change: '+15.54%',
     isPositive: true,
-    icon: <Users />,
+    icon: <Bot />,
     chartData: [5, 6, 5, 9, 8, 7, 6],
   },
   {
-    title: 'Nuevas Órdenes',
+    title: 'Análisis Finalizados',
     value: '1,226',
-    change: '-40.2%',
-    isPositive: false,
-    icon: <ShoppingBag />,
-    chartData: [9, 8, 7, 6, 5, 4, 3],
+    change: '+10.2%',
+    isPositive: true,
+    icon: <FileCheck />,
+    chartData: [5, 6, 7, 8, 7, 6, 8],
   },
   {
-    title: 'Ingreso Prom. por Orden',
-    value: '1080',
-    change: '+10.8%',
-    isPositive: true,
-    icon: <BarChart />,
-    chartData: [5, 6, 7, 8, 7, 6, 8],
+    title: 'Errores de Análisis',
+    value: '28',
+    change: '-5.2%',
+    isPositive: false,
+    icon: <AlertTriangle />,
+    chartData: [9, 8, 7, 6, 5, 4, 3],
   },
 ];
 

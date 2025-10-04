@@ -18,8 +18,8 @@ export function RevenueChart() {
   return (
     <Card className="flex flex-col flex-1">
       <CardHeader className="pb-2">
-        <CardDescription>Ingresos Totales</CardDescription>
-        <CardTitle className="text-4xl">$15,231.89</CardTitle>
+        <CardDescription>Archivos Centralizados</CardDescription>
+        <CardTitle className="text-4xl">1,523</CardTitle>
         <p className="text-xs text-muted-foreground">+20.1% desde el mes pasado</p>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col justify-end">

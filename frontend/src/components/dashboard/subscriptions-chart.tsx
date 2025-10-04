@@ -20,7 +20,7 @@ const chartData = [
 ];
 
 const chartConfig = {
-  subscriptions: {
+  tasks: {
     color: 'hsl(var(--chart-1))',
   },
 } satisfies ChartConfig;
@@ -29,14 +29,14 @@ export function SubscriptionsChart() {
   return (
     <Card className="flex flex-col flex-1">
       <CardHeader className="pb-2">
-        <CardDescription>Suscripciones</CardDescription>
-        <CardTitle className="text-4xl">+2350</CardTitle>
+        <CardDescription>Tareas Automatizadas</CardDescription>
+        <CardTitle className="text-4xl">+2,350</CardTitle>
         <p className="text-xs text-muted-foreground">+180.1% desde el mes pasado</p>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col justify-end">
         <ChartContainer config={chartConfig} className="w-full h-14">
           <BarChart accessibilityLayer data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-            <Bar dataKey="v" fill="var(--color-subscriptions)" radius={2} />
+            <Bar dataKey="v" fill="var(--color-tasks)" radius={2} />
           </BarChart>
         </ChartContainer>
       </CardContent>
