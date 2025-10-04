@@ -1,4 +1,6 @@
 
+'use client';
+
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeSwitcher } from "@/components/dashboard/theme-switcher";
-import { KeyRound, Bell, Brush, Settings as SettingsIcon } from "lucide-react";
+import { Bell, Brush, Settings as SettingsIcon } from "lucide-react";
 
 
 export default function SettingsPage() {
@@ -18,7 +20,7 @@ export default function SettingsPage() {
       <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
         <div className="max-w-6xl mx-auto w-full">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Configuración</h1>
             <p className="text-muted-foreground mt-1">
               Gestiona la configuración de la aplicación y las notificaciones.
             </p>
@@ -29,7 +31,6 @@ export default function SettingsPage() {
               <TabsTrigger value="general" className="justify-start gap-2"><SettingsIcon className="h-5 w-5"/>General</TabsTrigger>
               <TabsTrigger value="appearance" className="justify-start gap-2"><Brush className="h-5 w-5"/>Apariencia</TabsTrigger>
               <TabsTrigger value="notifications" className="justify-start gap-2"><Bell className="h-5 w-5"/>Notificaciones</TabsTrigger>
-              <TabsTrigger value="security" className="justify-start gap-2"><KeyRound className="h-5 w-5"/>Seguridad</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 mt-4 md:mt-0">
@@ -42,11 +43,23 @@ export default function SettingsPage() {
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="siteName">Nombre del Sitio</Label>
-                      <Input id="siteName" defaultValue="SIG" />
+                      <Input id="siteName" defaultValue="SIG IA" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="siteUrl">URL del Sitio</Label>
-                      <Input id="siteUrl" defaultValue="https://sig-app.com" />
+                      <Input id="siteUrl" defaultValue="https://sig-ia.app" />
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="language">Idioma</Label>
+                      <Select defaultValue="es">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un idioma" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="es">Español</SelectItem>
+                          <SelectItem value="en">Inglés</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </CardContent>
                 </Card>
@@ -120,29 +133,6 @@ export default function SettingsPage() {
                         <CardDescription>Recibirás correos sobre nuevas funciones y actualizaciones.</CardDescription>
                       </div>
                       <Switch />
-                    </div>
-                     <div className="flex items-center justify-between p-4 rounded-lg border">
-                       <div>
-                        <Label>Recordatorios de Seguridad</Label>
-                        <CardDescription>Recibirás correos sobre la seguridad de tu cuenta.</CardDescription>
-                      </div>
-                      <Switch defaultChecked/>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="security">
-                <Card className="shadow-lg border-2 border-accent">
-                  <CardHeader>
-                    <CardTitle>Seguridad</CardTitle>
-                    <CardDescription>Gestiona la seguridad de tu cuenta.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                     <div className="space-y-2">
-                      <Label>Sesiones Activas</Label>
-                      <CardDescription>Cierra la sesión en todos los demás dispositivos.</CardDescription>
-                      <Button variant="outline">Cerrar Sesión en otros dispositivos</Button>
                     </div>
                   </CardContent>
                 </Card>
