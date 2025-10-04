@@ -1,3 +1,7 @@
+# ================================
+# 📦 Dependencias Backend SIG IA
+# ================================
+
 # Framework principal
 fastapi==0.111.0
 uvicorn[standard]==0.30.0
@@ -18,7 +22,7 @@ python-jose[cryptography]==3.3.0
 # Cliente HTTP
 httpx==0.23.3
 
-# Supabase
+# Supabase (nuevo cliente oficial)
 supabase==1.0.3
 
 # Emails
@@ -36,4 +40,4 @@ Pillow==10.3.0
 pypdf==4.2.0
 pdf2docx==0.5.8
 python-magic-bin==0.4.14
-supabase-py==0.3.5
+
