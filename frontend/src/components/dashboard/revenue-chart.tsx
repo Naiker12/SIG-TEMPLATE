@@ -22,8 +22,8 @@ export function RevenueChart() {
         <CardTitle className="text-4xl">$15,231.89</CardTitle>
         <p className="text-xs text-muted-foreground">+20.1% desde el mes pasado</p>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-20 w-full">
+      <CardContent className="p-0">
+        <ChartContainer config={chartConfig} className="w-full">
           <LineChart accessibilityLayer data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
             <Line dataKey="v" type="natural" stroke="var(--color-revenue)" strokeWidth={2} dot={false} />
           </LineChart>

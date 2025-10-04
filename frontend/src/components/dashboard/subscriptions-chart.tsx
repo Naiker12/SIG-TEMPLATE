@@ -33,9 +33,9 @@ export function SubscriptionsChart() {
         <CardTitle className="text-4xl">+2350</CardTitle>
         <p className="text-xs text-muted-foreground">+180.1% desde el mes pasado</p>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-20 w-full">
-          <BarChart accessibilityLayer data={chartData}>
+      <CardContent className="p-0">
+        <ChartContainer config={chartConfig} className="w-full">
+          <BarChart accessibilityLayer data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
             <Bar dataKey="v" fill="var(--color-subscriptions)" radius={2} />
           </BarChart>
         </ChartContainer>
