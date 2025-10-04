@@ -88,7 +88,7 @@ export const toolsItems: MenuItem[] = [
         items: [
             { title: "Procesar", href: "/subir-excel/procesar-excel" },
             { title: "Validación de Formato", href: "/subir-excel/validacion-de-formato" },
-            { title: "A Dataset", href: "/subir-excel/conversion-a-dataset" },
+            { title: "Conversión a Dataset", href: "/subir-excel/conversion-a-dataset" },
             { title: "A API", href: "/subir-excel/excel-a-api" },
         ]
     },

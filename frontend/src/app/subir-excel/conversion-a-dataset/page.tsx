@@ -2,20 +2,23 @@
 'use client';
 
 import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet, Settings, Check, Download, CloudUpload, Table2 } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, Settings, Download, CloudUpload, Table2, Trash2 } from "lucide-react";
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 
 
 export default function ConvertToDatasetPage() {
     const [file, setFile] = useState<File | null>(null);
     const [isConverting, setIsConverting] = useState(false);
+    const [conversionProgress, setConversionProgress] = useState(0);
     const [dataset, setDataset] = useState<any>(null);
     
     const mockProcessedInfo = file ? {
@@ -34,7 +37,22 @@ export default function ConvertToDatasetPage() {
     const handleConvert = () => {
         if (!file) return;
         setIsConverting(true);
+        setConversionProgress(0);
+        setDataset(null);
+
+        const progressInterval = setInterval(() => {
+            setConversionProgress(prev => {
+                if (prev >= 95) {
+                    clearInterval(progressInterval);
+                    return 95;
+                }
+                return prev + 10;
+            });
+        }, 200);
+
         setTimeout(() => {
+            clearInterval(progressInterval);
+            setConversionProgress(100);
             setDataset({
                 name: `Dataset de ${file.name.split('.')[0]}`,
                 description: 'Dataset consolidado de las ventas trimestrales del año 2023.',
@@ -51,14 +69,70 @@ export default function ConvertToDatasetPage() {
                     { field: 'Region', type: 'string' },
                 ]
             });
-            setIsConverting(false);
+            setTimeout(() => setIsConverting(false), 500);
         }, 2000);
+    }
+    
+    const renderResultContent = () => {
+        if (isConverting) {
+            return (
+                 <motion.div
+                    key="progress"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="w-full flex flex-col items-center justify-center text-center"
+                >
+                    <CircularProgressBar progress={conversionProgress} message="Convirtiendo..." />
+                </motion.div>
+            )
+        }
+
+        if (dataset) {
+            return (
+                 <motion.div key="dataset-info" initial={{opacity: 0}} animate={{opacity: 1}} className="space-y-4 w-full">
+                    <div>
+                        <h3 className="font-semibold text-lg">{dataset.name}</h3>
+                        <p className="text-sm text-muted-foreground">{dataset.description}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                        <div className="bg-muted p-3 rounded-lg">
+                            <p className="text-sm text-muted-foreground">Filas</p>
+                            <p className="text-2xl font-bold">{dataset.rows}</p>
+                        </div>
+                        <div className="bg-muted p-3 rounded-lg">
+                            <p className="text-sm text-muted-foreground">Columnas</p>
+                            <p className="text-2xl font-bold">{dataset.columns}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 className="font-medium mb-2">Estructura del Dataset</h4>
+                        <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                            {dataset.structure.map((field: any) => (
+                                <div key={field.field} className="flex justify-between text-sm">
+                                    <span className="font-mono text-primary bg-primary/10 p-1 rounded-md text-xs">{field.field}</span>
+                                    <span className="text-muted-foreground">{field.type}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </motion.div>
+            )
+        }
+
+        return (
+             <motion.div key="placeholder" initial={{opacity: 0}} animate={{opacity: 1}} className="text-center text-muted-foreground">
+                <Table2 className="h-16 w-16 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold">La previsualización del dataset aparecerá aquí.</h3>
+                <p>Completa los pasos anteriores para empezar.</p>
+            </motion.div>
+        )
     }
 
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
+      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto pb-8">
         <div className="max-w-7xl mx-auto w-full">
           <header className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Conversión a Dataset</h1>
@@ -77,17 +151,29 @@ export default function ConvertToDatasetPage() {
                         <CardDescription>Selecciona el archivo Excel que quieres convertir.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                         <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center">
-                            <UploadCloud className="w-16 h-16 text-muted-foreground mb-4" />
-                            <Button asChild variant="outline">
-                                <label htmlFor="file-upload" className="cursor-pointer">
-                                    {file ? "Cambiar Archivo" : "Seleccionar Archivo"}
-                                </label>
-                            </Button>
-                            <Input id="file-upload" type="file" onChange={handleFileChange} accept=".xlsx, .xls, .csv" className="hidden" />
-                            {file && <p className="text-muted-foreground text-sm mt-3 font-medium flex items-center gap-2"><FileSpreadsheet className="w-4 h-4"/>{file.name}</p>}
-                            {!file && <p className="text-muted-foreground text-sm mt-3">Formatos soportados: .csv, .xlsx, .xls</p>}
-                        </div>
+                        {file ? (
+                             <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                                <div className="flex items-center gap-4 min-w-0">
+                                    <FileSpreadsheet className="w-8 h-8 text-primary flex-shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="font-semibold truncate">{file.name}</p>
+                                        <p className="text-sm text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
+                                    </div>
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => setFile(null)}>
+                                    <Trash2 className="w-5 h-5 text-destructive" /><span className="sr-only">Quitar Archivo</span>
+                                </Button>
+                            </div>
+                        ) : (
+                             <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center">
+                                <UploadCloud className="w-16 h-16 text-muted-foreground mb-4" />
+                                <Button asChild variant="outline">
+                                    <label htmlFor="file-upload" className="cursor-pointer">Seleccionar Archivo</label>
+                                </Button>
+                                <Input id="file-upload" type="file" onChange={handleFileChange} accept=".xlsx, .xls, .csv" className="hidden" />
+                                <p className="text-muted-foreground text-sm mt-3">Formatos soportados: .csv, .xlsx, .xls</p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -144,66 +230,29 @@ export default function ConvertToDatasetPage() {
                         <CardTitle>Paso 3: Convertir y Previsualizar</CardTitle>
                         <CardDescription>Ejecuta la conversión y revisa el resultado.</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 flex flex-col justify-between">
-                        {!dataset && (
-                            <div className="flex-1 flex items-center justify-center border-2 border-dashed rounded-xl bg-muted/50 p-8 text-center">
-                                <div className="text-muted-foreground">
-                                    <Table2 className="h-16 w-16 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold">La previsualización del dataset aparecerá aquí.</h3>
-                                    <p>Completa los pasos anteriores para empezar.</p>
-                                </div>
-                            </div>
-                        )}
-
-                        {dataset && (
-                            <div className="space-y-4">
-                                <div>
-                                    <h3 className="font-semibold text-lg">{dataset.name}</h3>
-                                    <p className="text-sm text-muted-foreground">{dataset.description}</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 text-center">
-                                    <div className="bg-muted p-3 rounded-lg">
-                                        <p className="text-sm text-muted-foreground">Filas</p>
-                                        <p className="text-2xl font-bold">{dataset.rows}</p>
-                                    </div>
-                                    <div className="bg-muted p-3 rounded-lg">
-                                        <p className="text-sm text-muted-foreground">Columnas</p>
-                                        <p className="text-2xl font-bold">{dataset.columns}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 className="font-medium mb-2">Estructura del Dataset</h4>
-                                    <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
-                                        {dataset.structure.map((field: any) => (
-                                            <div key={field.field} className="flex justify-between text-sm">
-                                                <span className="font-mono text-primary bg-primary/10 p-1 rounded-md text-xs">{field.field}</span>
-                                                <span className="text-muted-foreground">{field.type}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="mt-6 border-t pt-6 space-y-3">
-                            <Button size="lg" className="w-full" onClick={handleConvert} disabled={!file || isConverting}>
-                                <Settings className="mr-2"/>
-                                {isConverting ? 'Convirtiendo...' : (dataset ? 'Volver a Convertir' : 'Convertir a Dataset')}
-                            </Button>
-                            {dataset && (
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button variant="outline" className="w-full">
-                                        <Download className="mr-2"/>
-                                        Descargar
-                                    </Button>
-                                     <Button variant="outline" className="w-full">
-                                        <CloudUpload className="mr-2"/>
-                                        Guardar
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
+                    <CardContent className="flex-1 flex flex-col items-center justify-center p-6">
+                       <AnimatePresence mode="wait">
+                          {renderResultContent()}
+                       </AnimatePresence>
                     </CardContent>
+                    <div className="p-6 border-t space-y-3">
+                        <Button size="lg" className="w-full" onClick={handleConvert} disabled={!file || isConverting}>
+                            <Settings className="mr-2"/>
+                            {isConverting ? 'Convirtiendo...' : (dataset ? 'Volver a Convertir' : 'Convertir a Dataset')}
+                        </Button>
+                        {dataset && !isConverting && (
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button variant="outline" className="w-full">
+                                    <Download className="mr-2"/>
+                                    Descargar
+                                </Button>
+                                 <Button variant="outline" className="w-full">
+                                    <CloudUpload className="mr-2"/>
+                                    Guardar
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                  </Card>
             </div>
 
