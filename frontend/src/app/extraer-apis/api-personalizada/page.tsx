@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Code, TableIcon, View, HardDriveDownload, Settings, Loader2, File, FileJson, FileSpreadsheet, ChevronDown, Network } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
 import {
@@ -31,6 +30,8 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLoadingStore } from '@/hooks/use-loading-store';
 import { useAuthStore } from '@/hooks/useAuthStore';
+import { DataTable } from '@/components/limpieza-de-datos/data-table';
+import { type ColumnDef } from '@tanstack/react-table';
 
 
 export default function CustomApiPage() {
@@ -84,7 +85,16 @@ export default function CustomApiPage() {
     }, 1500);
   };
 
-  const tableHeaders = response && response.data.length > 0 ? Object.keys(response.data[0] || {}) : [];
+  const columns = useMemo<ColumnDef<any>[]>(() => {
+    if (!response || !response.data || response.data.length === 0) return [];
+    
+    const dataKeys = Object.keys(response.data[0]);
+
+    return dataKeys.map(key => ({
+      accessorKey: key,
+      header: key.charAt(0).toUpperCase() + key.slice(1),
+    }));
+  }, [response]);
   
   if (isCheckingAuth) {
     return (
@@ -243,22 +253,7 @@ export default function CustomApiPage() {
                       ))}
                   </TabsContent>
                   <TabsContent value="table" className="mt-4">
-                    <div className="border rounded-lg overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            {tableHeaders.map(header => <TableHead key={header}>{header.charAt(0).toUpperCase() + header.slice(1)}</TableHead>)}
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                           {response.data.map((row: any) => (
-                              <TableRow key={row.id}>
-                                {tableHeaders.map(header => <TableCell key={`${row.id}-${header}`}>{row[header]}</TableCell>)}
-                              </TableRow>
-                           ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                    <DataTable columns={columns} data={response.data} />
                   </TabsContent>
                   <TabsContent value="json" className="mt-4">
                     <Textarea 

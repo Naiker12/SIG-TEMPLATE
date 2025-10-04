@@ -10,6 +10,11 @@ import {
   getPaginationRowModel,
   PaginationState,
   Row,
+  getFilteredRowModel,
+  ColumnFiltersState,
+  getSortedRowModel,
+  SortingState,
+  VisibilityState,
 } from "@tanstack/react-table"
 
 import {
@@ -35,8 +40,8 @@ import {
     ChevronsRight,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { ColumnFiltersState, getFilteredRowModel, getSortedRowModel, SortingState, VisibilityState } from "@tanstack/react-table"
 import { Checkbox } from "../ui/checkbox"
+import { Input } from "../ui/input"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -67,7 +72,7 @@ export function DataTable<TData, TValue>({
 
   const table = useReactTable({
     data,
-    columns: [
+    columns: columns.find(c => c.id === 'select') ? columns : [
         {
           id: "select",
           header: ({ table }) => (
@@ -121,8 +126,14 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full space-y-4">
-       <div className="flex items-center justify-between">
-            <div className="flex-1">
+       <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 flex items-center gap-4">
+                <Input
+                  placeholder="Filtrar datos..."
+                  value={(table.getState().globalFilter as string) ?? ""}
+                  onChange={(event) => table.setGlobalFilter(event.target.value)}
+                  className="max-w-sm"
+                />
               {toolbarContent}
             </div>
             <DropdownMenu>
