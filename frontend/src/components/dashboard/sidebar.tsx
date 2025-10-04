@@ -14,11 +14,12 @@ import {
 } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils"
-import { platformItems, toolsItems, userMenuItems } from "./sidebar-data"
+import { platformItems, toolsItems, userMenuItems, publicToolsItems } from "./sidebar-data"
 import type { MenuItem } from "./sidebar-data"
-import { ChevronsLeft, LogOut, ChevronDown } from "lucide-react"
+import { ChevronsLeft, LogOut, ChevronDown, LogIn } from "lucide-react"
 import { ThemeSwitcher } from "./theme-switcher";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuthModal } from "@/hooks/use-auth-modal";
 
 export function DashboardSidebar() {
   const { isLoggedIn, user, clearSession } = useAuthStore()
@@ -27,6 +28,8 @@ export function DashboardSidebar() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const [hasMounted, setHasMounted] = React.useState(false);
+  const authModal = useAuthModal();
+
 
   React.useEffect(() => {
     setHasMounted(true);
@@ -37,7 +40,7 @@ export function DashboardSidebar() {
     router.push('/');
   }
   
-  if (!isLoggedIn || !user || !hasMounted) {
+  if (!hasMounted) {
     return null
   }
   
@@ -140,23 +143,34 @@ export function DashboardSidebar() {
         
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 space-y-4 py-4">
           {isOpen ? (
-              <>
-                  <div>
-                      <p className="px-3 py-1 text-xs font-semibold uppercase text-sidebar-muted-foreground/80 tracking-wider">
-                          Plataforma
-                      </p>
-                      <div className="mt-2 space-y-1">{renderNavLinks(platformItems)}</div>
-                  </div>
-                   <div>
-                      <p className="px-3 py-1 text-xs font-semibold uppercase text-sidebar-muted-foreground/80 tracking-wider">
-                          Herramientas
-                      </p>
-                      <div className="mt-2 space-y-1">{renderNavLinks(toolsItems)}</div>
-                  </div>
-              </>
+              isLoggedIn ? (
+                  <>
+                      <div>
+                          <p className="px-3 py-1 text-xs font-semibold uppercase text-sidebar-muted-foreground/80 tracking-wider">
+                              Plataforma
+                          </p>
+                          <div className="mt-2 space-y-1">{renderNavLinks(platformItems)}</div>
+                      </div>
+                      <div>
+                          <p className="px-3 py-1 text-xs font-semibold uppercase text-sidebar-muted-foreground/80 tracking-wider">
+                              Herramientas
+                          </p>
+                          <div className="mt-2 space-y-1">{renderNavLinks(toolsItems)}</div>
+                      </div>
+                  </>
+              ) : (
+                  <>
+                      <div>
+                          <p className="px-3 py-1 text-xs font-semibold uppercase text-sidebar-muted-foreground/80 tracking-wider">
+                              Herramientas Públicas
+                          </p>
+                          <div className="mt-2 space-y-1">{renderNavLinks(publicToolsItems)}</div>
+                      </div>
+                  </>
+              )
           ) : (
               <div className="space-y-2">
-                  {[...platformItems, ...toolsItems].map((item, index) => (
+                  {(isLoggedIn ? [...platformItems, ...toolsItems] : publicToolsItems).map((item, index) => (
                       <Link key={index} href={item.href} className={cn(
                           buttonVariants({ variant: (pathname.startsWith(item.href) && item.href !== '/') || (pathname === '/' && item.href === '/') ? "secondary" : "ghost", size: "icon" }), "h-10 w-10")}>
                           <item.icon className="h-5 w-5" />
@@ -170,31 +184,53 @@ export function DashboardSidebar() {
          <div className="mt-auto p-3 border-t border-sidebar-border">
            <div className="space-y-2 pt-2">
               {isOpen ? (
-                  <>
-                  {renderNavLinks(userMenuItems)}
-                  <Separator className="bg-sidebar-border my-2"/>
-                  <ThemeSwitcher />
-                  <Button variant="ghost" className="w-full justify-start text-base px-3 h-10 text-sidebar-muted-foreground" onClick={handleLogout}>
-                      <LogOut className="mr-3 h-5 w-5" />
-                      Cerrar Sesión
-                  </Button>
-                  </>
+                  isLoggedIn ? (
+                    <>
+                    {renderNavLinks(userMenuItems)}
+                    <Separator className="bg-sidebar-border my-2"/>
+                    <ThemeSwitcher />
+                    <Button variant="ghost" className="w-full justify-start text-base px-3 h-10 text-sidebar-muted-foreground" onClick={handleLogout}>
+                        <LogOut className="mr-3 h-5 w-5" />
+                        Cerrar Sesión
+                    </Button>
+                    </>
+                  ) : (
+                    <>
+                    <Separator className="bg-sidebar-border my-2"/>
+                    <ThemeSwitcher />
+                    <Button variant="ghost" className="w-full justify-start text-base px-3 h-10 text-sidebar-muted-foreground" onClick={authModal.onOpen}>
+                        <LogIn className="mr-3 h-5 w-5" />
+                        Iniciar Sesión
+                    </Button>
+                    </>
+                  )
               ): (
-                  <>
-                      {userMenuItems.map((item, index) => (
-                          <Link key={index} href={item.href} className={cn(
-                              buttonVariants({ variant: pathname.startsWith(item.href) ? "secondary" : "ghost", size: "icon" }), "h-10 w-10")}>
-                              <item.icon className="h-5 w-5" />
-                              <span className="sr-only">{item.title}</span>
-                          </Link>
-                      ))}
+                  isLoggedIn ? (
+                    <>
+                        {userMenuItems.map((item, index) => (
+                            <Link key={index} href={item.href} className={cn(
+                                buttonVariants({ variant: pathname.startsWith(item.href) ? "secondary" : "ghost", size: "icon" }), "h-10 w-10")}>
+                                <item.icon className="h-5 w-5" />
+                                <span className="sr-only">{item.title}</span>
+                            </Link>
+                        ))}
+                        <Separator className="bg-sidebar-border my-2"/>
+                        <ThemeSwitcher />
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleLogout}>
+                            <LogOut className="h-5 w-5" />
+                            <span className="sr-only">Cerrar Sesión</span>
+                        </Button>
+                    </>
+                  ) : (
+                     <>
                       <Separator className="bg-sidebar-border my-2"/>
                       <ThemeSwitcher />
-                      <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleLogout}>
-                          <LogOut className="h-5 w-5" />
-                          <span className="sr-only">Cerrar Sesión</span>
+                      <Button variant="ghost" size="icon" className="h-10 w-10" onClick={authModal.onOpen}>
+                          <LogIn className="h-5 w-5" />
+                          <span className="sr-only">Iniciar Sesión</span>
                       </Button>
-                  </>
+                    </>
+                  )
               )}
            </div>
         </div>

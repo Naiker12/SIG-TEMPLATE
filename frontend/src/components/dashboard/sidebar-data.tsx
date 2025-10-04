@@ -104,6 +104,11 @@ export const toolsItems: MenuItem[] = [
     },
 ];
 
+// New array for public tools
+export const publicToolsItems: MenuItem[] = toolsItems.filter(item => 
+    item.title === "Gestión PDF" || item.title === "Gestión Word"
+);
+
 export const userMenuItems: MenuItem[] = [
     { title: "Perfil", href: "/profile", icon: User },
     { title: "Configuración", href: "/settings", icon: Settings },
