@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-py"
+  interface = "asyncio"
 }
 
 datasource db {
@@ -10,28 +11,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- Modelos de Autenticación y Usuarios ---
+
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  name         String
-  password     String
-  bio          String?
-  roleId       String?
-  role         Role?         @relation(fields: [roleId], references: [id])
-  files        File[]
-  uploadedFiles FileMetadata[] @relation("UploadedBy")
-  projects      Project[]
+  id              String         @id @default(uuid())
+  name            String
+  email           String         @unique
+  password        String
+  bio             String?
+  roleId          String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  role            Role           @relation(fields: [roleId], references: [id])
+  files           File[]
+  uploadedFiles   FileMetadata[] // Un usuario puede subir muchos archivos
+  projects        Project[]      // Un usuario puede crear muchos proyectos
 
   @@map("User")
 }
 
 model Role {
-  id    String @id @default(uuid())
-  name  String @unique
-  users User[]
-
+  id        String   @id @default(uuid())
+  name      String   @unique
+  users     User[]
+  
   @@map("Role")
 }
+
+// --- Modelo de Archivos (Legado) ---
 
 model File {
   id        String   @id @default(uuid())
@@ -40,41 +48,46 @@ model File {
   size      Int
   status    String
   createdAt DateTime @default(now())
+  
   userId    String
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("File")
 }
 
-// --- Modelos para el nuevo flujo de análisis ---
+// --- Nuevos Modelos para Análisis de Datos ---
 
 model FileMetadata {
-  id         String   @id @default(uuid())
+  id         String     @id @default(uuid())
   filename   String
   filetype   String
-  filepath   String   @unique // Ruta física al archivo en el servidor
+  filepath   String     @unique // Ruta física en el servidor
   columns    String[]
   rows_count Int
   size       Int
-  uploadedAt DateTime @default(now())
+  uploadedAt DateTime   @default(now())
+
   userId     String
-  user       User     @relation("UploadedBy", fields: [userId], references: [id])
-  projects   Project[]
+  user       User       @relation(fields: [userId], references: [id])
+  
+  projects   Project[] // Un archivo puede tener varios proyectos de análisis
 
   @@map("FileMetadata")
 }
 
 model Project {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   name        String
   description String?
-  fileId      String
+  config      Json       // JSON con la configuración del dashboard (gráficos, filtros)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
   userId      String
-  config      Json
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fileId      String
   file        FileMetadata @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("Project")
 }
