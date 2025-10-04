@@ -8,6 +8,7 @@ import { AuthModalProvider } from '@/components/auth-modal';
 import { PageLoader } from '@/components/ui/page-loader';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
+import { useSidebarStore } from '@/hooks/use-sidebar-store';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -43,11 +44,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <AuthModalProvider />
             <PageLoader />
-            <div className="flex min-h-screen w-full">
-              <DashboardSidebar />
-              <div className="flex flex-col w-full">
-                {children}
-              </div>
+            <DashboardSidebar />
+            <div className={cn("transition-[padding-left] duration-300 ease-in-out", useSidebarStore.getState().isOpen ? "sm:pl-60" : "sm:pl-16")}>
+              {children}
             </div>
             <Toaster />
         </ThemeProvider>

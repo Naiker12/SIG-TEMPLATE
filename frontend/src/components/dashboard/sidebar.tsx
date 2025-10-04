@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 import { platformItems, toolsItems, userMenuItems } from "./sidebar-data"
 import type { MenuItem } from "./sidebar-data"
 import { ChevronsLeft, LogOut, ChevronDown } from "lucide-react"
+import { ThemeSwitcher } from "./theme-switcher";
 
 export function DashboardSidebar() {
   const { isLoggedIn, user, clearSession } = useAuthStore()
@@ -93,7 +94,11 @@ export function DashboardSidebar() {
 
 
   return (
-    <aside className={cn("flex-col border-r bg-sidebar transition-[width] duration-300 ease-in-out", isOpen ? "w-60" : "w-16", "hidden sm:flex")}>
+    <aside className={cn(
+        "fixed top-0 left-0 h-screen flex-col border-r bg-sidebar transition-[width] duration-300 ease-in-out", 
+        isOpen ? "w-60" : "w-16", 
+        "hidden sm:flex"
+    )}>
       <div className="flex h-16 items-center px-4 shrink-0 justify-between">
         <Link href="/" className={cn("flex items-center gap-2.5", !isOpen && "w-10 justify-center")}>
           <Image
@@ -129,7 +134,7 @@ export function DashboardSidebar() {
             </>
         ) : (
             <div className="space-y-2">
-                {[...platformItems, ...toolsItems, ...userMenuItems].map((item, index) => (
+                {[...platformItems, ...toolsItems].map((item, index) => (
                     <Link key={index} href={item.href} className={cn(
                         buttonVariants({ variant: (pathname.startsWith(item.href) && item.href !== '/') || (pathname === '/' && item.href === '/') ? "secondary" : "ghost", size: "icon" }), "h-10 w-10")}>
                         <item.icon className="h-5 w-5" />
@@ -145,6 +150,7 @@ export function DashboardSidebar() {
             <>
               {renderNavLinks(userMenuItems)}
               <Separator className="bg-sidebar-border"/>
+               <ThemeSwitcher />
                <Button variant="ghost" className="w-full justify-start text-base px-3 h-10 text-sidebar-muted-foreground" onClick={handleLogout}>
                 <LogOut className="mr-3 h-5 w-5" />
                 Cerrar Sesión
@@ -152,6 +158,15 @@ export function DashboardSidebar() {
             </>
          ): (
             <>
+                 {userMenuItems.map((item, index) => (
+                     <Link key={index} href={item.href} className={cn(
+                         buttonVariants({ variant: pathname.startsWith(item.href) ? "secondary" : "ghost", size: "icon" }), "h-10 w-10")}>
+                         <item.icon className="h-5 w-5" />
+                         <span className="sr-only">{item.title}</span>
+                     </Link>
+                 ))}
+                 <Separator className="bg-sidebar-border"/>
+                 <ThemeSwitcher />
                  <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleLogout}>
                     <LogOut className="h-5 w-5" />
                     <span className="sr-only">Cerrar Sesión</span>
