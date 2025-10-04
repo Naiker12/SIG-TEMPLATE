@@ -70,18 +70,10 @@ export default function ExcelToApiPage() {
         }));
     }, [data]);
     
-    const UploadSheet = ({ isButton = false }: { isButton?: boolean }) => (
+    const UploadSheet = () => (
         <Sheet>
             <SheetTrigger asChild>
-                {isButton ? (
-                   <Button>Procesar Otro Archivo</Button>
-                ) : (
-                    <Button asChild variant="default">
-                        <Label htmlFor="file-upload" className="cursor-pointer">
-                            Seleccionar Archivo
-                        </Label>
-                    </Button>
-                )}
+                <Button>Procesar Otro Archivo</Button>
             </SheetTrigger>
             <SheetContent>
                 <SheetHeader>
@@ -117,7 +109,7 @@ export default function ExcelToApiPage() {
                             </p>
                         </header>
                          <div className="flex items-center gap-2">
-                            {data.length > 0 && !isProcessing && <UploadSheet isButton={true} />}
+                            {data.length > 0 && !isProcessing && <UploadSheet />}
                             <Button size="lg" variant="outline" onClick={() => setIsApiModalOpen(true)}>
                                 <DatabaseZap className="mr-2" />
                                 Mis APIs Activas
@@ -142,7 +134,11 @@ export default function ExcelToApiPage() {
                                             <UploadCloud className="w-16 h-16 text-muted-foreground mb-4" />
                                             <h3 className="text-xl font-semibold mb-2">Arrastra y suelta tu archivo Excel o CSV</h3>
                                             <p className="text-muted-foreground mb-4">o</p>
-                                            <UploadSheet />
+                                            <Button asChild variant="default">
+                                                <Label htmlFor="file-upload" className="cursor-pointer">
+                                                    Seleccionar Archivo
+                                                </Label>
+                                            </Button>
                                             <Input id="file-upload" type="file" onChange={handleFileChange} accept=".csv, .xlsx, .xls" className="hidden" />
                                             <p className="text-muted-foreground text-sm mt-4">Formatos soportados: .csv, .xlsx, .xls</p>
                                         </div>
