@@ -12,9 +12,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Code, TableIcon, View, HardDriveDownload, Settings, Loader2, File, FileJson, FileSpreadsheet, ChevronDown } from "lucide-react";
+import { Code, TableIcon, View, HardDriveDownload, Settings, Loader2, File, FileJson, FileSpreadsheet, ChevronDown, Network } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLoadingStore } from '@/hooks/use-loading-store';
 import { useAuthStore } from '@/hooks/useAuthStore';
@@ -24,7 +32,7 @@ export default function CustomApiPage() {
   const [response, setResponse] = useState<any>(null);
   const { setIsLoading, isLoading } = useLoadingStore();
   const [hasHeaders, setHasHeaders] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('cards');
   const { isLoggedIn } = useAuthStore(state => ({ isLoggedIn: state.isLoggedIn }));
   const router = useRouter();
@@ -52,7 +60,7 @@ export default function CustomApiPage() {
 
   const handleExtract = () => {
     setIsLoading(true);
-    setIsModalOpen(false);
+    setIsSheetOpen(false);
     setTimeout(() => {
       setResponse({
         data: [
@@ -81,19 +89,19 @@ export default function CustomApiPage() {
     );
   }
 
-  const RequestModal = () => (
-     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogTrigger asChild>
+  const RequestSheet = () => (
+     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetTrigger asChild>
             <Button size="lg">
                 <Settings className="mr-2"/>
                 Configurar Petición
             </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>Configurar Petición de API</DialogTitle>
-                <DialogDescription>Define los parámetros de tu punto final para extraer los datos.</DialogDescription>
-            </DialogHeader>
+        </SheetTrigger>
+        <SheetContent>
+            <SheetHeader>
+                <SheetTitle>Configurar Petición de API</SheetTitle>
+                <SheetDescription>Define los parámetros de tu punto final para extraer los datos.</SheetDescription>
+            </SheetHeader>
             <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                     <Label htmlFor="api-url">URL del Endpoint</Label>
@@ -111,7 +119,7 @@ export default function CustomApiPage() {
                       </SelectContent>
                     </Select>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 pt-2">
                     <Switch id="headers-switch" checked={hasHeaders} onCheckedChange={setHasHeaders} />
                     <Label htmlFor="headers-switch">Añadir Cabeceras Personalizadas</Label>
                 </div>
@@ -122,11 +130,11 @@ export default function CustomApiPage() {
                     </div>
                 )}
             </div>
-            <DialogFooter>
+            <SheetFooter>
                 <Button type="button" onClick={handleExtract}>Extraer Datos</Button>
-            </DialogFooter>
-        </DialogContent>
-     </Dialog>
+            </SheetFooter>
+        </SheetContent>
+     </Sheet>
   );
 
   const DownloadButton = () => {
@@ -161,7 +169,7 @@ export default function CustomApiPage() {
     <>
       <TopBar />
       <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
-        <div className="max-w-7xl mx-auto w-full">
+        <div className="max-w-full mx-auto w-full">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <header>
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight">API Personalizada</h1>
@@ -170,7 +178,7 @@ export default function CustomApiPage() {
               </p>
             </header>
             <div className="flex-shrink-0">
-                <RequestModal />
+                <RequestSheet />
             </div>
           </div>
 
@@ -189,19 +197,28 @@ export default function CustomApiPage() {
               {!response && !isLoading && (
                  <div className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
                     <div className="text-center text-muted-foreground p-4">
+                        <Network className="h-16 w-16 mx-auto mb-4" />
                         <p className="text-lg font-semibold mb-2">Esperando petición</p>
                         <p className="max-w-xs mx-auto">Usa el botón "Configurar Petición" para empezar a extraer datos de una API.</p>
                     </div>
                  </div>
               )}
-              {response && (
+              {isLoading && (
+                 <div className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
+                    <div className="text-center text-muted-foreground p-4 flex flex-col items-center gap-4">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary"/>
+                        <p className="text-lg font-semibold">Extrayendo datos...</p>
+                    </div>
+                 </div>
+              )}
+              {response && !isLoading && (
                 <Tabs defaultValue="cards" value={activeTab} onValueChange={setActiveTab} className="mt-4">
                   <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid md:grid-cols-3">
                     <TabsTrigger value="cards"><View className="mr-2"/>Tarjetas</TabsTrigger>
                     <TabsTrigger value="table"><TableIcon className="mr-2"/>Tabla</TabsTrigger>
                     <TabsTrigger value="json"><Code className="mr-2"/>JSON</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="cards" className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-x-auto">
+                  <TabsContent value="cards" className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {response.data.map((item: any) => (
                         <Card key={item.id} className="hover:border-primary/50 transition-colors">
                           <CardHeader>
