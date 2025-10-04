@@ -14,9 +14,9 @@ import { useAuthStore } from '@/hooks/useAuthStore';
 import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
 import { ChartConfigSheet } from '@/components/analisis-de-datos/ChartConfigSheet';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
-import { mockData, mockKpis, mockSalesOverTime, mockSalesByCategory } from '@/components/analisis-de-datos/mock-data';
+import { mockData, mockKpis, mockSalesOverTime, mockSalesByCategory } from '@/components/analisis-de-datos/mock-data.tsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Legend, PieChart, Pie, Cell } from "recharts";
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
@@ -146,7 +146,7 @@ export default function DataAnalysisPage() {
                                                 <Pie data={mockSalesByCategory} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}>
                                                     {mockSalesByCategory.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                                 </Pie>
-                                                <Legend />
+                                                <ChartLegend content={<ChartLegendContent />} />
                                             </PieChart>
                                         </ChartContainer>
                                     </CardContent>
@@ -159,4 +159,3 @@ export default function DataAnalysisPage() {
         </>
     );
 }
-
