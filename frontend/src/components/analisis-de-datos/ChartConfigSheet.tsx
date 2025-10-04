@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings2 } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { categoricalColumns, numericalColumns } from './mock-data';
 import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 
@@ -36,7 +36,7 @@ export function ChartConfigSheet() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline"><Settings2 className="mr-2 h-4 w-4"/>Configurar Gráficos</Button>
+        <Button variant="outline"><Settings className="mr-2 h-4 w-4"/>Configurar Gráficos</Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>

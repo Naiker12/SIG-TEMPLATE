@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle, FolderOpen, UploadCloud } from 'lucide-react';
+import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle, FolderOpen, UploadCloud, Save } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
 import { useChartConfigStore } from '@/hooks/use-chart-config-store';
+import { useToast } from '@/hooks/use-toast';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
@@ -32,6 +33,7 @@ export default function DataAnalysisPage() {
     const [file, setFile] = useState<File | null>(null);
     const [data, setData] = useState<any[]>([]);
     const { setIsLoading } = useLoadingStore();
+    const { toast } = useToast();
     const { isLoggedIn } = useAuthStore(state => ({ isLoggedIn: state.isLoggedIn }));
     const router = useRouter();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -80,6 +82,21 @@ export default function DataAnalysisPage() {
         }, 1500)
     }
 
+    const handleSaveProject = () => {
+        if (!data.length) {
+             toast({
+                variant: 'destructive',
+                title: 'No hay datos para guardar',
+                description: 'Carga y analiza un archivo antes de guardar un proyecto.',
+            });
+            return;
+        }
+        toast({
+            title: 'Proyecto Guardado',
+            description: 'Tu configuración de análisis actual ha sido guardada.',
+        });
+    }
+
     const aggregatedPieData = useMemo(() => {
         if (!data.length) return [];
         const { labelKey, valueKey } = pieChartConfig;
@@ -122,6 +139,9 @@ export default function DataAnalysisPage() {
                          <div className="flex items-center gap-2">
                              <Button variant="outline" size="lg" onClick={() => setIsProjectsModalOpen(true)}>
                                  <FolderOpen className="mr-2"/> Ver Proyectos
+                             </Button>
+                             <Button variant="outline" size="lg" onClick={handleSaveProject}>
+                                <Save className="mr-2 h-5 w-5"/> Guardar
                              </Button>
                              <Button size="lg" onClick={() => setIsUploadModalOpen(true)}>
                                 <FileUp className="mr-2"/> Cargar Datos
