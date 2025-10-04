@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, DatabaseZap, TableIcon, Code, FileSpreadsheet } from "lucide-react";
+import { UploadCloud, DatabaseZap, TableIcon, Code, FileSpreadsheet, Power } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { ActiveApisModal } from '@/components/excel-a-api/active-apis-modal';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const mockExcelData = [
     { id: "row-1", "ID Cliente": "C001", "Nombre": "Ana", "Apellido": "Torres", "Email": "ana.t@example.com", "País": "España", "Último Pedido": "2024-08-15" },
@@ -29,7 +31,11 @@ export default function ExcelToApiPage() {
     const [data, setData] = useState<any[]>([]);
     const [isApiModalOpen, setIsApiModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isDeploying, setIsDeploying] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+    const [apiName, setApiName] = useState("");
+    const { toast } = useToast();
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
@@ -53,9 +59,38 @@ export default function ExcelToApiPage() {
                 clearInterval(progressInterval);
                 setProgress(100);
                 setData(mockExcelData);
+                setApiName(`API de ${newFile.name.split('.')[0]}`);
                 setIsProcessing(false);
             }, 2500);
         }
+    };
+
+    const handleDeployApi = () => {
+        if (!apiName.trim()) {
+            toast({ variant: 'destructive', title: 'Nombre requerido', description: 'Por favor, dale un nombre a tu API.' });
+            return;
+        }
+        setIsConfigModalOpen(false);
+        setIsDeploying(true);
+        setProgress(0);
+
+        const progressInterval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 95) {
+                    clearInterval(progressInterval);
+                    return 95;
+                }
+                return prev + 5;
+            });
+        }, 150);
+
+        setTimeout(() => {
+            clearInterval(progressInterval);
+            setProgress(100);
+            setIsDeploying(false);
+            toast({ title: '¡API Desplegada!', description: 'Tu nueva API está activa y lista para usar.' });
+            // Here you would typically add the new API to your list
+        }, 2000);
     };
     
      const columns: ColumnDef<any>[] = useMemo(() => {
@@ -71,7 +106,7 @@ export default function ExcelToApiPage() {
     const UploadSheet = () => (
         <Sheet>
             <SheetTrigger asChild>
-                <Button>Procesar Otro Archivo</Button>
+                <Button variant="outline">Procesar Otro Archivo</Button>
             </SheetTrigger>
             <SheetContent>
                 <SheetHeader>
@@ -116,7 +151,7 @@ export default function ExcelToApiPage() {
                     </div>
                     
                     <AnimatePresence mode="wait">
-                        {data.length === 0 && !isProcessing ? (
+                        {data.length === 0 && !isProcessing && !isDeploying ? (
                              <motion.div key="upload" className="w-full">
                                 <Card className="shadow-lg max-w-4xl mx-auto border-2 border-accent min-h-[450px]">
                                     <CardContent className="h-full flex flex-col justify-center items-center p-6">
@@ -139,17 +174,27 @@ export default function ExcelToApiPage() {
                             <motion.div key="data" className="w-full">
                                 <Card className="border-2 border-accent shadow-lg min-h-[450px]">
                                     <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <FileSpreadsheet /> {isProcessing ? 'Procesando Archivo' : 'Vista Previa de Datos'}
-                                        </CardTitle>
-                                        <CardDescription>
-                                            {isProcessing ? `Procesando el archivo ${file?.name}...` : `Los datos de tu archivo ${file?.name} están listos.`}
-                                        </CardDescription>
+                                        <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4'>
+                                            <div>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    <FileSpreadsheet /> {isProcessing || isDeploying ? 'Procesando...' : 'Vista Previa de Datos'}
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    {isProcessing ? `Procesando el archivo ${file?.name}...` 
+                                                    : isDeploying ? `Activando API: ${apiName}`
+                                                    : `Los datos de tu archivo ${file?.name} están listos.`}
+                                                </CardDescription>
+                                            </div>
+                                            <Button size="lg" disabled={data.length === 0 || isDeploying} onClick={() => setIsConfigModalOpen(true)}>
+                                                <Power className="mr-2"/>
+                                                Crear API
+                                            </Button>
+                                        </div>
                                     </CardHeader>
                                     <CardContent>
-                                        {isProcessing ? (
-                                            <div className="flex items-center justify-center min-h-[300px]">
-                                                <CircularProgressBar progress={progress} message="Procesando..." />
+                                        {isProcessing || isDeploying ? (
+                                            <div className="flex items-center justify-center min-h-[500px]">
+                                                <CircularProgressBar progress={progress} message={isDeploying ? 'Activando API...' : 'Procesando archivo...'} />
                                             </div>
                                         ) : (
                                             <Tabs defaultValue="table" className="w-full">
@@ -177,6 +222,29 @@ export default function ExcelToApiPage() {
                 </div>
             </main>
             <ActiveApisModal isOpen={isApiModalOpen} onOpenChange={setIsApiModalOpen} />
+            
+            {/* API Creation Config Modal */}
+            <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Configurar y Activar API</DialogTitle>
+                        <DialogDescription>Dale un nombre a tu nueva API antes de activarla.</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label htmlFor="api-name">Nombre de la API</Label>
+                        <Input 
+                            id="api-name" 
+                            value={apiName} 
+                            onChange={(e) => setApiName(e.target.value)}
+                            placeholder="Ej: API de Ventas Q1"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsConfigModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleDeployApi}>Confirmar y Activar</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
