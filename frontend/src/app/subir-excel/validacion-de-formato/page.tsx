@@ -53,7 +53,7 @@ export default function FormatValidationPage() {
                 }
                 return prev + 10;
             });
-        }, 150);
+        }, 200);
 
         setTimeout(() => {
             clearInterval(progressInterval);
@@ -68,7 +68,7 @@ export default function FormatValidationPage() {
                 ]
             });
             setTimeout(() => setIsProcessing(false), 500);
-        }, 1500);
+        }, 2000);
     }
 
     const renderContent = () => {
@@ -79,7 +79,7 @@ export default function FormatValidationPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="w-full flex flex-col items-center justify-center text-center min-h-[400px]"
+                    className="w-full flex flex-col items-center justify-center text-center"
                 >
                     <CircularProgressBar progress={processingProgress} message="Validando archivo..." />
                 </motion.div>
@@ -95,7 +95,7 @@ export default function FormatValidationPage() {
                   className="w-full flex flex-col items-center justify-center text-center min-h-[400px] border-2 border-dashed rounded-xl bg-muted/30 p-8"
                 >
                     <AlertTriangle className="h-20 w-20 text-muted-foreground mb-4"/>
-                    <h3 className="text-xl font-semibold mb-2">Esperando Resultados</h3>
+                    <h3 className="text-xl font-semibold mb-2">Resultados del Análisis</h3>
                     <p className="text-muted-foreground max-w-sm mx-auto">Los resultados del análisis de validación aparecerán aquí una vez que ejecutes el proceso.</p>
                 </motion.div>
             )
@@ -106,7 +106,7 @@ export default function FormatValidationPage() {
                 key="results"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className='space-y-8'
+                className='space-y-8 w-full'
             >
                 <Card className="bg-muted/30">
                     <CardHeader className="flex-row items-center gap-6 space-y-0">
@@ -272,7 +272,7 @@ export default function FormatValidationPage() {
                                         </Button>
                                     </div>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="flex items-center justify-center min-h-[400px]">
                                     <AnimatePresence mode="wait">
                                         {renderContent()}
                                     </AnimatePresence>
