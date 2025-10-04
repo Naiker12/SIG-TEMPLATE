@@ -18,12 +18,14 @@ import { platformItems, toolsItems, userMenuItems } from "./sidebar-data"
 import type { MenuItem } from "./sidebar-data"
 import { ChevronsLeft, LogOut, ChevronDown } from "lucide-react"
 import { ThemeSwitcher } from "./theme-switcher";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function DashboardSidebar() {
   const { isLoggedIn, user, clearSession } = useAuthStore()
   const { isOpen, toggle } = useSidebarStore();
   const pathname = usePathname();
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   if (!isLoggedIn || !user) {
     return null
@@ -91,12 +93,23 @@ export function DashboardSidebar() {
     });
   }
 
+  const sidebarClasses = cn(
+    "fixed top-0 left-0 h-screen flex flex-col border-r bg-sidebar-background transition-transform sm:transition-[width] duration-300 ease-in-out z-50",
+    {
+      // Mobile classes
+      "w-60": isMobile,
+      "translate-x-0": isMobile && isOpen,
+      "-translate-x-full": isMobile && !isOpen,
+      // Desktop classes
+      "sm:w-60": !isMobile && isOpen,
+      "sm:w-16": !isMobile && !isOpen,
+      "sm:translate-x-0": !isMobile,
+    }
+  );
+
 
   return (
-    <aside className={cn(
-        "fixed top-0 left-0 h-screen flex flex-col border-r bg-sidebar-background transition-[width] duration-300 ease-in-out z-50", 
-        isOpen ? "w-60" : "w-16"
-    )}>
+    <aside className={sidebarClasses}>
       <div className="flex h-16 items-center px-4 shrink-0 justify-between">
         <Link href="/" className={cn("flex items-center gap-2.5", !isOpen && "w-10 justify-center")}>
           <Image
