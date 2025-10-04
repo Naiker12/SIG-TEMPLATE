@@ -11,12 +11,11 @@ import { compressFiles } from '@/services/compressionService';
 import { uploadFileMetadata } from '@/services/fileService';
 import { saveAs } from 'file-saver';
 import { useToast } from '@/hooks/use-toast';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/hooks/useAuthStore';
 import { useAuthModal } from '@/hooks/use-auth-modal';
+import { useLoadingStore } from '@/hooks/use-loading-store';
 
 type CompressedInfo = {
   blob: Blob;
@@ -30,7 +29,7 @@ export default function OptimizeFilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [compressionLevel, setCompressionLevel] = useState([1]);
   const [compressedInfo, setCompressedInfo] = useState<CompressedInfo | null>(null);
-  const [optimizationProgress, setOptimizationProgress] = useState<number | null>(null);
+  const { setIsLoading } = useLoadingStore();
   const { toast } = useToast();
   const { isLoggedIn } = useAuthStore();
   const authModal = useAuthModal();
@@ -83,23 +82,12 @@ export default function OptimizeFilePage() {
   const handleOptimize = async () => {
     if (files.length === 0) return;
     setCompressedInfo(null);
-    setOptimizationProgress(0);
-    
-    const progressInterval = setInterval(() => {
-        setOptimizationProgress(prev => {
-            if (prev === null) return 0;
-            if (prev >= 95) return 95;
-            return prev + 5;
-        });
-    }, 350);
+    setIsLoading(true);
 
     try {
       const originalSize = files.reduce((acc, file) => acc + file.size, 0);
       const zipBlob = await compressFiles(files, compressionLevel[0]);
       
-      clearInterval(progressInterval);
-      setOptimizationProgress(100);
-
       // Log metadata after successful compression
       try {
           await uploadFileMetadata({
@@ -117,28 +105,25 @@ export default function OptimizeFilePage() {
            })
       }
 
-      setTimeout(() => {
-        setCompressedInfo({
-            blob: zipBlob,
-            size: zipBlob.size,
-            originalSize,
-        });
-        toast({
-            title: "Optimización Completa",
-            description: "Tus archivos han sido comprimidos y están listos para descargar.",
-        });
-        setOptimizationProgress(null);
-      }, 500);
+      setCompressedInfo({
+          blob: zipBlob,
+          size: zipBlob.size,
+          originalSize,
+      });
+      toast({
+          title: "Optimización Completa",
+          description: "Tus archivos han sido comprimidos y están listos para descargar.",
+      });
 
     } catch (error) {
-      clearInterval(progressInterval);
-      setOptimizationProgress(null);
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error de Optimización",
         description: error instanceof Error ? error.message : "Hubo un problema al comprimir los archivos. Inténtalo de nuevo.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -321,22 +306,6 @@ export default function OptimizeFilePage() {
           </Card>
         </div>
       </main>
-
-       <AnimatePresence>
-        {optimizationProgress !== null && (
-            <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm"
-            >
-                <CircularProgressBar 
-                    progress={optimizationProgress}
-                    message={optimizationProgress < 100 ? "Optimizando archivos..." : "Finalizando..."}
-                />
-            </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

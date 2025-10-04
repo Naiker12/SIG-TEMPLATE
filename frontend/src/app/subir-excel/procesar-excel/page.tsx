@@ -20,8 +20,7 @@ import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef, type Row, type PaginationState } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { uploadAndProcessExcel, getExcelPreview, type ExcelPreview, duplicateExcelRow, downloadExcelFile } from '@/services/excelService';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+import { useLoadingStore } from '@/hooks/use-loading-store';
 import {
   Select,
   SelectContent,
@@ -41,7 +40,7 @@ export default function ProcessExcelPage() {
   const [file, setFile] = useState<File | null>(null);
   const [processedFileId, setProcessedFileId] = useState<string | null>(null);
   const [tableData, setTableData] = useState<ExcelPreview | null>(null);
-  const [processingProgress, setProcessingProgress] = useState<number | null>(null);
+  const { setIsLoading } = useLoadingStore();
   const [selectedRows, setSelectedRows] = useState<Row<any>[]>([]);
   const [duplicateModal, setDuplicateModal] = useState<DuplicateModalState>({ isOpen: false, rowData: null });
   const [pagination, setPagination] = useState<PaginationState>({
@@ -75,10 +74,7 @@ export default function ProcessExcelPage() {
       return;
     }
     
-    setProcessingProgress(0);
-    const progressInterval = setInterval(() => {
-        setProcessingProgress(prev => (prev !== null && prev < 95 ? prev + 5 : 95));
-    }, 500);
+    setIsLoading(true);
 
     try {
       const { file_id } = await uploadAndProcessExcel(file);
@@ -100,9 +96,7 @@ export default function ProcessExcelPage() {
         description: error instanceof Error ? error.message : "No se pudo procesar el archivo.",
       });
     } finally {
-      clearInterval(progressInterval);
-      setProcessingProgress(100);
-      setTimeout(() => setProcessingProgress(null), 500);
+      setIsLoading(false);
     }
   };
 
@@ -276,21 +270,6 @@ export default function ProcessExcelPage() {
           )}
         </div>
       </main>
-      <AnimatePresence>
-        {processingProgress !== null && (
-            <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm"
-            >
-                <CircularProgressBar 
-                    progress={processingProgress}
-                    message={processingProgress < 100 ? "Procesando archivo..." : "Finalizando..."}
-                />
-            </motion.div>
-        )}
-      </AnimatePresence>
       <DuplicateRowModal 
         isOpen={duplicateModal.isOpen} 
         onOpenChange={(isOpen) => setDuplicateModal(prev => ({...prev, isOpen}))}

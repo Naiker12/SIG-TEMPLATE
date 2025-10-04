@@ -9,14 +9,13 @@ import { FileText, X, Download, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { convertFilesToPdf, type ConversionResult } from '@/services/conversionService';
 import { useToast } from '@/hooks/use-toast';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { saveAs } from 'file-saver';
+import { useLoadingStore } from '@/hooks/use-loading-store';
 
 export default function ConvertWordToPdfPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [convertedInfo, setConvertedInfo] = useState<ConversionResult | null>(null);
-  const [conversionProgress, setConversionProgress] = useState<number | null>(null);
+  const { setIsLoading } = useLoadingStore();
   const { toast } = useToast();
 
   const handleFilesSelected = (newFiles: File[]) => {
@@ -45,35 +44,26 @@ export default function ConvertWordToPdfPage() {
   const handleConvert = async () => {
     if (files.length === 0) return;
     setConvertedInfo(null);
-    setConversionProgress(0);
-
-    const progressInterval = setInterval(() => {
-      setConversionProgress(prev => (prev !== null && prev < 95 ? prev + 5 : 95));
-    }, 400);
+    setIsLoading(true);
 
     try {
       const result = await convertFilesToPdf(files);
-      clearInterval(progressInterval);
-      setConversionProgress(100);
-
-      setTimeout(() => {
-        setConvertedInfo(result);
-        toast({
-          title: "Conversión Completa",
-          description: "Tus archivos Word han sido convertidos a PDF.",
-        });
-        setConversionProgress(null);
-      }, 500);
+      
+      setConvertedInfo(result);
+      toast({
+        title: "Conversión Completa",
+        description: "Tus archivos Word han sido convertidos a PDF.",
+      });
 
     } catch (error) {
-      clearInterval(progressInterval);
-      setConversionProgress(null);
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error de Conversión",
         description: "Hubo un problema al convertir los archivos. Inténtalo de nuevo.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -214,22 +204,6 @@ export default function ConvertWordToPdfPage() {
           </Card>
         </div>
       </main>
-
-      <AnimatePresence>
-        {conversionProgress !== null && (
-            <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm"
-            >
-                <CircularProgressBar 
-                    progress={conversionProgress}
-                    message={conversionProgress < 100 ? "Convirtiendo archivos..." : "Finalizando..."}
-                />
-            </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

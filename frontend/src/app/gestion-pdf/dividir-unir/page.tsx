@@ -13,12 +13,11 @@ import { DraggableFileItem } from "@/components/gestion-pdf/draggable-file-item"
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, X, Download, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { AnimatePresence, motion } from "framer-motion";
-import { CircularProgressBar } from "@/components/ui/circular-progress-bar";
 import { splitPdf, mergePdfs } from "@/services/pdfManipulationService";
 import { saveAs } from "file-saver";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useAuthModal } from "@/hooks/use-auth-modal";
+import { useLoadingStore } from "@/hooks/use-loading-store";
 
 type ProcessResult = {
   blob: Blob;
@@ -33,6 +32,7 @@ export default function SplitMergePdfPage() {
   const { toast } = useToast();
   const { isLoggedIn } = useAuthStore();
   const authModal = useAuthModal();
+  const { setIsLoading } = useLoadingStore();
   
   // State for Split
   const [splitFile, setSplitFile] = useState<File[]>([]);
@@ -43,7 +43,6 @@ export default function SplitMergePdfPage() {
   
   // Shared state for processing
   const [processResult, setProcessResult] = useState<ProcessResult | null>(null);
-  const [processProgress, setProcessProgress] = useState<number | null>(null);
 
   const handleFileRemove = (fileToRemove: File, type: 'split' | 'merge') => {
     if (type === 'split') {
@@ -85,15 +84,7 @@ export default function SplitMergePdfPage() {
   
   const handleProcess = async () => {
     setProcessResult(null);
-    setProcessProgress(0);
-
-    const progressInterval = setInterval(() => {
-        setProcessProgress(prev => {
-            if (prev === null) return 0;
-            if (prev >= 95) return 95;
-            return prev + 5;
-        });
-    }, 400);
+    setIsLoading(true);
     
     try {
         let blob: Blob;
@@ -113,24 +104,18 @@ export default function SplitMergePdfPage() {
             fileName = "pdf_unido.pdf";
         }
 
-        clearInterval(progressInterval);
-        setProcessProgress(100);
-
-        setTimeout(() => {
-            setProcessResult({ blob, size: blob.size, fileName });
-            toast({ title: "Proceso Completo", description: "Tu archivo está listo para descargar." });
-            setProcessProgress(null);
-        }, 500);
+        setProcessResult({ blob, size: blob.size, fileName });
+        toast({ title: "Proceso Completo", description: "Tu archivo está listo para descargar." });
 
     } catch (error) {
-        clearInterval(progressInterval);
-        setProcessProgress(null);
         console.error(error);
         toast({
             variant: "destructive",
             title: "Error en el Proceso",
             description: error instanceof Error ? error.message : "Ocurrió un problema. Inténtalo de nuevo.",
         });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -281,22 +266,6 @@ export default function SplitMergePdfPage() {
             )}
           </div>
       </main>
-
-      <AnimatePresence>
-          {processProgress !== null && (
-              <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm"
-              >
-                  <CircularProgressBar 
-                      progress={processProgress}
-                      message={processProgress < 100 ? "Procesando..." : "Finalizando..."}
-                  />
-              </motion.div>
-          )}
-        </AnimatePresence>
     </>
   );
 }

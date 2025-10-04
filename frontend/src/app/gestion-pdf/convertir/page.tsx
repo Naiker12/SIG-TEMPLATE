@@ -9,18 +9,17 @@ import { FileText, X, Download, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { convertPdfToWord, type ConversionResult } from '@/services/conversionService';
 import { useToast } from '@/hooks/use-toast';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { saveAs } from 'file-saver';
 import { useAuthStore } from '@/hooks/useAuthStore';
 import { useAuthModal } from '@/hooks/use-auth-modal';
+import { useLoadingStore } from '@/hooks/use-loading-store';
 
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
 
 export default function ConvertPdfToWordPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [convertedInfo, setConvertedInfo] = useState<ConversionResult | null>(null);
-  const [conversionProgress, setConversionProgress] = useState<number | null>(null);
+  const { setIsLoading } = useLoadingStore();
   const { toast } = useToast();
   const { isLoggedIn } = useAuthStore();
   const authModal = useAuthModal();
@@ -71,35 +70,26 @@ export default function ConvertPdfToWordPage() {
   const handleConvert = async () => {
     if (files.length === 0) return;
     setConvertedInfo(null);
-    setConversionProgress(0);
-
-    const progressInterval = setInterval(() => {
-      setConversionProgress(prev => (prev !== null && prev < 95 ? prev + 5 : 95));
-    }, 400);
+    setIsLoading(true);
 
     try {
       const result = await convertPdfToWord(files);
-      clearInterval(progressInterval);
-      setConversionProgress(100);
-
-      setTimeout(() => {
-        setConvertedInfo(result);
-        toast({
-          title: "Conversión Completa",
-          description: "Tus archivos han sido convertidos a Word y están listos para descargar.",
-        });
-        setConversionProgress(null);
-      }, 500);
+      
+      setConvertedInfo(result);
+      toast({
+        title: "Conversión Completa",
+        description: "Tus archivos han sido convertidos a Word y están listos para descargar.",
+      });
 
     } catch (error) {
-      clearInterval(progressInterval);
-      setConversionProgress(null);
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error de Conversión",
         description: error instanceof Error ? error.message : "Hubo un problema al convertir los archivos. Inténtalo de nuevo.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -236,22 +226,6 @@ export default function ConvertPdfToWordPage() {
           </Card>
         </div>
       </main>
-
-      <AnimatePresence>
-        {conversionProgress !== null && (
-            <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm"
-            >
-                <CircularProgressBar 
-                    progress={conversionProgress}
-                    message={conversionProgress < 100 ? "Convirtiendo a Word..." : "Finalizando..."}
-                />
-            </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }
