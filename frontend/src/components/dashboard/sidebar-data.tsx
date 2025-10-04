@@ -51,7 +51,7 @@ export const platformItems: MenuItem[] = [
 
 export const toolsItems: MenuItem[] = [
     {
-        title: "Extraer de APIs",
+        title: "Extraer APIs",
         href: "/extraer-apis/api-personalizada",
         icon: Webhook,
         isCollapsible: true,
