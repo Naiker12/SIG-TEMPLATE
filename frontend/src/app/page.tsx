@@ -49,7 +49,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="w-full">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <header>
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Tablero</h1>
               </header>
