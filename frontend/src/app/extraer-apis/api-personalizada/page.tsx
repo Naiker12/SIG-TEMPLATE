@@ -15,6 +15,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Code, TableIcon, View, HardDriveDownload, Settings, Loader2, File, FileJson, FileSpreadsheet, ChevronDown, Network } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -119,16 +124,21 @@ export default function CustomApiPage() {
                       </SelectContent>
                     </Select>
                 </div>
-                <div className="flex items-center space-x-2 pt-2">
-                    <Switch id="headers-switch" checked={hasHeaders} onCheckedChange={setHasHeaders} />
-                    <Label htmlFor="headers-switch">Añadir Cabeceras Personalizadas</Label>
-                </div>
-                {hasHeaders && (
-                    <div className="space-y-2">
-                        <Label htmlFor="api-headers">Cabeceras (JSON)</Label>
-                        <Textarea id="api-headers" placeholder={`{\n  "Authorization": "Bearer YOUR_API_KEY"\n}`} rows={4} />
-                    </div>
-                )}
+
+                <Collapsible open={hasHeaders} onOpenChange={setHasHeaders} className="space-y-4 pt-2">
+                    <CollapsibleTrigger asChild>
+                       <div className="flex items-center space-x-2">
+                           <Switch id="headers-switch" checked={hasHeaders} />
+                           <Label htmlFor="headers-switch" className="cursor-pointer">Añadir Cabeceras Personalizadas</Label>
+                       </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                       <div className="space-y-2">
+                           <Label htmlFor="api-headers">Cabeceras (JSON)</Label>
+                           <Textarea id="api-headers" placeholder={`{\n  "Authorization": "Bearer YOUR_API_KEY"\n}`} rows={4} />
+                       </div>
+                    </CollapsibleContent>
+                </Collapsible>
             </div>
             <SheetFooter>
                 <Button type="button" onClick={handleExtract}>Extraer Datos</Button>
