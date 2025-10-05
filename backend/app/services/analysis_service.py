@@ -143,6 +143,11 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
     
     basic_stats = df[numerical_cols].describe().to_dict() if numerical_cols else {}
     
+    # Sanitize basic_stats to ensure integer values where expected
+    for col_stats in basic_stats.values():
+        if 'count' in col_stats and pd.notna(col_stats['count']):
+            col_stats['count'] = int(col_stats['count'])
+    
     # Obtener una muestra de los datos
     sample_data = df.head(100).to_dict(orient='records')
 
