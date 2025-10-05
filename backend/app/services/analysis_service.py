@@ -3,7 +3,6 @@ import uuid
 import pandas as pd
 from fastapi import UploadFile, HTTPException, status
 from io import BytesIO
-import httpx
 
 from app import schemas
 from db.database import prisma
@@ -60,7 +59,7 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
         if file_extension == '.csv':
             df = pd.read_csv(file_stream)
         else:  # .xlsx
-            df = pd.read_excel(file_stream)
+            df = pd.read_excel(file_stream, engine='openpyxl')
         
         columns = df.columns.tolist()
         rows_count = len(df)
@@ -91,7 +90,7 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
 async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResult:
     """
     Analiza un archivo previamente subido para obtener estadísticas descriptivas.
-    Descarga el archivo desde la URL de Supabase y lo carga en memoria para el análisis.
+    Descarga el archivo desde Supabase Storage y lo carga en memoria para el análisis.
     """
     file_metadata = await prisma.filemetadata.find_unique(where={"id": file_id})
     if not file_metadata or file_metadata.userId != user_id:
@@ -101,15 +100,22 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
         )
 
     try:
-        file_path_url = file_metadata.filepath
-        
-        async with httpx.AsyncClient() as client:
-            response = await client.get(file_path_url)
-            response.raise_for_status()  # Asegurarse de que la descarga fue exitosa
-            file_content = response.content
+        # Extraer el path del archivo desde la URL completa
+        # La URL tiene el formato: .../storage/v1/object/public/file/user_id/uuid.xlsx
+        supabase_bucket = "file"
+        file_path_in_bucket = file_metadata.filepath.split(f'/{supabase_bucket}/')[-1]
+
+        # Descargar el archivo directamente desde Supabase Storage
+        file_content = supabase.storage.from_(supabase_bucket).download(file_path_in_bucket)
+
+        if not file_content:
+             raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="El archivo no se encontró en el almacenamiento de Supabase."
+            )
 
         file_stream = BytesIO(file_content)
-        file_extension = os.path.splitext(file_path_url)[1].lower()
+        file_extension = os.path.splitext(file_path_in_bucket)[1].lower()
 
         if '.csv' in file_extension:
             df = pd.read_csv(file_stream)
@@ -118,12 +124,15 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
         else:
             raise HTTPException(status_code=400, detail="Formato de archivo no soportado para análisis.")
 
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"No se pudo descargar el archivo desde Supabase para análisis: {e.response.status_code}"
-        )
     except Exception as e:
+        # Captura errores de la descarga o del procesamiento de pandas
+        error_detail = str(e)
+        # Si el error viene de la librería de Supabase, podría ser más específico
+        if "NotFound" in error_detail:
+             raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Archivo no encontrado en Supabase Storage: {file_path_in_bucket}"
+            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"No se pudo leer o procesar el archivo para análisis: {e}"
