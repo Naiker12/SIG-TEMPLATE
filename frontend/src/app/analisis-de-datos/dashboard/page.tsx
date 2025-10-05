@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Loader2, FileUp, TrendingUp, CheckCircle, AlertCircle, FolderOpen, UploadCloud, Save } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle, FolderOpen, UploadCloud, Save } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLoadingStore } from '@/hooks/use-loading-store';
@@ -18,25 +18,14 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLe
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 import { useToast } from '@/hooks/use-toast';
-import { getProjects, createProject, uploadFileForAnalysis, getFileAnalysis, getProjectById } from '@/services/analysisService';
-import type { Project, AnalysisResult, FileMetadata } from '@/services/types';
-import { Textarea } from '@/components/ui/textarea';
-import { exportToPng, exportToCsv, exportToXlsx } from '@/lib/exportUtils';
-
+import { getProjects, createProject, uploadFileForAnalysis, getFileAnalysis } from '@/services/analysisService';
+import type { Project, AnalysisResult } from '@/services/types';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
-const ChartPlaceholder = ({ message }: { message: string }) => (
-    <div className="flex items-center justify-center h-full text-muted-foreground text-center p-4">
-        {message}
-    </div>
-);
-
 // --- MAIN COMPONENT ---
 export default function DataAnalysisPage() {
-    const dashboardRef = useRef<HTMLDivElement>(null);
     const [file, setFile] = useState<File | null>(null);
-    const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
     const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
     
@@ -47,10 +36,8 @@ export default function DataAnalysisPage() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [isProjectsModalOpen, setIsProjectsModalOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
 
-    const { areaChartConfig, pieChartConfig, setAvailableColumns, setAreaChartConfig, setPieChartConfig } = useChartConfigStore();
+    const { areaChartConfig, pieChartConfig, setAvailableColumns } = useChartConfigStore();
 
     useEffect(() => {
         if (useAuthStore.persist.hasHydrated()) {
@@ -96,12 +83,13 @@ export default function DataAnalysisPage() {
         setIsUploadModalOpen(false);
         setIsLoading(true);
         try {
-            const uploadResponse = await uploadFileForAnalysis(file);
-            setFileMetadata(uploadResponse.file_metadata);
-            toast({ title: "Archivo Subido", description: `"${uploadResponse.file_metadata.filename}" procesado. Obteniendo análisis...` });
+            const { file_metadata } = await uploadFileForAnalysis(file);
+            toast({ title: "Archivo Subido", description: `"${file_metadata.filename}" procesado. Obteniendo análisis...` });
             
-            const analysisData = await getFileAnalysis(uploadResponse.file_metadata.id);
+            const analysisData = await getFileAnalysis(file_metadata.id);
             setAnalysisResult(analysisData);
+
+            // Update chart config store with available columns
             setAvailableColumns(analysisData.numerical_columns, analysisData.categorical_columns);
 
         } catch (error) {
@@ -119,37 +107,34 @@ export default function DataAnalysisPage() {
         setIsProjectsModalOpen(false);
         setIsLoading(true);
         try {
-            const project = await getProjectById(projectId);
-            const analysisData = await getFileAnalysis(project.fileId);
-            setAnalysisResult(analysisData);
-            setAvailableColumns(analysisData.numerical_columns, analysisData.categorical_columns);
-
-            // Restore chart configs from project
-            if (project.config.areaChartConfig) {
-              setAreaChartConfig(project.config.areaChartConfig);
-            }
-            if (project.config.pieChartConfig) {
-              setPieChartConfig(project.config.pieChartConfig);
-            }
-
-            // Restore file metadata for context
-            const dummyFile: FileMetadata = {
-                id: project.fileId,
-                filename: 'Archivo de Proyecto', // Filename is not stored in project, so we use a placeholder
-                filetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // Placeholder
-                size: 0,
-                columns: analysisData.columns,
-                rows_count: analysisData.total_rows,
-                uploadedAt: project.createdAt,
-                userId: project.userId
-            };
-            setFileMetadata(dummyFile);
-
-
-            toast({
-                title: `Proyecto "${project.name}" Cargado`,
-                description: 'Se han restaurado los datos y la configuración del dashboard.',
+            // In a real scenario, you'd fetch the project, its fileId, and then the analysis for that file.
+            // For now, we simulate this by just loading some data.
+            // const project = await getProjectById(projectId);
+            // const analysisData = await getFileAnalysis(project.fileId);
+            // setAnalysisResult(analysisData);
+            // setAvailableColumns(analysisData.numerical_columns, analysisData.categorical_columns);
+             toast({
+                title: 'Proyecto Cargado (Simulación)',
+                description: 'La carga de datos y configuración del proyecto se implementaría aquí.',
             });
+             // Simulate loading some analysis
+             const dummyAnalysis: AnalysisResult = {
+                columns: ['mes', 'categoria', 'ingresos', 'costos'],
+                numerical_columns: ['ingresos', 'costos'],
+                categorical_columns: ['mes', 'categoria'],
+                total_rows: 100,
+                basic_stats: {
+                    ingresos: { mean: 5000, std: 1000, count: 100, min: 1000, '25%': 4000, '50%': 5000, '75%': 6000, max: 9000 },
+                    costos: { mean: 3000, std: 500, count: 100, min: 1000, '25%': 2500, '50%': 3000, '75%': 3500, max: 4500 },
+                },
+                sample_data: [
+                    { mes: 'Ene', categoria: 'A', ingresos: 4500, costos: 2800 },
+                    { mes: 'Feb', categoria: 'B', ingresos: 5200, costos: 3100 },
+                    { mes: 'Mar', categoria: 'A', ingresos: 4100, costos: 2000 },
+                ]
+            };
+            setAnalysisResult(dummyAnalysis);
+            setAvailableColumns(dummyAnalysis.numerical_columns, dummyAnalysis.categorical_columns);
 
         } catch (error) {
              toast({
@@ -162,36 +147,34 @@ export default function DataAnalysisPage() {
         }
     }
 
-    const handleSaveProject = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        if (!analysisResult || !fileMetadata) return;
+    const handleSaveProject = async () => {
+        if (!analysisResult) {
+             toast({
+                variant: 'destructive',
+                title: 'No hay datos para guardar',
+                description: 'Carga y analiza un archivo antes de guardar un proyecto.',
+            });
+            return;
+        }
 
-        const formData = new FormData(event.currentTarget);
-        const name = formData.get('projectName') as string;
-        const description = formData.get('projectDescription') as string;
-
-        setIsSaving(true);
+        // Dummy implementation for saving project
         try {
             await createProject({
-                name,
-                description,
-                fileId: fileMetadata.id,
+                name: `Mi Proyecto ${new Date().toLocaleTimeString()}`,
+                description: 'Un análisis guardado desde el dashboard',
+                fileId: 'dummy-file-id', // This should come from the uploaded file metadata
                 config: { areaChartConfig, pieChartConfig }
             });
-            setIsSaveModalOpen(false);
             toast({
-                title: 'Proyecto Guardado',
-                description: `Tu análisis "${name}" ha sido guardado con éxito.`,
+                title: 'Proyecto Guardado (Simulación)',
+                description: 'Tu configuración de análisis actual ha sido guardada.',
             });
-            fetchProjects(); // Refresh project list in the background
         } catch (error) {
              toast({
                 variant: 'destructive',
                 title: 'Error al Guardar',
                 description: error instanceof Error ? error.message : "No se pudo guardar el proyecto.",
             });
-        } finally {
-            setIsSaving(false);
         }
     }
     
@@ -214,16 +197,14 @@ export default function DataAnalysisPage() {
 
 
     const fileTypeUsage = useMemo(() => {
-        if (!analysisResult || !fileMetadata) return [];
-        const fileType = fileMetadata.filetype.toLowerCase();
-        const isExcel = fileType.includes('excel') || fileType.includes('spreadsheetml');
-        const isCsv = fileType.includes('csv');
-
+        if (!analysisResult) return [{ name: 'Excel', usage: 0 }, { name: 'CSV', usage: 0 }];
+        const isExcel = file?.name.endsWith('.xlsx') || file?.name.endsWith('.xls');
+        const isCsv = file?.name.endsWith('.csv');
         return [
             { name: 'Excel', usage: isExcel ? 1 : 0 },
             { name: 'CSV', usage: isCsv ? 1 : 0 },
         ].filter(item => item.usage > 0);
-    }, [analysisResult, fileMetadata]);
+    }, [analysisResult, file]);
     
     // --- RENDER ---
     if (isCheckingAuth) {
@@ -237,7 +218,7 @@ export default function DataAnalysisPage() {
     return (
         <>
             <TopBar />
-            <main ref={dashboardRef} className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 overflow-auto pb-8">
+            <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 overflow-auto pb-8">
                 <div className="max-w-full mx-auto w-full">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <header>
@@ -249,7 +230,7 @@ export default function DataAnalysisPage() {
                                  <FolderOpen className="mr-2"/> Ver Proyectos
                              </Button>
                              {analysisResult && (
-                                <Button variant="outline" size="lg" onClick={() => setIsSaveModalOpen(true)}>
+                                <Button variant="outline" size="lg" onClick={handleSaveProject}>
                                     <Save className="mr-2 h-5 w-5"/> Guardar
                                 </Button>
                              )}
@@ -269,96 +250,67 @@ export default function DataAnalysisPage() {
                         </div>
                     ) : (
                         <div className="space-y-8">
-                            <DataFilters 
-                                onExport={(format) => {
-                                    if (!analysisResult) return;
-                                    if (format === 'png') exportToPng(dashboardRef.current, 'dashboard.png');
-                                    if (format === 'csv') exportToCsv(analysisResult.sample_data, 'sample_data.csv');
-                                    if (format === 'xlsx') exportToXlsx(analysisResult.sample_data, 'sample_data.xlsx');
-                                }}
-                            />
+                            <DataFilters />
                             
-                            {Object.keys(analysisResult.basic_stats).length > 0 && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {Object.entries(analysisResult.basic_stats).map(([key, stats]) => (
-                                    <KpiCard 
-                                        key={key} 
-                                        title={`Media de ${key}`}
-                                        value={stats.mean?.toFixed(2) ?? 'N/A'}
-                                        change={`Std: ${stats.std?.toFixed(2) ?? 'N/A'}`}
-                                        isPositive={true}
-                                        icon={<TrendingUp className="h-4 w-4" />}
-                                    />
-                                ))}
-                              </div>
-                            )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                               {Object.entries(analysisResult.basic_stats).map(([key, stats]) => (
+                                <KpiCard 
+                                    key={key} 
+                                    title={`Media de ${key}`}
+                                    value={stats.mean?.toFixed(2) ?? 'N/A'}
+                                    change={`Std: ${stats.std?.toFixed(2) ?? 'N/A'}`}
+                                    isPositive={true}
+                                    icon={<TrendingUp className="h-4 w-4" />}
+                                />
+                               ))}
+                            </div>
                             
                             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                                 <Card className="lg:col-span-3">
                                     <CardHeader>
                                         <CardTitle>Análisis de Métrica Principal</CardTitle>
-                                        <CardDescription>
-                                            {areaChartConfig.yAxis && areaChartConfig.xAxis ? (
-                                                <>Visualización del eje Y: <span className='font-semibold text-primary'>{areaChartConfig.yAxis}</span> por <span className='font-semibold text-primary'>{areaChartConfig.xAxis}</span>.</>
-                                            ) : (
-                                                <>Configura los ejes para ver el gráfico.</>
-                                            )}
-                                        </CardDescription>
+                                        <CardDescription>Visualización del eje Y: <span className='font-semibold text-primary'>{areaChartConfig.yAxis}</span> por <span className='font-semibold text-primary'>{areaChartConfig.xAxis}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
-                                        {(areaChartConfig.yAxis && areaChartConfig.xAxis) ? (
-                                            <ChartContainer config={{}} className="w-full h-full">
-                                                <AreaChart data={analysisResult.sample_data}>
-                                                    <defs>
-                                                        <linearGradient id="fillArea" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
-                                                            <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <CartesianGrid vertical={false} />
-                                                    <XAxis dataKey={areaChartConfig.xAxis} tickLine={false} axisLine={false} tickMargin={8} />
-                                                    <YAxis dataKey={areaChartConfig.yAxis} tickLine={false} axisLine={false} tickMargin={8} />
-                                                    <ChartTooltip content={<ChartTooltipContent />} />
-                                                    <Area type="monotone" dataKey={areaChartConfig.yAxis} stroke="hsl(var(--chart-1))" fill="url(#fillArea)" />
-                                                </AreaChart>
-                                            </ChartContainer>
-                                        ) : (
-                                            <ChartPlaceholder message="No hay suficientes columnas numéricas o categóricas para mostrar este gráfico." />
-                                        )}
+                                         <ChartContainer config={{}} className="w-full h-full">
+                                            <AreaChart data={analysisResult.sample_data}>
+                                                 <defs>
+                                                    <linearGradient id="fillArea" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
+                                                        <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid vertical={false} />
+                                                <XAxis dataKey={areaChartConfig.xAxis} tickLine={false} axisLine={false} tickMargin={8} />
+                                                <YAxis dataKey={areaChartConfig.yAxis} tickLine={false} axisLine={false} tickMargin={8} />
+                                                <ChartTooltip content={<ChartTooltipContent />} />
+                                                <Area type="monotone" dataKey={areaChartConfig.yAxis} stroke="hsl(var(--chart-1))" fill="url(#fillArea)" />
+                                            </AreaChart>
+                                        </ChartContainer>
                                     </CardContent>
                                 </Card>
                                 <Card className="lg:col-span-2">
                                     <CardHeader>
                                         <CardTitle>Distribución por Categoría</CardTitle>
-                                        <CardDescription>
-                                            {pieChartConfig.valueKey && pieChartConfig.labelKey ? (
-                                                <>Mostrando <span className='font-semibold text-primary'>{pieChartConfig.valueKey}</span> por <span className='font-semibold text-primary'>{pieChartConfig.labelKey}</span>.</>
-                                            ) : (
-                                                <>Configura las claves para ver el gráfico.</>
-                                            )}
-                                        </CardDescription>
+                                        <CardDescription>Mostrando <span className='font-semibold text-primary'>{pieChartConfig.valueKey}</span> por <span className='font-semibold text-primary'>{pieChartConfig.labelKey}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
-                                        {(pieChartConfig.valueKey && pieChartConfig.labelKey) ? (
-                                            <ChartContainer config={{}} className='w-full h-full'>
-                                                <PieChart>
-                                                    <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                                                    <Pie data={aggregatedPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${(percent * 100).toFixed(0)}%`}>
-                                                        {aggregatedPieData.map((entry, index) => (
-                                                            <Cell 
-                                                                key={`cell-${index}`} 
-                                                                fill={COLORS[index % COLORS.length]}
-                                                                stroke="hsl(var(--card))"
-                                                                strokeWidth={2}
-                                                            />
-                                                        ))}
-                                                    </Pie>
-                                                    <ChartLegend content={<ChartLegendContent />} />
-                                                </PieChart>
-                                            </ChartContainer>
-                                        ) : (
-                                            <ChartPlaceholder message="No hay suficientes columnas numéricas o categóricas para mostrar este gráfico." />
-                                        )}
+                                         <ChartContainer config={{}} className='w-full h-full'>
+                                            <PieChart>
+                                                <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+                                                <Pie data={aggregatedPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${(percent * 100).toFixed(0)}%`}>
+                                                    {aggregatedPieData.map((entry, index) => (
+                                                        <Cell 
+                                                            key={`cell-${index}`} 
+                                                            fill={COLORS[index % COLORS.length]}
+                                                            stroke="hsl(var(--card))"
+                                                            strokeWidth={2}
+                                                        />
+                                                    ))}
+                                                </Pie>
+                                                <ChartLegend content={<ChartLegendContent />} />
+                                            </PieChart>
+                                        </ChartContainer>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -385,8 +337,27 @@ export default function DataAnalysisPage() {
                                     </CardContent>
                                 </Card>
                                 <Card>
-                                     <CardHeader>
-                                        <CardTitle>Tasa de Éxito</CardTitle>
+                                    <CardHeader>
+                                        <div className="flex justify-between items-center">
+                                            <CardTitle>Tareas por Día</CardTitle>
+                                            <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
+                                        </div>
+                                        <CardDescription>Esta es una simulación de datos.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-48">
+                                        <p className="text-center text-muted-foreground h-full flex items-center justify-center">Gráfico de ejemplo.</p>
+                                    </CardContent>
+                                    <CardFooter className="flex justify-center text-sm text-muted-foreground">
+                                        <TrendingUp className="w-4 h-4 mr-1"/>
+                                        Simulación
+                                    </CardFooter>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex justify-between items-center">
+                                            <CardTitle>Tasa de Éxito</CardTitle>
+                                            <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
+                                        </div>
                                         <CardDescription>Procesos completados vs. errores.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-48 flex items-center justify-center">
@@ -417,33 +388,6 @@ export default function DataAnalysisPage() {
                                         <div className='flex items-center text-red-500'><AlertCircle className="w-4 h-4 mr-1"/> Errores: 0</div>
                                     </CardFooter>
                                 </Card>
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Información del Archivo</CardTitle>
-                                        <CardDescription>Detalles sobre la fuente de datos actual.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4 text-sm">
-                                        <div className='flex justify-between'>
-                                            <span className='text-muted-foreground'>Nombre:</span>
-                                            <span className='font-medium truncate text-right'>{fileMetadata?.filename}</span>
-                                        </div>
-                                        <div className='flex justify-between'>
-                                            <span className='text-muted-foreground'>Filas:</span>
-                                            <span className='font-medium'>{analysisResult.total_rows}</span>
-                                        </div>
-                                        <div className='flex justify-between'>
-                                            <span className='text-muted-foreground'>Columnas:</span>
-                                            <span className='font-medium'>{analysisResult.columns.length}</span>
-                                        </div>
-                                        <div className='flex justify-between'>
-                                            <span className='text-muted-foreground'>Tamaño:</span>
-                                            <span className='font-medium'>{fileMetadata?.size ? (fileMetadata.size / 1024).toFixed(2) : 'N/A'} KB</span>
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter>
-                                        <p className='text-xs text-muted-foreground'>Datos actualizados a las {new Date().toLocaleTimeString()}</p>
-                                    </CardFooter>
-                                </Card>
                             </div>
                         </div>
                     )}
@@ -472,7 +416,7 @@ export default function DataAnalysisPage() {
                         <DialogTitle>Mis Proyectos de Análisis</DialogTitle>
                         <DialogDescription>Selecciona un proyecto guardado para cargarlo o crea uno nuevo.</DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-4 max-h-96 overflow-y-auto">
+                    <div className="py-4 space-y-4">
                         {projects.length > 0 ? (
                             projects.map(proj => (
                                 <Card 
@@ -505,37 +449,6 @@ export default function DataAnalysisPage() {
                             <UploadCloud className="mr-2"/> Cargar Nuevo Archivo
                         </Button>
                      </div>
-                </DialogContent>
-            </Dialog>
-
-             {/* Save Project Modal */}
-             <Dialog open={isSaveModalOpen} onOpenChange={setIsSaveModalOpen}>
-                <DialogContent>
-                    <form onSubmit={handleSaveProject}>
-                        <DialogHeader>
-                            <DialogTitle>Guardar Proyecto de Análisis</DialogTitle>
-                            <DialogDescription>
-                                Guarda la configuración actual del dashboard y los datos para reutilizarlos más tarde.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="projectName">Nombre del Proyecto</Label>
-                                <Input id="projectName" name="projectName" defaultValue={`Mi Análisis - ${new Date().toLocaleDateString()}`} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="projectDescription">Descripción (Opcional)</Label>
-                                <Textarea id="projectDescription" name="projectDescription" placeholder="Ej: Análisis de ventas Q3 para la región norte." />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setIsSaveModalOpen(false)}>Cancelar</Button>
-                            <Button type="submit" disabled={isSaving}>
-                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Guardar Proyecto
-                            </Button>
-                        </DialogFooter>
-                    </form>
                 </DialogContent>
             </Dialog>
         </>
