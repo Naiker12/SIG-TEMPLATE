@@ -105,8 +105,10 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
              raise HTTPException(status_code=503, detail="El servicio de almacenamiento no está configurado.")
              
         supabase_bucket = "file"
+        # Extraer el path del bucket de la URL completa
         file_path_in_bucket = file_metadata.filepath.split(f'/{supabase_bucket}/')[-1]
 
+        # Descargar el contenido del archivo directamente desde Supabase Storage
         file_content = supabase.storage.from_(supabase_bucket).download(file_path_in_bucket)
 
         if not file_content:
