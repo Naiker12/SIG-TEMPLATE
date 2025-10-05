@@ -1,3 +1,4 @@
+
 import { API_BASE_URL } from '@/lib/api-config';
 import { useAuthStore } from '@/hooks/useAuthStore';
 
@@ -27,8 +28,8 @@ export async function fetchWithAuth(url: string, options: RequestInit, explicitT
         // Cerramos la sesión del frontend para forzar un nuevo login.
         if (response.status === 401) {
             useAuthStore.getState().clearSession();
-            // Refrescar la página podría ser una opción para redirigir a la home.
-            // window.location.reload(); 
+            // Recargar la página para forzar la redirección a la página de inicio.
+            window.location.reload(); 
         }
         
         // Intentar parsear el mensaje de error del backend
