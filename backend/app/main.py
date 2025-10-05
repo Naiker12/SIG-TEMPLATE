@@ -63,8 +63,8 @@ async def http_exception_handler(request, exc):
 # Routers de la nueva arquitectura con prefijo /api
 app.include_router(auth_router, prefix="/api")
 app.include_router(file_router, prefix="/api")
-app.include_router(analysis_router, prefix="/api", tags=["Análisis de Datos"])
-app.include_router(project_router, prefix="/api", tags=["Proyectos de Análisis"])
+app.include_router(analysis_router, prefix="/api")
+app.include_router(project_router, prefix="/api")
 
 # Herramientas legadas (mantener sin prefijo /api si el frontend las llama así directamente)
 app.include_router(compress_router)
