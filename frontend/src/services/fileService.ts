@@ -39,7 +39,7 @@ export async function uploadFileMetadata(fileData: FileCreate): Promise<File | n
         return null;
     }
     
-    return fetchWithAuth(`${API_BASE_URL}/api/files/metadata`, {
+    return fetchWithAuth(`${API_BASE_URL}/api/files`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fileData),

@@ -4,9 +4,9 @@ from app.services import file_service
 from app.services.auth_service import get_current_user
 from typing import List
 
-file_router = APIRouter(prefix="/api", tags=["Files"])
+file_router = APIRouter(prefix="/files", tags=["Files"])
 
-@file_router.post("/upload", response_model=schemas.File, status_code=status.HTTP_201_CREATED)
+@file_router.post("", response_model=schemas.File, status_code=status.HTTP_201_CREATED)
 async def upload_file_metadata(
     file_data: schemas.FileCreate,
     current_user: schemas.User = Depends(get_current_user)
@@ -24,7 +24,7 @@ async def upload_file_metadata(
         )
 
 
-@file_router.get("/files", response_model=List[schemas.File])
+@file_router.get("", response_model=List[schemas.File])
 async def get_user_files(
     current_user: schemas.User = Depends(get_current_user),
     skip: int = 0,
