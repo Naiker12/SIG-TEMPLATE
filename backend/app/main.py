@@ -5,6 +5,11 @@ import os
 from fastapi import FastAPI
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
+from dotenv import load_dotenv
+
+# Cargar las variables de entorno desde backend/.env antes de importar otros módulos que las necesiten.
+# Esto asegura que la DATABASE_URL y otras claves estén disponibles globalmente.
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 from app.core.middleware import setup_cors
 from db.database import prisma

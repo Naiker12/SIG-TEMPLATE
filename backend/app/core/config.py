@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: Optional[str] = None
 
     class Config:
-        env_file = 'backend/.env'
-        extra = "ignore"   
+        # Pydantic-settings leerá automáticamente las variables del entorno del sistema.
+        # La carga del archivo .env se manejará explícitamente en main.py para mayor robustez.
+        extra = "ignore"
 
 settings = Settings()
