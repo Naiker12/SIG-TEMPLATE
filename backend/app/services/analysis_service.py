@@ -1,4 +1,3 @@
-
 import os
 import uuid
 import pandas as pd
@@ -14,16 +13,6 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
     """
     Sube un archivo a Supabase Storage, extrae sus metadatos usando pandas
     y registra la información en la base de datos.
-    
-    Args:
-        file: El archivo subido desde el endpoint de FastAPI.
-        user_id: El ID del usuario que sube el archivo.
-
-    Returns:
-        El objeto de metadatos del archivo creado.
-        
-    Raises:
-        HTTPException: Si el tipo de archivo no es soportado o si ocurre un error.
     """
     file_extension = os.path.splitext(file.filename)[1].lower()
     if file_extension not in ['.csv', '.xlsx', '.xls']:
@@ -60,7 +49,7 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
         file_stream = BytesIO(content)
         if file_extension == '.csv':
             df = pd.read_csv(file_stream)
-        else:  # .xlsx
+        else:  # .xlsx / .xls
             df = pd.read_excel(file_stream, engine='openpyxl')
         
         columns = df.columns.tolist()
@@ -102,17 +91,16 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
 
     try:
         if not supabase:
-             raise HTTPException(status_code=503, detail="El servicio de almacenamiento no está configurado.")
+            raise HTTPException(status_code=503, detail="El servicio de almacenamiento no está configurado.")
              
         supabase_bucket = "file"
-        # Extraer el path del bucket de la URL completa
         file_path_in_bucket = file_metadata.filepath.split(f'/{supabase_bucket}/')[-1]
 
-        # Descargar el contenido del archivo directamente desde Supabase Storage
+        # Descargar contenido del archivo
         file_content = supabase.storage.from_(supabase_bucket).download(file_path_in_bucket)
 
         if not file_content:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="El archivo no se encontró en el almacenamiento de Supabase."
             )
@@ -130,7 +118,7 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
     except Exception as e:
         error_detail = str(e)
         if "NotFound" in error_detail:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Archivo no encontrado en Supabase Storage: {file_path_in_bucket}"
             )
@@ -139,18 +127,18 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
             detail=f"No se pudo leer o procesar el archivo para análisis: {e}"
         )
 
-    # Realizar análisis básico
+    # Análisis básico
     numerical_cols = df.select_dtypes(include=['number']).columns.tolist()
     categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
     
     basic_stats = df[numerical_cols].describe().to_dict() if numerical_cols else {}
     
-    # Sanitize basic_stats to ensure integer values where expected
+    # Sanitize basic_stats para que 'count' sea int
     for col_stats in basic_stats.values():
         if 'count' in col_stats and pd.notna(col_stats['count']):
             col_stats['count'] = int(col_stats['count'])
     
-    # Obtener una muestra de los datos
+    # Obtener muestra de datos para evitar errores de serialización
     sample_data = df.head(100).to_dict(orient='records')
 
     return schemas.AnalysisResult(
@@ -161,4 +149,3 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
         basic_stats=basic_stats,
         sample_data=sample_data
     )
-
