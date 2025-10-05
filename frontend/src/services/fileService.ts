@@ -21,7 +21,7 @@ type FileCreate = Omit<File, 'id' | 'createdAt' | 'userId'>;
  * Throws an error if the request fails.
  */
 export async function getUserFiles(): Promise<File[]> {
-    const files = await fetchWithAuth(`${API_BASE_URL}/files`, {
+    const files = await fetchWithAuth(`${API_BASE_URL}/api/files`, {
         method: 'GET',
     });
     return files || [];
@@ -39,7 +39,7 @@ export async function uploadFileMetadata(fileData: FileCreate): Promise<File | n
         return null;
     }
     
-    return fetchWithAuth(`${API_BASE_URL}/files/metadata`, {
+    return fetchWithAuth(`${API_BASE_URL}/api/files/metadata`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fileData),

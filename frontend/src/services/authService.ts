@@ -2,7 +2,7 @@ import { API_BASE_URL } from '@/lib/api-config';
 import { fetchWithAuth } from './userService';
 
 export async function registerUser(userData: any) {
-  const res = await fetch(`${API_BASE_URL}/auth/register`, {
+  const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(userData),
@@ -19,7 +19,7 @@ export async function loginUser(credentials: any) {
     params.append('username', credentials.email);
     params.append('password', credentials.password);
   
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params,
@@ -33,7 +33,7 @@ export async function loginUser(credentials: any) {
     const accessToken = tokenData.access_token;
 
     // After getting token, fetch user details using the NEW token
-    const user = await fetchWithAuth(`${API_BASE_URL}/auth/me`, {
+    const user = await fetchWithAuth(`${API_BASE_URL}/api/auth/me`, {
         method: 'GET'
     }, accessToken);
     

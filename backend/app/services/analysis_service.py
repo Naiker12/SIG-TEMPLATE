@@ -70,8 +70,8 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
             detail=f"No se pudo procesar el contenido del archivo: {e}"
         )
 
-    # Guardar metadatos en la base de datos (⚠️ corrección aquí)
-    file_metadata_db = await prisma.file_metadata.create(
+    # Guardar metadatos en la base de datos (CORRECCIÓN: usar snake_case)
+    file_metadata_db = await prisma.filemetadata.create(
         data={
             "filename": file.filename,
             "filetype": file.content_type,
@@ -92,8 +92,8 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
     Analiza un archivo previamente subido para obtener estadísticas descriptivas.
     Ahora lee el archivo desde la URL pública de Supabase.
     """
-    # ⚠️ corrección aquí también: file_metadata en lugar de filemetadata
-    file_metadata = await prisma.file_metadata.find_unique(where={"id": file_id})
+    # CORRECCIÓN: usar snake_case
+    file_metadata = await prisma.filemetadata.find_unique(where={"id": file_id})
     if not file_metadata or file_metadata.userId != user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
