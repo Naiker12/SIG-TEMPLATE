@@ -149,22 +149,26 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
     numerical_cols = df.select_dtypes(include=['number']).columns.tolist()
     categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
     
-    descriptive_stats = df[numerical_cols].describe()
-    
-    # Sanitizar los datos para asegurar compatibilidad con Pydantic
-    basic_stats = descriptive_stats.to_dict()
-    for col_name, stats in basic_stats.items():
-        for stat_key, value in stats.items():
-            if pd.notna(value):
-                # Convertir 'count' y otros valores enteros a int nativo de Python
-                if stat_key in ['count']:
-                    stats[stat_key] = int(value)
+    # Solo calcular estadísticas si hay columnas numéricas
+    if numerical_cols:
+        descriptive_stats = df[numerical_cols].describe()
+        basic_stats = descriptive_stats.to_dict()
+        # Sanitizar los datos para asegurar compatibilidad con Pydantic
+        for col_name, stats in basic_stats.items():
+            for stat_key, value in stats.items():
+                if pd.notna(value):
+                    # Convertir 'count' y otros valores enteros a int nativo de Python
+                    if stat_key in ['count']:
+                        stats[stat_key] = int(value)
+                    else:
+                        # Mantener otros valores como float
+                        stats[stat_key] = float(value)
                 else:
-                    # Mantener otros valores como float
-                    stats[stat_key] = float(value)
-            else:
-                # Reemplazar NaN/NaT con None para la serialización JSON
-                stats[stat_key] = None
+                    # Reemplazar NaN/NaT con None para la serialización JSON
+                    stats[stat_key] = None
+    else:
+        # Si no hay columnas numéricas, devolver un diccionario vacío
+        basic_stats = {}
 
     sample_data = df.head(100).to_dict(orient='records')
     # Reemplazar NaN por None en la muestra para evitar errores de serialización
@@ -181,3 +185,4 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
         basic_stats=basic_stats,
         sample_data=sample_data
     )
+
