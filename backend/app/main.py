@@ -2,6 +2,7 @@
 
 import sys
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
@@ -13,7 +14,6 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 from app.core.middleware import setup_cors
 from db.database import prisma
-from db.supabase_client import supabase
 
 # Routers
 from app.routers.compress_router import compress_router
@@ -30,26 +30,36 @@ from app.routers.project_router import project_router
 # Añadir el root del proyecto al path de Python
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-app = FastAPI(title="SIG IA - API de Gestión Documental y Análisis")
+# ----------------------------
+# Eventos de ciclo de vida (Lifespan)
+# ----------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Código que se ejecuta al iniciar la aplicación
+    print("INFO:     Iniciando la aplicación...")
+    os.makedirs("uploads", exist_ok=True)
+    os.makedirs("outputs", exist_ok=True)
+    os.makedirs("temp_files", exist_ok=True)
+    await prisma.connect()
+    print("INFO:     Conexión a la base de datos establecida.")
+    
+    yield
+    
+    # Código que se ejecuta al apagar la aplicación
+    print("INFO:     Apagando la aplicación...")
+    await prisma.disconnect()
+    print("INFO:     Conexión a la base de datos cerrada.")
+
+
+app = FastAPI(
+    title="SIG IA - API de Gestión Documental y Análisis",
+    lifespan=lifespan
+)
 
 # ----------------------------
 # Configuración de Middleware
 # ----------------------------
 setup_cors(app)
-
-# ----------------------------
-# Eventos de ciclo de vida
-# ----------------------------
-@app.on_event("startup")
-async def startup():
-    os.makedirs("uploads", exist_ok=True)
-    os.makedirs("outputs", exist_ok=True)
-    os.makedirs("temp_files", exist_ok=True)
-    await prisma.connect()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await prisma.disconnect()
 
 # ----------------------------
 # Manejo global de excepciones
