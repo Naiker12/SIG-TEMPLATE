@@ -79,6 +79,7 @@ class AnalysisResult(BaseModel):
     categorical_columns: List[str] = Field(..., description="Columnas que contienen datos categóricos.")
     total_rows: int = Field(..., description="Número total de filas.")
     basic_stats: Dict[str, Dict[str, Any]] = Field(..., description="Estadísticas descriptivas para columnas numéricas.")
+    sample_data: List[Dict[str, Any]] = Field(..., description="Una muestra de las primeras 100 filas de datos.")
     
 # Creación de un Proyecto de Análisis
 class ProjectCreate(BaseModel):

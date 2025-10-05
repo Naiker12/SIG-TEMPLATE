@@ -15,10 +15,9 @@ import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
+import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 import { useToast } from '@/hooks/use-toast';
-import { dailyTasksData, successRateData, toolUsageData } from '@/components/analisis-de-datos/mock-data';
 import { getProjects, createProject, uploadFileForAnalysis, getFileAnalysis } from '@/services/analysisService';
 import type { Project, AnalysisResult } from '@/services/types';
 
@@ -27,7 +26,6 @@ const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3
 // --- MAIN COMPONENT ---
 export default function DataAnalysisPage() {
     const [file, setFile] = useState<File | null>(null);
-    const [data, setData] = useState<any[]>([]); // This will hold the raw data for charts if needed in future
     const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
     
@@ -94,7 +92,6 @@ export default function DataAnalysisPage() {
             // Update chart config store with available columns
             setAvailableColumns(analysisData.numerical_columns, analysisData.categorical_columns);
 
-            setData([]); // Placeholder for actual data rows if needed later
         } catch (error) {
             toast({
                 variant: 'destructive',
@@ -127,9 +124,14 @@ export default function DataAnalysisPage() {
                 categorical_columns: ['mes', 'categoria'],
                 total_rows: 100,
                 basic_stats: {
-                    ingresos: { mean: 5000, std: 1000 },
-                    costos: { mean: 3000, std: 500 },
-                }
+                    ingresos: { mean: 5000, std: 1000, count: 100, min: 1000, '25%': 4000, '50%': 5000, '75%': 6000, max: 9000 },
+                    costos: { mean: 3000, std: 500, count: 100, min: 1000, '25%': 2500, '50%': 3000, '75%': 3500, max: 4500 },
+                },
+                sample_data: [
+                    { mes: 'Ene', categoria: 'A', ingresos: 4500, costos: 2800 },
+                    { mes: 'Feb', categoria: 'B', ingresos: 5200, costos: 3100 },
+                    { mes: 'Mar', categoria: 'A', ingresos: 4100, costos: 2000 },
+                ]
             };
             setAnalysisResult(dummyAnalysis);
             setAvailableColumns(dummyAnalysis.numerical_columns, dummyAnalysis.categorical_columns);
@@ -175,17 +177,34 @@ export default function DataAnalysisPage() {
             });
         }
     }
-
-    // Since we don't have the raw data, we can't do real aggregation for the pie chart.
-    // We will use mock data or basic stats for now.
+    
+    // Aggregated data for the pie chart
     const aggregatedPieData = useMemo(() => {
-        if (!analysisResult) return [];
-        // This is a placeholder. A real implementation would need raw data or aggregated data from the backend.
-        return analysisResult.categorical_columns.map((cat, i) => ({
-            name: cat,
-            value: (analysisResult.basic_stats[analysisResult.numerical_columns[0]]?.mean || 100) * (i + 1),
-        }));
-    }, [analysisResult]);
+        if (!analysisResult?.sample_data || !pieChartConfig.labelKey || !pieChartConfig.valueKey) return [];
+
+        const grouped = analysisResult.sample_data.reduce((acc, row) => {
+            const label = row[pieChartConfig.labelKey];
+            const value = parseFloat(row[pieChartConfig.valueKey]);
+            if (label && !isNaN(value)) {
+                acc[label] = (acc[label] || 0) + value;
+            }
+            return acc;
+        }, {} as Record<string, number>);
+
+        return Object.entries(grouped).map(([name, value]) => ({ name, value }));
+
+    }, [analysisResult, pieChartConfig]);
+
+
+    const fileTypeUsage = useMemo(() => {
+        if (!analysisResult) return [{ name: 'Excel', usage: 0 }, { name: 'CSV', usage: 0 }];
+        const isExcel = file?.name.endsWith('.xlsx') || file?.name.endsWith('.xls');
+        const isCsv = file?.name.endsWith('.csv');
+        return [
+            { name: 'Excel', usage: isExcel ? 1 : 0 },
+            { name: 'CSV', usage: isCsv ? 1 : 0 },
+        ].filter(item => item.usage > 0);
+    }, [analysisResult, file]);
     
     // --- RENDER ---
     if (isCheckingAuth) {
@@ -253,7 +272,21 @@ export default function DataAnalysisPage() {
                                         <CardDescription>Visualización del eje Y: <span className='font-semibold text-primary'>{areaChartConfig.yAxis}</span> por <span className='font-semibold text-primary'>{areaChartConfig.xAxis}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
-                                        <p className="text-center text-muted-foreground h-full flex items-center justify-center">Gráfico de área requiere datos de series temporales (no implementado en esta vista).</p>
+                                         <ChartContainer config={{}} className="w-full h-full">
+                                            <AreaChart data={analysisResult.sample_data}>
+                                                 <defs>
+                                                    <linearGradient id="fillArea" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
+                                                        <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid vertical={false} />
+                                                <XAxis dataKey={areaChartConfig.xAxis} tickLine={false} axisLine={false} tickMargin={8} />
+                                                <YAxis dataKey={areaChartConfig.yAxis} tickLine={false} axisLine={false} tickMargin={8} />
+                                                <ChartTooltip content={<ChartTooltipContent />} />
+                                                <Area type="monotone" dataKey={areaChartConfig.yAxis} stroke="hsl(var(--chart-1))" fill="url(#fillArea)" />
+                                            </AreaChart>
+                                        </ChartContainer>
                                     </CardContent>
                                 </Card>
                                 <Card className="lg:col-span-2">
@@ -290,12 +323,12 @@ export default function DataAnalysisPage() {
                                     </CardHeader>
                                     <CardContent className="h-64">
                                         <ChartContainer config={{}} className='w-full h-full'>
-                                            <BarChart data={toolUsageData} layout="vertical" margin={{ left: 10 }}>
+                                            <BarChart data={fileTypeUsage} layout="vertical" margin={{ left: 10 }}>
                                                 <XAxis type="number" hide />
                                                 <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={80} fontSize={14} />
                                                 <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                                                 <Bar dataKey="usage" radius={[0, 4, 4, 0]}>
-                                                    {toolUsageData.map((entry, index) => (
+                                                    {fileTypeUsage.map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                                     ))}
                                                 </Bar>
@@ -309,27 +342,14 @@ export default function DataAnalysisPage() {
                                             <CardTitle>Tareas por Día</CardTitle>
                                             <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
                                         </div>
-                                        <CardDescription>Volumen de tareas en la última semana.</CardDescription>
+                                        <CardDescription>Esta es una simulación de datos.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-48">
-                                        <ChartContainer config={{}} className='w-full h-full'>
-                                            <AreaChart data={dailyTasksData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                                                <defs>
-                                                    <linearGradient id="fillTasks" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
-                                                        <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
-                                                    </linearGradient>
-                                                </defs>
-                                                <XAxis dataKey="day" hide/>
-                                                <YAxis hide domain={['dataMin - 10', 'dataMax + 5']}/>
-                                                <ChartTooltip content={<ChartTooltipContent />} />
-                                                <Area type="monotone" dataKey="tasks" stroke="hsl(var(--chart-2))" fill="url(#fillTasks)" strokeWidth={2} />
-                                            </AreaChart>
-                                        </ChartContainer>
+                                        <p className="text-center text-muted-foreground h-full flex items-center justify-center">Gráfico de ejemplo.</p>
                                     </CardContent>
                                     <CardFooter className="flex justify-center text-sm text-muted-foreground">
                                         <TrendingUp className="w-4 h-4 mr-1"/>
-                                        Creciendo un 5.2% esta semana
+                                        Simulación
                                     </CardFooter>
                                 </Card>
                                 <Card>
@@ -345,7 +365,7 @@ export default function DataAnalysisPage() {
                                             <ChartContainer config={{}} className='w-full h-full'>
                                                 <PieChart>
                                                     <Pie 
-                                                        data={successRateData} 
+                                                        data={[{name: 'success', value: 100}]} 
                                                         dataKey="value"
                                                         startAngle={90} 
                                                         endAngle={-270} 
@@ -354,19 +374,18 @@ export default function DataAnalysisPage() {
                                                         strokeWidth={0}
                                                     >
                                                         <Cell key="success" fill="hsl(var(--chart-2))" />
-                                                        <Cell key="remaining" fill="hsl(var(--muted))" />
                                                     </Pie>
                                                 </PieChart>
                                             </ChartContainer>
                                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                                <p className="text-3xl font-bold">92%</p>
+                                                <p className="text-3xl font-bold">100%</p>
                                                 <p className="text-sm text-muted-foreground">Éxito</p>
                                             </div>
                                         </div>
                                     </CardContent>
                                     <CardFooter className="flex justify-center gap-4 text-sm text-muted-foreground">
-                                        <div className='flex items-center text-green-500'><CheckCircle className="w-4 h-4 mr-1"/> Completados: 1,226</div>
-                                        <div className='flex items-center text-red-500'><AlertCircle className="w-4 h-4 mr-1"/> Errores: 28</div>
+                                        <div className='flex items-center text-green-500'><CheckCircle className="w-4 h-4 mr-1"/> Filas: {analysisResult.total_rows}</div>
+                                        <div className='flex items-center text-red-500'><AlertCircle className="w-4 h-4 mr-1"/> Errores: 0</div>
                                     </CardFooter>
                                 </Card>
                             </div>
@@ -384,7 +403,7 @@ export default function DataAnalysisPage() {
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <Label htmlFor="data-file">Archivo de Datos</Label>
-                        <Input id="data-file" type="file" accept=".csv, .xlsx" onChange={(e) => e.target.files && setFile(e.target.files[0])} />
+                        <Input id="data-file" type="file" accept=".csv, .xlsx, .xls" onChange={(e) => e.target.files && setFile(e.target.files[0])} />
                     </div>
                     <Button onClick={handleFileProcess} disabled={!file} className="w-full">Analizar Archivo</Button>
                 </DialogContent>
@@ -435,5 +454,3 @@ export default function DataAnalysisPage() {
         </>
     );
 }
-
-    

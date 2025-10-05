@@ -8,9 +8,6 @@ export async function uploadFileForAnalysis(file: File): Promise<UploadResponse>
     const formData = new FormData();
     formData.append('file', file);
 
-    // fetchWithAuth will automatically handle the token.
-    // We must NOT set headers manually when using FormData,
-    // as the browser needs to set the Content-Type with the correct boundary.
     return fetchWithAuth(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData,

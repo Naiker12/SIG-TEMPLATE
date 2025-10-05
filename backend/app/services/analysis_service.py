@@ -1,3 +1,4 @@
+
 import os
 import uuid
 import pandas as pd
@@ -25,7 +26,7 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
         HTTPException: Si el tipo de archivo no es soportado o si ocurre un error.
     """
     file_extension = os.path.splitext(file.filename)[1].lower()
-    if file_extension not in ['.csv', '.xlsx']:
+    if file_extension not in ['.csv', '.xlsx', '.xls']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Tipo de archivo no soportado. Sube un .csv o .xlsx."
@@ -36,16 +37,17 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
 
     # Subir el archivo a Supabase Storage
     unique_filename = f"{user_id}/{uuid.uuid4()}{file_extension}"
-    supabase_bucket = "file"  # Nombre del bucket en Supabase
+    supabase_bucket = "file"
 
     try:
-        # La librería de Supabase espera bytes
+        if not supabase:
+            raise HTTPException(status_code=503, detail="El servicio de almacenamiento no está configurado.")
+            
         supabase.storage.from_(supabase_bucket).upload(
             path=unique_filename,
             file=content,
             file_options={"content-type": file.content_type}
         )
-        # Obtener la URL pública del archivo subido
         file_path = supabase.storage.from_(supabase_bucket).get_public_url(unique_filename)
     except Exception as e:
         raise HTTPException(
@@ -75,7 +77,7 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
         data={
             "filename": file.filename,
             "filetype": file.content_type,
-            "filepath": file_path,  # Guardamos la URL pública de Supabase
+            "filepath": file_path,
             "columns": columns,
             "rows_count": rows_count,
             "size": file_size,
@@ -83,7 +85,6 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
         }
     )
     
-    # Convertir el modelo Prisma a esquema Pydantic
     return schemas.FileMetadata.model_validate(file_metadata_db)
 
 
@@ -100,12 +101,12 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
         )
 
     try:
-        # Extraer el path del archivo desde la URL completa
-        # La URL tiene el formato: .../storage/v1/object/public/file/user_id/uuid.xlsx
+        if not supabase:
+             raise HTTPException(status_code=503, detail="El servicio de almacenamiento no está configurado.")
+             
         supabase_bucket = "file"
         file_path_in_bucket = file_metadata.filepath.split(f'/{supabase_bucket}/')[-1]
 
-        # Descargar el archivo directamente desde Supabase Storage
         file_content = supabase.storage.from_(supabase_bucket).download(file_path_in_bucket)
 
         if not file_content:
@@ -119,15 +120,13 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
 
         if '.csv' in file_extension:
             df = pd.read_csv(file_stream)
-        elif '.xlsx' in file_extension:
+        elif '.xlsx' in file_extension or '.xls' in file_extension:
             df = pd.read_excel(file_stream, engine='openpyxl')
         else:
             raise HTTPException(status_code=400, detail="Formato de archivo no soportado para análisis.")
 
     except Exception as e:
-        # Captura errores de la descarga o del procesamiento de pandas
         error_detail = str(e)
-        # Si el error viene de la librería de Supabase, podría ser más específico
         if "NotFound" in error_detail:
              raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -143,11 +142,15 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
     categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
     
     basic_stats = df[numerical_cols].describe().to_dict() if numerical_cols else {}
+    
+    # Obtener una muestra de los datos
+    sample_data = df.head(100).to_dict(orient='records')
 
     return schemas.AnalysisResult(
         columns=df.columns.tolist(),
         numerical_columns=numerical_cols,
         categorical_columns=categorical_cols,
         total_rows=len(df),
-        basic_stats=basic_stats
+        basic_stats=basic_stats,
+        sample_data=sample_data
     )

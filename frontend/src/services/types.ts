@@ -37,6 +37,7 @@ export type AnalysisResult = {
     categorical_columns: string[];
     total_rows: number;
     basic_stats: Record<string, Record<string, any>>;
+    sample_data: Record<string, any>[];
 }
 
 // Corresponds to ProjectCreate in backend schemas.py
@@ -54,5 +55,3 @@ export type Project = {
     createdAt: string; // ISO datetime string
     updatedAt: string; // ISO datetime string
 } & ProjectCreate;
-
-    
