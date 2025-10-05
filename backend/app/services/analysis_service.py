@@ -3,6 +3,7 @@ import uuid
 import pandas as pd
 from fastapi import UploadFile, HTTPException, status
 from io import BytesIO
+import httpx
 
 from app import schemas
 from db.database import prisma
@@ -70,7 +71,7 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
             detail=f"No se pudo procesar el contenido del archivo: {e}"
         )
 
-    # Guardar metadatos en la base de datos (CORRECCIÓN: usar snake_case)
+    # Guardar metadatos en la base de datos
     file_metadata_db = await prisma.filemetadata.create(
         data={
             "filename": file.filename,
@@ -90,9 +91,8 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
 async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResult:
     """
     Analiza un archivo previamente subido para obtener estadísticas descriptivas.
-    Ahora lee el archivo desde la URL pública de Supabase.
+    Descarga el archivo desde la URL de Supabase y lo carga en memoria para el análisis.
     """
-    # CORRECCIÓN: usar snake_case
     file_metadata = await prisma.filemetadata.find_unique(where={"id": file_id})
     if not file_metadata or file_metadata.userId != user_id:
         raise HTTPException(
@@ -100,19 +100,33 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
             detail="Archivo no encontrado o no tienes permiso para acceder a él."
         )
 
-    # Cargar el archivo con pandas desde la URL
     try:
         file_path_url = file_metadata.filepath
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(file_path_url)
+            response.raise_for_status()  # Asegurarse de que la descarga fue exitosa
+            file_content = response.content
+
+        file_stream = BytesIO(file_content)
         file_extension = os.path.splitext(file_path_url)[1].lower()
 
-        if file_extension == '.csv':
-            df = pd.read_csv(file_path_url)
-        else:  # .xlsx
-            df = pd.read_excel(file_path_url, engine='openpyxl')
+        if '.csv' in file_extension:
+            df = pd.read_csv(file_stream)
+        elif '.xlsx' in file_extension:
+            df = pd.read_excel(file_stream, engine='openpyxl')
+        else:
+            raise HTTPException(status_code=400, detail="Formato de archivo no soportado para análisis.")
+
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"No se pudo descargar el archivo desde Supabase para análisis: {e.response.status_code}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"No se pudo leer el archivo desde la URL para análisis: {e}"
+            detail=f"No se pudo leer o procesar el archivo para análisis: {e}"
         )
 
     # Realizar análisis básico

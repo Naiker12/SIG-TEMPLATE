@@ -21,6 +21,7 @@ python-jose[cryptography]==3.3.0
 
 # Cliente HTTP
 httpx==0.23.3
+anyio==4.4.0
 
 # Supabase (nuevo cliente oficial)
 supabase==1.0.3
@@ -40,4 +41,3 @@ Pillow==10.3.0
 pypdf==4.2.0
 pdf2docx==0.5.8
 python-magic-bin==0.4.14
-
