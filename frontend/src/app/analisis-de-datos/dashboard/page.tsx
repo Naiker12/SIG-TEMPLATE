@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle, FolderOpen, UploadCloud, Save } from 'lucide-react';
+import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle, FolderOpen, UploadCloud, Save, FileSpreadsheet } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -197,13 +197,15 @@ export default function DataAnalysisPage() {
 
 
     const fileTypeUsage = useMemo(() => {
-        if (!analysisResult) return [{ name: 'Excel', usage: 0 }, { name: 'CSV', usage: 0 }];
-        const isExcel = file?.name.endsWith('.xlsx') || file?.name.endsWith('.xls');
-        const isCsv = file?.name.endsWith('.csv');
-        return [
-            { name: 'Excel', usage: isExcel ? 1 : 0 },
-            { name: 'CSV', usage: isCsv ? 1 : 0 },
-        ].filter(item => item.usage > 0);
+        if (!analysisResult || !file) return [{ name: 'N/A', usage: 0 }];
+        const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+        const isCsv = file.name.endsWith('.csv');
+        
+        let fileTypes = [];
+        if (isExcel) fileTypes.push({ name: 'Excel', usage: 100 });
+        if (isCsv) fileTypes.push({ name: 'CSV', usage: 100 });
+        
+        return fileTypes.length > 0 ? fileTypes : [{ name: 'Otro', usage: 100 }];
     }, [analysisResult, file]);
     
     // --- RENDER ---
@@ -227,21 +229,21 @@ export default function DataAnalysisPage() {
                         </header>
                          <div className="flex items-center gap-2">
                              <Button variant="outline" size="lg" onClick={handleOpenProjectsModal}>
-                                 <FolderOpen className="mr-2"/> Ver Proyectos
+                                 <FolderOpen className="mr-2 h-4 w-4"/> Ver Proyectos
                              </Button>
                              {analysisResult && (
                                 <Button variant="outline" size="lg" onClick={handleSaveProject}>
-                                    <Save className="mr-2 h-5 w-5"/> Guardar
+                                    <Save className="mr-2 h-4 w-4"/> Guardar
                                 </Button>
                              )}
                              <Button size="lg" onClick={() => setIsUploadModalOpen(true)}>
-                                <FileUp className="mr-2"/> Cargar Datos
+                                <FileUp className="mr-2 h-4 w-4"/> Cargar Datos
                              </Button>
                          </div>
                     </div>
                     
                     {!analysisResult ? (
-                        <div className="flex flex-col items-center justify-center h-[60vh] border-2 border-dashed rounded-xl bg-muted/30">
+                        <div className="flex flex-col items-center justify-center h-[60vh] border-2 border-dashed rounded-xl bg-card">
                             <div className="text-center p-8">
                                 <LayoutDashboard className="h-20 w-20 mx-auto text-muted-foreground mb-4" />
                                 <h2 className="text-2xl font-semibold mb-2">Bienvenido al Dashboard de Análisis</h2>
@@ -259,10 +261,15 @@ export default function DataAnalysisPage() {
                                     title={`Media de ${key}`}
                                     value={stats.mean?.toFixed(2) ?? 'N/A'}
                                     change={`Std: ${stats.std?.toFixed(2) ?? 'N/A'}`}
-                                    isPositive={true}
                                     icon={<TrendingUp className="h-4 w-4" />}
                                 />
                                ))}
+                                <KpiCard 
+                                    title="Filas Totales"
+                                    value={analysisResult.total_rows.toLocaleString()}
+                                    change={`${analysisResult.columns.length} columnas`}
+                                    icon={<FileSpreadsheet className="h-4 w-4" />}
+                                />
                             </div>
                             
                             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -273,19 +280,13 @@ export default function DataAnalysisPage() {
                                     </CardHeader>
                                     <CardContent className="h-80">
                                          <ChartContainer config={{}} className="w-full h-full">
-                                            <AreaChart data={analysisResult.sample_data}>
-                                                 <defs>
-                                                    <linearGradient id="fillArea" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
-                                                        <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
-                                                    </linearGradient>
-                                                </defs>
+                                            <BarChart data={analysisResult.sample_data} margin={{ top: 20, right: 20, bottom: 5, left: 20 }}>
                                                 <CartesianGrid vertical={false} />
                                                 <XAxis dataKey={areaChartConfig.xAxis} tickLine={false} axisLine={false} tickMargin={8} />
                                                 <YAxis dataKey={areaChartConfig.yAxis} tickLine={false} axisLine={false} tickMargin={8} />
-                                                <ChartTooltip content={<ChartTooltipContent />} />
-                                                <Area type="monotone" dataKey={areaChartConfig.yAxis} stroke="hsl(var(--chart-1))" fill="url(#fillArea)" />
-                                            </AreaChart>
+                                                <ChartTooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
+                                                <Bar dataKey={areaChartConfig.yAxis} fill="hsl(var(--chart-1))" radius={4} />
+                                            </BarChart>
                                         </ChartContainer>
                                     </CardContent>
                                 </Card>
@@ -319,7 +320,6 @@ export default function DataAnalysisPage() {
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>Tipos de Archivo Procesados</CardTitle>
-                                        <CardDescription>Qué formatos son los más comunes.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-64">
                                         <ChartContainer config={{}} className='w-full h-full'>
@@ -446,7 +446,7 @@ export default function DataAnalysisPage() {
                                 setIsUploadModalOpen(true);
                             }}
                         >
-                            <UploadCloud className="mr-2"/> Cargar Nuevo Archivo
+                            <UploadCloud className="mr-2 h-4 w-4"/> Cargar Nuevo Archivo
                         </Button>
                      </div>
                 </DialogContent>
