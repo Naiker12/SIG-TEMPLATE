@@ -18,7 +18,7 @@ async def upload_file_for_analysis(
     current_user: schemas.User = Depends(get_current_user)
 ):
     """
-    Sube un archivo (CSV o Excel), lo guarda en el servidor, extrae sus metadatos
+    Sube un archivo (CSV o Excel), lo guarda en Supabase, extrae sus metadatos
     (columnas, número de filas, etc.) y lo registra en la base de datos.
     
     - **file**: El archivo a subir.

@@ -17,7 +17,7 @@ from app.routers.split_pdf_router import split_pdf_router
 from app.routers.merge_pdf_router import merge_pdf_router
 from app.routers.pdf_to_word_router import pdf_to_word_router
 from app.routers.auth_router import auth_router
-from app.routers.file_router import file_router  # <-- router de archivos
+from app.routers.file_router import file_router
 from app.routers.excel_router import excel_router
 from app.routers.analysis_router import analysis_router
 from app.routers.project_router import project_router
@@ -60,6 +60,12 @@ async def http_exception_handler(request, exc):
 # Registrar routers
 # ----------------------------
 
+# Routers de la nueva arquitectura con prefijo /api
+app.include_router(auth_router, prefix="/api")
+app.include_router(file_router, prefix="/api")
+app.include_router(analysis_router, prefix="/api", tags=["Análisis de Datos"])
+app.include_router(project_router, prefix="/api", tags=["Proyectos de Análisis"])
+
 # Herramientas legadas (mantener sin prefijo /api si el frontend las llama así directamente)
 app.include_router(compress_router)
 app.include_router(convert_to_pdf_router)
@@ -67,10 +73,3 @@ app.include_router(split_pdf_router)
 app.include_router(merge_pdf_router)
 app.include_router(pdf_to_word_router)
 app.include_router(excel_router)
-
-# Routers de la nueva arquitectura con prefijo /api
-# Unificando todo bajo /api
-app.include_router(auth_router, prefix="/api")
-app.include_router(file_router, prefix="/api")
-app.include_router(analysis_router, prefix="/api", tags=["Análisis de Datos"])
-app.include_router(project_router, prefix="/api", tags=["Proyectos de Análisis"])
