@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getProjects, createProject, uploadFileForAnalysis, getFileAnalysis } from '@/services/analysisService';
 import type { Project, AnalysisResult } from '@/services/types';
 
-const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--chart-6))', 'hsl(var(--muted))'];
+const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--muted))'];
 const MAX_CATEGORIES = 7; // Mostrar 7 categorías + "Otros"
 
 const aggregateData = (data: any[], categoryKey: string, valueKey: string) => {
