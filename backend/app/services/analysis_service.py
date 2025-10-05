@@ -2,6 +2,8 @@
 import os
 import uuid
 import pandas as pd
+import polars as pl
+import janitor
 from fastapi import UploadFile, HTTPException, status
 from io import BytesIO
 
@@ -9,6 +11,22 @@ from app import schemas
 from db.database import prisma
 from db.supabase_client import supabase
 
+LARGE_FILE_THRESHOLD_BYTES = 50 * 1024 * 1024 # 50 MB
+
+def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Aplica una limpieza estándar a un DataFrame de pandas."""
+    return (
+        df
+        .clean_names()
+        .remove_empty()
+    )
+
+def safe_cast_to_int(value):
+    """Castea un valor a int de forma segura, manejando nulos."""
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
 
 async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileMetadata:
     """
@@ -45,16 +63,19 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
             detail=f"No se pudo subir el archivo a Supabase: {e}"
         )
 
-    # Procesar el archivo con pandas para extraer metadatos
+    # Procesar el archivo con pandas para extraer metadatos limpios
     try:
         file_stream = BytesIO(content)
         if file_extension == '.csv':
-            df = pd.read_csv(file_stream)
-        else:  # .xlsx / .xls
+            df = pd.read_csv(file_stream, engine='pyarrow')
+        else:
             df = pd.read_excel(file_stream, engine='openpyxl')
         
-        columns = df.columns.tolist()
-        rows_count = len(df)
+        # Aplicar limpieza
+        cleaned_df = clean_dataframe(df)
+        
+        columns = cleaned_df.columns.tolist()
+        rows_count = len(cleaned_df)
 
     except Exception as e:
         raise HTTPException(
@@ -81,7 +102,8 @@ async def process_and_save_file(file: UploadFile, user_id: str) -> schemas.FileM
 async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResult:
     """
     Analiza un archivo previamente subido para obtener estadísticas descriptivas.
-    Descarga el archivo desde Supabase Storage y lo carga en memoria para el análisis.
+    Descarga el archivo desde Supabase Storage y lo carga en memoria para el análisis,
+    usando Polars para archivos grandes.
     """
     file_metadata = await prisma.filemetadata.find_unique(where={"id": file_id})
     if not file_metadata or file_metadata.userId != user_id:
@@ -97,7 +119,6 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
         supabase_bucket = "file"
         file_path_in_bucket = file_metadata.filepath.split(f'/{supabase_bucket}/')[-1]
 
-        # Descargar contenido del archivo
         file_content = supabase.storage.from_(supabase_bucket).download(file_path_in_bucket)
 
         if not file_content:
@@ -107,22 +128,18 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
             )
 
         file_stream = BytesIO(file_content)
-        file_extension = os.path.splitext(file_path_in_bucket)[1].lower()
+        use_polars = file_metadata.size > LARGE_FILE_THRESHOLD_BYTES
 
-        if '.csv' in file_extension:
-            df = pd.read_csv(file_stream)
-        elif '.xlsx' in file_extension or '.xls' in file_extension:
-            df = pd.read_excel(file_stream, engine='openpyxl')
+        if use_polars:
+            # Usar Polars para archivos grandes
+            df = pl.read_excel(file_stream) if '.xls' in file_path_in_bucket else pl.read_csv(file_stream)
+            df = df.janitor.clean_names().to_pandas() # Convertir a pandas para compatibilidad
         else:
-            raise HTTPException(status_code=400, detail="Formato de archivo no soportado para análisis.")
+            # Usar Pandas para archivos más pequeños
+            df = pd.read_excel(file_stream, engine='openpyxl') if '.xls' in file_path_in_bucket else pd.read_csv(file_stream, engine='pyarrow')
+            df = clean_dataframe(df)
 
     except Exception as e:
-        error_detail = str(e)
-        if "NotFound" in error_detail:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Archivo no encontrado en Supabase Storage: {file_path_in_bucket}"
-            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"No se pudo leer o procesar el archivo para análisis: {e}"
@@ -132,17 +149,29 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
     numerical_cols = df.select_dtypes(include=['number']).columns.tolist()
     categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
     
-    basic_stats = df[numerical_cols].describe().to_dict() if numerical_cols else {}
+    descriptive_stats = df[numerical_cols].describe()
     
-    # --- INICIO DE LA CORRECCIÓN ---
-    # Sanitizar basic_stats para asegurar que 'count' sea int y solucionar el TypeError de Pydantic
-    for col_stats in basic_stats.values():
-        if 'count' in col_stats and pd.notna(col_stats['count']):
-            col_stats['count'] = int(col_stats['count'])
-    # --- FIN DE LA CORRECCIÓN ---
-    
-    # Obtener muestra de datos para evitar errores de serialización
+    # Sanitizar los datos para asegurar compatibilidad con Pydantic
+    basic_stats = descriptive_stats.to_dict()
+    for col_name, stats in basic_stats.items():
+        for stat_key, value in stats.items():
+            if pd.notna(value):
+                # Convertir 'count' y otros valores enteros a int nativo de Python
+                if stat_key in ['count']:
+                    stats[stat_key] = int(value)
+                else:
+                    # Mantener otros valores como float
+                    stats[stat_key] = float(value)
+            else:
+                # Reemplazar NaN/NaT con None para la serialización JSON
+                stats[stat_key] = None
+
     sample_data = df.head(100).to_dict(orient='records')
+    # Reemplazar NaN por None en la muestra para evitar errores de serialización
+    for row in sample_data:
+        for key, value in row.items():
+            if pd.isna(value):
+                row[key] = None
 
     return schemas.AnalysisResult(
         columns=df.columns.tolist(),
@@ -152,4 +181,3 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
         basic_stats=basic_stats,
         sample_data=sample_data
     )
-
