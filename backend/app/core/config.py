@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: Optional[str] = None
 
     class Config:
-        env_file = "backend/.env" 
+        env_file = 'backend/.env'
         extra = "ignore"   
 
 settings = Settings()
