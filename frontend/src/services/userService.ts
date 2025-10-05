@@ -6,30 +6,37 @@ export async function fetchWithAuth(url: string, options: RequestInit, explicitT
     
     const headers = new Headers(options.headers || {});
 
-    // Do not set Authorization header if the body is FormData.
-    // The browser will handle the multipart boundary and our token will be sent
-    // as part of the form data if needed, or in this case, the server will
-    // correctly parse the multipart request and then check for auth.
-    // The main issue is that setting headers manually breaks FormData requests.
-    if (token && !(options.body instanceof FormData)) {
+    // Siempre añadir el token si está disponible. FastAPI/Uvicorn manejan correctamente
+    // las cabeceras de autorización incluso con peticiones multipart/form-data.
+    if (token) {
         headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    // No establecer 'Content-Type' manualmente si el cuerpo es FormData,
+    // el navegador lo hará con el boundary correcto.
+    if (!(options.body instanceof FormData)) {
+        if (!headers.has('Content-Type')) {
+            headers.set('Content-Type', 'application/json');
+        }
     }
 
     const response = await fetch(url, { ...options, headers });
     
     if (!response.ok) {
+        // Si el error es 401 (Unauthorized), el token es inválido o el usuario no existe.
+        // Cerramos la sesión del frontend para forzar un nuevo login.
         if (response.status === 401) {
-            // This is a critical error, often meaning the token is expired or invalid.
-            // Forcing a logout might be a good strategy here.
-            // useAuthStore.getState().clearSession();
-            throw new Error("Could not validate credentials");
+            useAuthStore.getState().clearSession();
+            // Refrescar la página podría ser una opción para redirigir a la home.
+            // window.location.reload(); 
         }
-        // Try to parse the error message from the backend
-        const errorData = await response.json().catch(() => ({ detail: 'An unexpected error occurred.' }));
+        
+        // Intentar parsear el mensaje de error del backend
+        const errorData = await response.json().catch(() => ({ detail: `Error del servidor: ${response.statusText}` }));
         throw new Error(errorData.detail || `Error: ${response.status}`);
     }
     
-    // Handle responses with no content
+    // Manejar respuestas sin contenido
     if (response.status === 204 || response.headers.get('content-length') === '0') {
         return null;
     }
@@ -55,7 +62,6 @@ export async function updateUserProfile(data: UserUpdateData) {
 
     return fetchWithAuth(`${API_BASE_URL}/auth/me`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
     });
 }
@@ -68,7 +74,6 @@ type PasswordUpdateData = {
 export async function updateUserPassword(data: PasswordUpdateData) {
     return fetchWithAuth(`${API_BASE_URL}/auth/me/password`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
 }
