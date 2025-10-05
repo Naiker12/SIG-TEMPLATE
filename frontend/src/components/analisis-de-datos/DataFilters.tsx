@@ -6,12 +6,14 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Download, Mail } from 'lucide-react';
 import { ChartConfigSheet } from './ChartConfigSheet';
+import { CategoryFilter } from './CategoryFilter';
 
 export function DataFilters() {
   return (
     <div className="flex flex-col md:flex-row gap-4 justify-between items-center p-4 border rounded-lg bg-card">
       <div className="flex flex-wrap items-center gap-4">
         <DateRangePicker />
+        <CategoryFilter />
         <ChartConfigSheet />
       </div>
       <div className="flex items-center gap-2">

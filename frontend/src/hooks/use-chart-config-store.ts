@@ -18,9 +18,13 @@ interface ChartConfigState {
   pieChartConfig: PieChartConfig;
   numericalColumns: string[];
   categoricalColumns: string[];
+  allCategories: string[];
+  selectedCategories: string[];
   setAreaChartConfig: (config: ChartConfig) => void;
   setPieChartConfig: (config: PieChartConfig) => void;
   setAvailableColumns: (numerical: string[], categorical: string[]) => void;
+  setAllCategories: (categories: string[]) => void;
+  setSelectedCategories: (categories: string[]) => void;
 }
 
 export const useChartConfigStore = create<ChartConfigState>((set) => ({
@@ -34,6 +38,8 @@ export const useChartConfigStore = create<ChartConfigState>((set) => ({
   },
   numericalColumns: [],
   categoricalColumns: [],
+  allCategories: [],
+  selectedCategories: [],
   setAreaChartConfig: (config) => set({ areaChartConfig: config }),
   setPieChartConfig: (config) => set({ pieChartConfig: config }),
   setAvailableColumns: (numerical, categorical) => set(state => ({
@@ -49,6 +55,6 @@ export const useChartConfigStore = create<ChartConfigState>((set) => ({
         valueKey: numerical.includes(state.pieChartConfig.valueKey) ? state.pieChartConfig.valueKey : numerical[0] || '',
       }
   })),
+  setAllCategories: (categories) => set({ allCategories: categories, selectedCategories: categories }),
+  setSelectedCategories: (categories) => set({ selectedCategories: categories }),
 }));
-
-    

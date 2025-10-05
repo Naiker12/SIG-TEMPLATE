@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Loader2, FileUp, MoreHorizontal, TrendingUp, CheckCircle, AlertCircle, FolderOpen, UploadCloud, Save, FileSpreadsheet } from 'lucide-react';
+import { LayoutDashboard, Loader2, FileUp, FolderOpen, Save, FileSpreadsheet, LineChart, BarChart3, PieChartIcon, AreaChart, GitCompareArrows } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,15 +13,40 @@ import { useLoadingStore } from '@/hooks/use-loading-store';
 import { useAuthStore } from '@/hooks/useAuthStore';
 import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
+import { Area, Bar, BarChart, CartesianGrid, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, Line, ComposedChart } from "recharts";
 import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 import { useToast } from '@/hooks/use-toast';
 import { getProjects, createProject, uploadFileForAnalysis, getFileAnalysis } from '@/services/analysisService';
 import type { Project, AnalysisResult } from '@/services/types';
 
-const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--chart-6))', 'hsl(var(--muted))'];
+const MAX_CATEGORIES = 7; // Mostrar 7 categorías + "Otros"
+
+const aggregateData = (data: any[], categoryKey: string, valueKey: string) => {
+    if (!data || !categoryKey || !valueKey) return [];
+
+    const grouped = data.reduce((acc, row) => {
+        const label = row[categoryKey];
+        const value = parseFloat(row[valueKey]);
+        if (label !== null && label !== undefined && !isNaN(value)) {
+            acc[label] = (acc[label] || 0) + value;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    const sorted = Object.entries(grouped).sort(([, a], [, b]) => b - a);
+
+    if (sorted.length > MAX_CATEGORIES + 1) {
+        const top = sorted.slice(0, MAX_CATEGORIES);
+        const otherSum = sorted.slice(MAX_CATEGORIES).reduce((sum, [, value]) => sum + value, 0);
+        return [...top.map(([name, value]) => ({ name, value })), { name: 'Otros', value: otherSum }];
+    }
+
+    return sorted.map(([name, value]) => ({ name, value }));
+};
+
 
 // --- MAIN COMPONENT ---
 export default function DataAnalysisPage() {
@@ -37,7 +62,12 @@ export default function DataAnalysisPage() {
     const [isProjectsModalOpen, setIsProjectsModalOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-    const { areaChartConfig, pieChartConfig, setAvailableColumns } = useChartConfigStore();
+    const { 
+        areaChartConfig, 
+        pieChartConfig, 
+        setAvailableColumns,
+        selectedCategories, 
+    } = useChartConfigStore();
 
     useEffect(() => {
         if (useAuthStore.persist.hasHydrated()) {
@@ -58,7 +88,29 @@ export default function DataAnalysisPage() {
 
         return () => unsubscribe();
     }, [isLoggedIn, router]);
+    
+    // --- DATA PROCESSING ---
+    const filteredData = useMemo(() => {
+        if (!analysisResult?.sample_data || !pieChartConfig.labelKey) return [];
+        if (selectedCategories.length === 0) return analysisResult.sample_data;
+        return analysisResult.sample_data.filter(row => selectedCategories.includes(row[pieChartConfig.labelKey]));
+    }, [analysisResult, pieChartConfig.labelKey, selectedCategories]);
+    
+    const aggregatedPieData = useMemo(() => {
+        return aggregateData(filteredData, pieChartConfig.labelKey, pieChartConfig.valueKey);
+    }, [filteredData, pieChartConfig]);
 
+    const allCategories = useMemo(() => {
+        if (!analysisResult?.sample_data || !pieChartConfig.labelKey) return [];
+        return [...new Set(analysisResult.sample_data.map(row => row[pieChartConfig.labelKey]).filter(Boolean))];
+    }, [analysisResult, pieChartConfig.labelKey]);
+
+    useEffect(() => {
+        useChartConfigStore.getState().setAllCategories(allCategories as string[]);
+    }, [allCategories]);
+
+
+    // --- API CALLS & HANDLERS ---
     const fetchProjects = async () => {
         if (!isLoggedIn) return;
         try {
@@ -104,109 +156,52 @@ export default function DataAnalysisPage() {
     }
     
     const handleLoadProject = async (projectId: string) => {
+        // This is a dummy implementation
         setIsProjectsModalOpen(false);
         setIsLoading(true);
         try {
-            // In a real scenario, you'd fetch the project, its fileId, and then the analysis for that file.
-            // For now, we simulate this by just loading some data.
-            // const project = await getProjectById(projectId);
-            // const analysisData = await getFileAnalysis(project.fileId);
-            // setAnalysisResult(analysisData);
-            // setAvailableColumns(analysisData.numerical_columns, analysisData.categorical_columns);
-             toast({
-                title: 'Proyecto Cargado (Simulación)',
-                description: 'La carga de datos y configuración del proyecto se implementaría aquí.',
-            });
-             // Simulate loading some analysis
              const dummyAnalysis: AnalysisResult = {
-                columns: ['mes', 'categoria', 'ingresos', 'costos'],
-                numerical_columns: ['ingresos', 'costos'],
+                columns: ['mes', 'categoria', 'ingresos', 'costos', 'beneficio'],
+                numerical_columns: ['ingresos', 'costos', 'beneficio'],
                 categorical_columns: ['mes', 'categoria'],
-                total_rows: 100,
+                total_rows: 120,
                 basic_stats: {
-                    ingresos: { mean: 5000, std: 1000, count: 100, min: 1000, '25%': 4000, '50%': 5000, '75%': 6000, max: 9000 },
-                    costos: { mean: 3000, std: 500, count: 100, min: 1000, '25%': 2500, '50%': 3000, '75%': 3500, max: 4500 },
+                    ingresos: { mean: 5000, std: 1000, count: 120 },
+                    costos: { mean: 3000, std: 500, count: 120 },
+                    beneficio: { mean: 2000, std: 600, count: 120 },
                 },
-                sample_data: [
-                    { mes: 'Ene', categoria: 'A', ingresos: 4500, costos: 2800 },
-                    { mes: 'Feb', categoria: 'B', ingresos: 5200, costos: 3100 },
-                    { mes: 'Mar', categoria: 'A', ingresos: 4100, costos: 2000 },
-                ]
+                sample_data: Array.from({length: 12}, (_, i) => ({
+                    mes: new Date(2023, i).toLocaleString('es-ES', { month: 'short' }),
+                    categoria: ['Electrónica', 'Ropa', 'Hogar', 'Juguetes'][i % 4],
+                    ingresos: 4000 + Math.random() * 2000,
+                    costos: 2500 + Math.random() * 1000,
+                    beneficio: 1500 + Math.random() * 1000,
+                }))
             };
             setAnalysisResult(dummyAnalysis);
             setAvailableColumns(dummyAnalysis.numerical_columns, dummyAnalysis.categorical_columns);
-
+            toast({ title: 'Proyecto Cargado (Simulación)', description: 'Datos de ejemplo cargados.' });
         } catch (error) {
-             toast({
-                variant: 'destructive',
-                title: 'Error al Cargar Proyecto',
-                description: error instanceof Error ? error.message : "No se pudo cargar el proyecto.",
-            });
+             toast({ variant: 'destructive', title: 'Error', description: "No se pudo cargar el proyecto simulado." });
         } finally {
             setIsLoading(false);
         }
     }
 
     const handleSaveProject = async () => {
-        if (!analysisResult) {
-             toast({
-                variant: 'destructive',
-                title: 'No hay datos para guardar',
-                description: 'Carga y analiza un archivo antes de guardar un proyecto.',
-            });
-            return;
-        }
-
-        // Dummy implementation for saving project
+        if (!analysisResult) return;
         try {
             await createProject({
                 name: `Mi Proyecto ${new Date().toLocaleTimeString()}`,
                 description: 'Un análisis guardado desde el dashboard',
-                fileId: 'dummy-file-id', // This should come from the uploaded file metadata
+                fileId: 'dummy-file-id',
                 config: { areaChartConfig, pieChartConfig }
             });
-            toast({
-                title: 'Proyecto Guardado (Simulación)',
-                description: 'Tu configuración de análisis actual ha sido guardada.',
-            });
+            toast({ title: 'Proyecto Guardado (Simulación)' });
         } catch (error) {
-             toast({
-                variant: 'destructive',
-                title: 'Error al Guardar',
-                description: error instanceof Error ? error.message : "No se pudo guardar el proyecto.",
-            });
+             toast({ variant: 'destructive', title: 'Error', description: "No se pudo guardar el proyecto." });
         }
     }
-    
-    // Aggregated data for the pie chart
-    const aggregatedPieData = useMemo(() => {
-        if (!analysisResult?.sample_data || !pieChartConfig.labelKey || !pieChartConfig.valueKey) return [];
-
-        const grouped = analysisResult.sample_data.reduce((acc, row) => {
-            const label = row[pieChartConfig.labelKey];
-            const value = parseFloat(row[pieChartConfig.valueKey]);
-            if (label && !isNaN(value)) {
-                acc[label] = (acc[label] || 0) + value;
-            }
-            return acc;
-        }, {} as Record<string, number>);
-
-        return Object.entries(grouped).map(([name, value]) => ({ name, value }));
-
-    }, [analysisResult, pieChartConfig]);
-
-
-    const fileTypeUsage = useMemo(() => {
-        if (!analysisResult || !file) return [{ name: 'N/A', usage: 0 }];
-        const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
-        const isCsv = file.name.endsWith('.csv');
-        
-        let fileTypes = [];
-        if (isExcel) fileTypes.push({ name: 'Excel', usage: 100 });
-        if (isCsv) fileTypes.push({ name: 'CSV', usage: 100 });
-        
-        return fileTypes.length > 0 ? fileTypes : [{ name: 'Otro', usage: 100 }];
-    }, [analysisResult, file]);
     
     // --- RENDER ---
     if (isCheckingAuth) {
@@ -255,13 +250,13 @@ export default function DataAnalysisPage() {
                             <DataFilters />
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                               {Object.entries(analysisResult.basic_stats).map(([key, stats]) => (
+                               {Object.entries(analysisResult.basic_stats).slice(0,3).map(([key, stats]) => (
                                 <KpiCard 
                                     key={key} 
                                     title={`Media de ${key}`}
                                     value={stats.mean?.toFixed(2) ?? 'N/A'}
-                                    change={`Std: ${stats.std?.toFixed(2) ?? 'N/A'}`}
-                                    icon={<TrendingUp className="h-4 w-4" />}
+                                    change={`Total: ${stats.count?.toLocaleString() ?? 'N/A'}`}
+                                    icon={<BarChart3 className="h-4 w-4" />}
                                 />
                                ))}
                                 <KpiCard 
@@ -275,14 +270,14 @@ export default function DataAnalysisPage() {
                             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                                 <Card className="lg:col-span-3">
                                     <CardHeader>
-                                        <CardTitle>Análisis de Métrica Principal</CardTitle>
+                                        <CardTitle className="flex items-center gap-2"><BarChart3/> Métrica Principal por Categoría</CardTitle>
                                         <CardDescription>Visualización del eje Y: <span className='font-semibold text-primary'>{areaChartConfig.yAxis}</span> por <span className='font-semibold text-primary'>{areaChartConfig.xAxis}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
                                          <ChartContainer config={{}} className="w-full h-full">
-                                            <BarChart data={analysisResult.sample_data} margin={{ top: 20, right: 20, bottom: 5, left: 20 }}>
+                                            <BarChart data={filteredData} margin={{ top: 20, right: 20, bottom: 5, left: 20 }}>
                                                 <CartesianGrid vertical={false} />
-                                                <XAxis dataKey={areaChartConfig.xAxis} tickLine={false} axisLine={false} tickMargin={8} />
+                                                <XAxis dataKey={areaChartConfig.xAxis} tickLine={false} axisLine={false} tickMargin={8} angle={-45} textAnchor="end" height={60} interval={0} />
                                                 <YAxis dataKey={areaChartConfig.yAxis} tickLine={false} axisLine={false} tickMargin={8} />
                                                 <ChartTooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
                                                 <Bar dataKey={areaChartConfig.yAxis} fill="hsl(var(--chart-1))" radius={4} />
@@ -292,118 +287,63 @@ export default function DataAnalysisPage() {
                                 </Card>
                                 <Card className="lg:col-span-2">
                                     <CardHeader>
-                                        <CardTitle>Distribución por Categoría</CardTitle>
+                                        <CardTitle className="flex items-center gap-2"><PieChartIcon/> Distribución por Categoría</CardTitle>
                                         <CardDescription>Mostrando <span className='font-semibold text-primary'>{pieChartConfig.valueKey}</span> por <span className='font-semibold text-primary'>{pieChartConfig.labelKey}</span>.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-80">
                                          <ChartContainer config={{}} className='w-full h-full'>
                                             <PieChart>
                                                 <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                                                <Pie data={aggregatedPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${(percent * 100).toFixed(0)}%`}>
+                                                <Pie data={aggregatedPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" labelLine={false} label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}>
                                                     {aggregatedPieData.map((entry, index) => (
-                                                        <Cell 
-                                                            key={`cell-${index}`} 
-                                                            fill={COLORS[index % COLORS.length]}
-                                                            stroke="hsl(var(--card))"
-                                                            strokeWidth={2}
-                                                        />
+                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--card))" strokeWidth={2} />
                                                     ))}
                                                 </Pie>
-                                                <ChartLegend content={<ChartLegendContent />} />
+                                                <ChartLegend content={<ChartLegendContent nameKey="name"/>} />
                                             </PieChart>
                                         </ChartContainer>
                                     </CardContent>
                                 </Card>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle>Tipos de Archivo Procesados</CardTitle>
+                                        <CardTitle className="flex items-center gap-2"><LineChart/> Evolución Temporal</CardTitle>
+                                        <CardDescription>Tendencia de <span className='font-semibold text-primary'>{areaChartConfig.yAxis}</span> a lo largo del tiempo.</CardDescription>
                                     </CardHeader>
-                                    <CardContent className="h-64">
-                                        <ChartContainer config={{}} className='w-full h-full'>
-                                            <BarChart data={fileTypeUsage} layout="vertical" margin={{ left: 10 }}>
-                                                <XAxis type="number" hide />
-                                                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={80} fontSize={14} />
-                                                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                                                <Bar dataKey="usage" radius={[0, 4, 4, 0]}>
-                                                    {fileTypeUsage.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                    ))}
-                                                </Bar>
+                                    <CardContent className="h-72">
+                                        <ChartContainer config={{}} className="w-full h-full">
+                                            <ComposedChart data={filteredData}>
+                                                 <CartesianGrid vertical={false} />
+                                                 <XAxis dataKey={areaChartConfig.xAxis} tickLine={false} axisLine={false} tickMargin={8} />
+                                                 <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                                                 <ChartTooltip content={<ChartTooltipContent />} />
+                                                 <ChartLegend />
+                                                 <Area type="monotone" dataKey={areaChartConfig.yAxis} fill="hsl(var(--chart-2))" stroke="hsl(var(--chart-2))" fillOpacity={0.3} />
+                                                 <Line type="monotone" dataKey={areaChartConfig.yAxis} stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+                                            </ComposedChart>
+                                        </ChartContainer>
+                                    </CardContent>
+                                </Card>
+                                 <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2"><GitCompareArrows/> Comparativa de Métricas</CardTitle>
+                                        <CardDescription>Relación entre <span className='font-semibold text-primary'>{pieChartConfig.valueKey}</span> y <span className='font-semibold text-primary'>{areaChartConfig.yAxis}</span>.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-72">
+                                         <ChartContainer config={{}} className="w-full h-full">
+                                            <BarChart data={filteredData} layout="vertical">
+                                                <CartesianGrid horizontal={false} />
+                                                <XAxis type="number" />
+                                                <YAxis dataKey={areaChartConfig.xAxis} type="category" tickLine={false} axisLine={false} tickMargin={8} width={80} />
+                                                <ChartTooltip content={<ChartTooltipContent />} />
+                                                <ChartLegend />
+                                                <Bar dataKey={pieChartConfig.valueKey} stackId="a" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+                                                <Bar dataKey={areaChartConfig.yAxis} stackId="a" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} />
                                             </BarChart>
                                         </ChartContainer>
                                     </CardContent>
-                                </Card>
-                                <Card>
-                                    <CardHeader>
-                                        <div className="flex justify-between items-center">
-                                            <CardTitle>Tareas por Día</CardTitle>
-                                            <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
-                                        </div>
-                                        <CardDescription>Esta es una simulación de datos.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="h-48">
-                                         <ChartContainer config={{}} className="w-full h-full">
-                                            <AreaChart data={[
-                                                { day: 'Lun', tasks: 40 }, { day: 'Mar', tasks: 30 }, { day: 'Mié', tasks: 20 },
-                                                { day: 'Jue', tasks: 27 }, { day: 'Vie', tasks: 18 }, { day: 'Sáb', tasks: 23 },
-                                                { day: 'Dom', tasks: 34 }
-                                            ]} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                                                <defs>
-                                                    <linearGradient id="fillTasks" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
-                                                        <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
-                                                    </linearGradient>
-                                                </defs>
-                                                <XAxis dataKey="day" hide/>
-                                                <YAxis hide domain={['dataMin - 10', 'dataMax + 5']}/>
-                                                <ChartTooltip content={<ChartTooltipContent />} />
-                                                <Area dataKey="tasks" type="monotone" stroke="hsl(var(--chart-2))" fill="url(#fillTasks)" strokeWidth={2} />
-                                            </AreaChart>
-                                        </ChartContainer>
-                                    </CardContent>
-                                    <CardFooter className="flex justify-center text-sm text-muted-foreground">
-                                        <TrendingUp className="w-4 h-4 mr-1"/>
-                                        Simulación
-                                    </CardFooter>
-                                </Card>
-                                <Card>
-                                    <CardHeader>
-                                        <div className="flex justify-between items-center">
-                                            <CardTitle>Tasa de Éxito</CardTitle>
-                                            <MoreHorizontal className="w-4 h-4 text-muted-foreground"/>
-                                        </div>
-                                        <CardDescription>Procesos completados vs. errores.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="h-48 flex items-center justify-center">
-                                        <div className="relative h-40 w-40">
-                                            <ChartContainer config={{}} className='w-full h-full'>
-                                                <PieChart>
-                                                    <Pie 
-                                                        data={[{name: 'success', value: 100}]} 
-                                                        dataKey="value"
-                                                        startAngle={90} 
-                                                        endAngle={-270} 
-                                                        innerRadius="75%" 
-                                                        outerRadius="100%"
-                                                        strokeWidth={0}
-                                                    >
-                                                        <Cell key="success" fill="hsl(var(--chart-1))" />
-                                                    </Pie>
-                                                </PieChart>
-                                            </ChartContainer>
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                                <p className="text-3xl font-bold">100%</p>
-                                                <p className="text-sm text-muted-foreground">Éxito</p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter className="flex justify-center gap-4 text-sm text-muted-foreground">
-                                        <div className='flex items-center text-success'><CheckCircle className="w-4 h-4 mr-1"/> Filas: {analysisResult.total_rows}</div>
-                                        <div className='flex items-center text-destructive'><AlertCircle className="w-4 h-4 mr-1"/> Errores: 0</div>
-                                    </CardFooter>
                                 </Card>
                             </div>
                         </div>
@@ -411,7 +351,7 @@ export default function DataAnalysisPage() {
                 </div>
             </main>
 
-            {/* Upload Modal */}
+            {/* Modals */}
             <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
@@ -426,21 +366,16 @@ export default function DataAnalysisPage() {
                 </DialogContent>
             </Dialog>
             
-            {/* Projects Modal */}
             <Dialog open={isProjectsModalOpen} onOpenChange={setIsProjectsModalOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Mis Proyectos de Análisis</DialogTitle>
-                        <DialogDescription>Selecciona un proyecto guardado para cargarlo o crea uno nuevo.</DialogDescription>
+                        <DialogDescription>Selecciona un proyecto guardado para cargarlo.</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         {projects.length > 0 ? (
                             projects.map(proj => (
-                                <Card 
-                                    key={proj.id} 
-                                    className="hover:border-primary transition-colors cursor-pointer"
-                                    onClick={() => handleLoadProject(proj.id)}
-                                >
+                                <Card key={proj.id} className="hover:border-primary transition-colors cursor-pointer" onClick={() => handleLoadProject(proj.id)}>
                                     <CardHeader>
                                         <CardTitle className="text-base">{proj.name}</CardTitle>
                                         <CardDescription>Última modificación: {new Date(proj.updatedAt).toLocaleDateString()}</CardDescription>
@@ -454,18 +389,6 @@ export default function DataAnalysisPage() {
                             </div>
                         )}
                     </div>
-                     <div className='flex flex-col sm:flex-row gap-2 border-t pt-4'>
-                        <Button 
-                            variant="secondary" 
-                            className="w-full"
-                            onClick={() => {
-                                setIsProjectsModalOpen(false);
-                                setIsUploadModalOpen(true);
-                            }}
-                        >
-                            <UploadCloud className="mr-2 h-4 w-4"/> Cargar Nuevo Archivo
-                        </Button>
-                     </div>
                 </DialogContent>
             </Dialog>
         </>
