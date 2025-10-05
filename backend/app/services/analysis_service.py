@@ -134,10 +134,12 @@ async def get_file_analysis(file_id: str, user_id: str) -> schemas.AnalysisResul
     
     basic_stats = df[numerical_cols].describe().to_dict() if numerical_cols else {}
     
-    # Sanitize basic_stats para que 'count' sea int y solucionar el TypeError de Pydantic
+    # --- INICIO DE LA CORRECCIÓN ---
+    # Sanitizar basic_stats para asegurar que 'count' sea int y solucionar el TypeError de Pydantic
     for col_stats in basic_stats.values():
         if 'count' in col_stats and pd.notna(col_stats['count']):
             col_stats['count'] = int(col_stats['count'])
+    # --- FIN DE LA CORRECCIÓN ---
     
     # Obtener muestra de datos para evitar errores de serialización
     sample_data = df.head(100).to_dict(orient='records')
