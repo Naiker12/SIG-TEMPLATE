@@ -15,7 +15,7 @@ import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
+import { AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 import { useToast } from '@/hooks/use-toast';
 import { getProjects, createProject, uploadFileForAnalysis, getFileAnalysis } from '@/services/analysisService';
@@ -345,7 +345,24 @@ export default function DataAnalysisPage() {
                                         <CardDescription>Esta es una simulación de datos.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-48">
-                                        <p className="text-center text-muted-foreground h-full flex items-center justify-center">Gráfico de ejemplo.</p>
+                                         <ChartContainer config={{}} className="w-full h-full">
+                                            <AreaChart data={[
+                                                { day: 'Lun', tasks: 40 }, { day: 'Mar', tasks: 30 }, { day: 'Mié', tasks: 20 },
+                                                { day: 'Jue', tasks: 27 }, { day: 'Vie', tasks: 18 }, { day: 'Sáb', tasks: 23 },
+                                                { day: 'Dom', tasks: 34 }
+                                            ]} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="fillTasks" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <XAxis dataKey="day" hide/>
+                                                <YAxis hide domain={['dataMin - 10', 'dataMax + 5']}/>
+                                                <ChartTooltip content={<ChartTooltipContent />} />
+                                                <AreaChart dataKey="tasks" type="monotone" stroke="hsl(var(--chart-2))" fill="url(#fillTasks)" strokeWidth={2} />
+                                            </AreaChart>
+                                        </ChartContainer>
                                     </CardContent>
                                     <CardFooter className="flex justify-center text-sm text-muted-foreground">
                                         <TrendingUp className="w-4 h-4 mr-1"/>
@@ -373,7 +390,7 @@ export default function DataAnalysisPage() {
                                                         outerRadius="100%"
                                                         strokeWidth={0}
                                                     >
-                                                        <Cell key="success" fill="hsl(var(--chart-2))" />
+                                                        <Cell key="success" fill="hsl(var(--chart-1))" />
                                                     </Pie>
                                                 </PieChart>
                                             </ChartContainer>
