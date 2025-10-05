@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-py"
+  provider      = "prisma-client-py"
+  binaryTargets = ["native", "windows"]
 }
 
 datasource db {
@@ -11,28 +12,25 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  name          String
-  email         String         @unique
-  password      String
-  bio           String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  roleId        String
-  role          Role           @relation(fields: [roleId], references: [id])
-  files         File[]
-  uploadedFiles FileMetadata[]
-  projects      Project[]
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  bio       String?
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  files     File[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("Usuario")
+  FileMetadata FileMetadata[]
+  Project      Project[]
 }
 
 model Role {
-  id   String @id @default(uuid())
-  name String @unique
-  User User[]
-
-  @@map("Role")
+  id    String @id @default(uuid())
+  name  String @unique
+  users User[]
 }
 
 model File {
@@ -41,40 +39,39 @@ model File {
   fileType  String
   size      Int
   status    String
-  createdAt DateTime @default(now())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-
-  @@map("File")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model FileMetadata {
-  id         String    @id @default(uuid())
-  filename   String
-  filetype   String
-  filepath   String
-  columns    String[]
-  rows_count Int
-  size       Int
-  uploadedAt DateTime  @default(now())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id])
-  projects   Project[]
+// ------------------------------------
+// -- Nuevos modelos para el módulo de análisis
+// ------------------------------------
 
-  @@map("FileMetadata")
+model FileMetadata {
+  id          String    @id @default(uuid())
+  filename    String
+  filetype    String
+  filepath    String // URL pública de Supabase Storage
+  columns     Json
+  rows_count  Int
+  size        Int
+  uploadedAt  DateTime  @default(now())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  projects    Project[]
 }
 
 model Project {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
-  fileId      String
-  config      Json
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  config      Json // Configuración del dashboard (gráficos, filtros, etc.)
   userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+  fileId      String
   file        FileMetadata @relation(fields: [fileId], references: [id])
-
-  @@map("Project")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
