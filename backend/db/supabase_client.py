@@ -16,9 +16,9 @@ if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
         )
     except Exception as e:
         # Si las variables de entorno están presentes pero fallan, es un error de configuración.
-        print(f"ERROR: No se pudo inicializar el cliente de Supabase. Revisa que tus variables de entorno SUPABASE_URL y SUPABASE_ANON_KEY sean correctas.")
+        print(f"ERROR: No se pudo inicializar el cliente de Supabase. Revisa que tus variables de entorno SUPABASE_URL y SUPABASE_ANON_KEY sean correctas en el archivo backend/.env.")
         print(f"Detalle del error: {e}")
         supabase = None
 else:
     # Mensaje informativo si las variables no están configuradas. La app arrancará, pero las funciones que usan Supabase Storage no funcionarán.
-    print("INFO: Las variables de entorno de Supabase (SUPABASE_URL, SUPABASE_ANON_KEY) no están configuradas. La subida de archivos de análisis no funcionará.")
+    print("INFO: Las variables de entorno de Supabase (SUPABASE_URL, SUPABASE_ANON_KEY) no están configuradas en el archivo backend/.env. La subida de archivos para análisis no funcionará.")
