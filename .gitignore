@@ -1,36 +1,28 @@
-# Dependencias y artefactos de construcción de Node.js
-/frontend/node_modules
-/frontend/.next
-/frontend/out
-/frontend/build
+# Entorno virtual de Python
+.venv/
+__pycache__/
+*.pyc
+
+# Dependencias de Node.js
+node_modules/
+
+# Archivos de compilación de Next.js
+.next/
+out/
+
+# Archivos de entorno
+# ¡IMPORTANTE! No subir credenciales al repositorio.
+.env
+.env*.local
+
+# Logs y archivos temporales
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnp
-.pnp.js
+uploads/
+outputs/
+temp_files/
 
-# Archivos de entorno del Frontend
-/frontend/.env
-/frontend/.env.local
-/frontend/.env.development
-/frontend/.env.production
-
-# Dependencias y artefactos de Python
-/backend/.venv
-/backend/__pycache__
-/backend/uploads
-/backend/outputs
-/backend/temp_files
-*.pyc
-*.pyo
-*.pyd
-
-# Archivo de entorno del Backend
-/backend/.env
-
-# Otros
+# Sistema Operativo
 .DS_Store
-*.tmp
-*.bak
-*.swp
-node_modules
+Thumbs.db

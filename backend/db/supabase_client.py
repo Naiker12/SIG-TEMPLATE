@@ -21,4 +21,10 @@ if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
         supabase = None
 else:
     # Mensaje informativo si las variables no están configuradas. La app arrancará, pero las funciones que usan Supabase Storage no funcionarán.
-    print("INFO: Las variables de entorno de Supabase (SUPABASE_URL, SUPABASE_ANON_KEY) no están configuradas en el archivo backend/.env. La subida de archivos para análisis no funcionará.")
+    print("------------------------------------------------------------------------------------")
+    print("INFO: Las variables de entorno de Supabase (SUPABASE_URL, SUPABASE_ANON_KEY) no están")
+    print("      configuradas en el archivo backend/.env.")
+    print("      La subida de archivos para análisis y otras funciones de almacenamiento no funcionarán.")
+    print("      Copia `backend/.env.example` a `backend/.env` y rellena tus credenciales.")
+    print("------------------------------------------------------------------------------------")
+
