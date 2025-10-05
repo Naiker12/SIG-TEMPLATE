@@ -13,7 +13,7 @@ import { useLoadingStore } from '@/hooks/use-loading-store';
 import { useAuthStore } from '@/hooks/useAuthStore';
 import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
 import { useChartConfigStore } from '@/hooks/use-chart-config-store';
