@@ -15,7 +15,7 @@ import { KpiCard } from '@/components/analisis-de-datos/KpiCard';
 import { DataFilters } from '@/components/analisis-de-datos/DataFilters';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
+import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import { useChartConfigStore } from '@/hooks/use-chart-config-store';
 import { useToast } from '@/hooks/use-toast';
 import { getProjects, createProject, uploadFileForAnalysis, getFileAnalysis } from '@/services/analysisService';
@@ -360,7 +360,7 @@ export default function DataAnalysisPage() {
                                                 <XAxis dataKey="day" hide/>
                                                 <YAxis hide domain={['dataMin - 10', 'dataMax + 5']}/>
                                                 <ChartTooltip content={<ChartTooltipContent />} />
-                                                <AreaChart dataKey="tasks" type="monotone" stroke="hsl(var(--chart-2))" fill="url(#fillTasks)" strokeWidth={2} />
+                                                <Area dataKey="tasks" type="monotone" stroke="hsl(var(--chart-2))" fill="url(#fillTasks)" strokeWidth={2} />
                                             </AreaChart>
                                         </ChartContainer>
                                     </CardContent>
@@ -401,8 +401,8 @@ export default function DataAnalysisPage() {
                                         </div>
                                     </CardContent>
                                     <CardFooter className="flex justify-center gap-4 text-sm text-muted-foreground">
-                                        <div className='flex items-center text-green-500'><CheckCircle className="w-4 h-4 mr-1"/> Filas: {analysisResult.total_rows}</div>
-                                        <div className='flex items-center text-red-500'><AlertCircle className="w-4 h-4 mr-1"/> Errores: 0</div>
+                                        <div className='flex items-center text-success'><CheckCircle className="w-4 h-4 mr-1"/> Filas: {analysisResult.total_rows}</div>
+                                        <div className='flex items-center text-destructive'><AlertCircle className="w-4 h-4 mr-1"/> Errores: 0</div>
                                     </CardFooter>
                                 </Card>
                             </div>

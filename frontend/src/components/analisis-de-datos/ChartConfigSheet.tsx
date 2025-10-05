@@ -45,7 +45,7 @@ export function ChartConfigSheet() {
         <SheetHeader>
           <SheetTitle>Configuración de Gráficos</SheetTitle>
           <SheetDescription>
-            Selecciona las columnas para personalizar los gráficos. Los cambios se aplicarán en tiempo real.
+            Selecciona las columnas de tus datos para personalizar los gráficos del dashboard. Los cambios se aplicarán en tiempo real.
           </SheetDescription>
         </SheetHeader>
         {noColumnsAvailable ? (
