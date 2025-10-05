@@ -7,7 +7,7 @@ fastapi==0.111.0
 uvicorn[standard]==0.30.0
 
 # ORM Prisma
-prisma==0.14.1
+prisma==0.14.0
 
 # Variables de entorno
 python-dotenv==1.0.1
