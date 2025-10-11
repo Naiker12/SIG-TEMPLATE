@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -20,12 +20,24 @@ import {
   type OnNodesChange,
   type OnEdgesChange,
   type OnConnect,
+  type DefaultEdgeOptions,
+  type NodeTypes,
 } from '@xyflow/react';
+import { InputNode } from '@/components/transformacion/custom-nodes/InputNode';
 
 import '@xyflow/react/dist/style.css';
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
+
+const defaultEdgeOptions: DefaultEdgeOptions = {
+  animated: true,
+  type: 'smoothstep',
+  style: {
+    strokeWidth: 2,
+    strokeDasharray: '5,5',
+  },
+};
 
 let nodeId = 0;
 
@@ -33,6 +45,12 @@ export default function DataTransformationPage() {
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Memoize nodeTypes to avoid re-renders
+  const nodeTypes: NodeTypes = useMemo(() => ({
+      inputNode: InputNode,
+      // We can add more custom nodes here
+  }), []);
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -48,14 +66,12 @@ export default function DataTransformationPage() {
   );
 
   const handleNodeSelect = (nodeType: string) => {
+    // For now, we'll map all inputs to a generic 'inputNode' type
     const newNode: Node = {
       id: `${++nodeId}`,
-      type: 'default', // Usaremos un tipo genérico por ahora
+      type: 'inputNode', // Use the custom node type
       position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: { label: `${nodeType}` },
-       // Añadimos puntos de conexión
-      sourcePosition: 'right',
-      targetPosition: 'left',
+      data: { nodeType: nodeType },
     };
     setNodes((nds) => nds.concat(newNode));
     setIsModalOpen(false);
@@ -72,9 +88,11 @@ export default function DataTransformationPage() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                defaultEdgeOptions={defaultEdgeOptions}
                 fitView
             >
-                <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+                <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
                 <Controls />
                 <MiniMap />
             </ReactFlow>

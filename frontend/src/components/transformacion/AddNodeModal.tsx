@@ -14,10 +14,14 @@ interface AddNodeModalProps {
 }
 
 const NodeCard = ({ node, onSelect }: { node: NodeDefinition, onSelect: (type: string) => void }) => (
-    <Card className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => onSelect(node.type)}>
+    <Card 
+      className="hover:border-primary/80 transition-colors cursor-pointer bg-card/50 hover:bg-muted" 
+      onClick={() => onSelect(node.type)}
+    >
         <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-                {node.icon} {node.title}
+            <CardTitle className="text-base flex items-center gap-3">
+                <span className="text-primary">{node.icon}</span>
+                {node.title}
             </CardTitle>
         </CardHeader>
         <CardContent>
@@ -39,10 +43,10 @@ export function AddNodeModal({ isOpen, onOpenChange, onNodeSelect = () => {} }: 
         </DialogHeader>
         <div className="flex-1 overflow-hidden">
            <Tabs defaultValue={NODE_CATEGORIES[0].id} className="h-full flex flex-col md:flex-row gap-6 p-6">
-                <TabsList className="flex flex-col h-auto justify-start p-2 gap-1 w-full md:w-64">
+                <TabsList className="flex flex-col h-auto justify-start p-2 gap-1 w-full md:w-64 bg-transparent border-r">
                     {NODE_CATEGORIES.map(category => (
-                        <TabsTrigger key={category.id} value={category.id} className="w-full justify-start text-base py-2 px-4">
-                           <span className="mr-3">{category.icon}</span> {category.title}
+                        <TabsTrigger key={category.id} value={category.id} className="w-full justify-start text-base py-2.5 px-4 data-[state=active]:bg-muted data-[state=active]:shadow-none">
+                           <span className="mr-3 text-lg">{category.icon}</span> {category.title}
                         </TabsTrigger>
                     ))}
                 </TabsList>
