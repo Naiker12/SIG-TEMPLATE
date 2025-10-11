@@ -22,9 +22,11 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         title: 'Cargar Datos',
         icon: '🟦',
         nodes: [
-            { type: 'fileInput', title: 'Archivo Local', description: 'Carga un archivo CSV o Excel desde tu computador.', icon: <FileInput /> },
-            { type: 'dbInput', title: 'Base de Datos', description: 'Conéctate a una base de datos para extraer datos.', icon: <Database /> },
-            { type: 'apiInput', title: 'API Externa', description: 'Importa datos desde un punto final de API REST.', icon: <UploadCloud /> },
+            { type: 'LOAD_CSV', title: 'Archivo CSV', description: 'Carga un archivo CSV desde tu dispositivo.', icon: <FileInput /> },
+            { type: 'LOAD_EXCEL', title: 'Archivo Excel', description: 'Carga un archivo .xlsx o .xls y selecciona una hoja.', icon: <FileInput /> },
+            { type: 'LOAD_JSON', title: 'Archivo JSON', description: 'Importa datos desde un archivo JSON.', icon: <FileInput /> },
+            { type: 'LOAD_SUPABASE', title: 'Tabla de Supabase', description: 'Conéctate a una tabla o vista de Supabase.', icon: <Database /> },
+            { type: 'LOAD_API', title: 'API Externa', description: 'Extrae datos desde un punto final de API REST.', icon: <UploadCloud /> },
         ]
     },
     {

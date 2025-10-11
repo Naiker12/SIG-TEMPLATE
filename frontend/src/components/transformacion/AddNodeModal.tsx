@@ -13,8 +13,8 @@ interface AddNodeModalProps {
   onNodeSelect?: (nodeType: string) => void;
 }
 
-const NodeCard = ({ node }: { node: NodeDefinition }) => (
-    <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+const NodeCard = ({ node, onSelect }: { node: NodeDefinition, onSelect: (type: string) => void }) => (
+    <Card className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => onSelect(node.type)}>
         <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
                 {node.icon} {node.title}
@@ -27,7 +27,7 @@ const NodeCard = ({ node }: { node: NodeDefinition }) => (
 );
 
 
-export function AddNodeModal({ isOpen, onOpenChange, onNodeSelect }: AddNodeModalProps) {
+export function AddNodeModal({ isOpen, onOpenChange, onNodeSelect = () => {} }: AddNodeModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[70vh] flex flex-col p-0">
@@ -52,7 +52,7 @@ export function AddNodeModal({ isOpen, onOpenChange, onNodeSelect }: AddNodeModa
                             <ScrollArea className="h-full pr-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {category.nodes.map(node => (
-                                        <NodeCard key={node.type} node={node} />
+                                        <NodeCard key={node.type} node={node} onSelect={onNodeSelect} />
                                     ))}
                                     {category.nodes.length === 0 && (
                                         <div className="col-span-2 text-center text-muted-foreground py-16">
