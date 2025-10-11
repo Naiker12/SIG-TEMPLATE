@@ -138,6 +138,7 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
                 </div>
             );
         case 'CALCULATE_COLUMN':
+        case 'CALCULATE_METRIC':
             return (
                  <div className="flex items-center gap-2">
                     <Label htmlFor={`calc-input-${id}`} className="text-xs whitespace-nowrap text-muted-foreground">f(x) =</Label>
@@ -170,12 +171,20 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
                     </Select>
                 </div>
             );
+        
+        // --- GENERIC CONFIG NODES ---
         case 'REMOVE_DUPLICATES':
         case 'REMOVE_NULLS':
         case 'SELECT_COLUMNS':
         case 'SORT_DATA':
         case 'NORMALIZE_TEXT':
         case 'VALIDATE_SCHEMA':
+        case 'AGGREGATE_STATS':
+        case 'SUMMARIZE_DATA':
+        case 'DATE_EXTRACT':
+        case 'RANK_VALUES':
+        case 'CORRELATION_MATRIX':
+        case 'DETECT_OUTLIERS':
             return (
                 <Button variant="outline" size="sm" className="w-full">
                     <Cog className="mr-2 h-4 w-4" />

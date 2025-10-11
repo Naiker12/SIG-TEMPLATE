@@ -1,5 +1,5 @@
 
-import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow, Split, GitMerge, FileX2, FilterX, Eraser, Columns, SortAsc, CaseSensitive, CheckSquare } from 'lucide-react';
+import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow, Split, GitMerge, FileX2, FilterX, Eraser, Columns, SortAsc, CaseSensitive, CheckSquare, TrendingUp, Sparkles, SlidersHorizontal } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export type NodeDefinition = {
@@ -61,7 +61,13 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         title: 'Análisis y Cálculos',
         icon: '🟧',
         nodes: [
-            { type: 'aggregateData', title: 'Agrupar y Agregar', description: 'Realiza cálculos como suma, promedio, etc.', icon: <Sigma /> },
+            { type: 'AGGREGATE_STATS', title: 'Agrupar y Resumir', description: 'Agrupa datos por categoría y calcula estadísticas (suma, promedio...).', icon: <Sigma /> },
+            { type: 'SUMMARIZE_DATA', title: 'Resumen Estadístico', description: 'Calcula estadísticas descriptivas generales del dataset.', icon: <SlidersHorizontal /> },
+            { type: 'CALCULATE_METRIC', title: 'Calcular Métrica', description: 'Crea una nueva columna con métricas personalizadas (KPIs).', icon: <Calculator /> },
+            { type: 'DATE_EXTRACT', title: 'Extraer de Fecha', description: 'Extrae componentes de una fecha (año, mes, día, trimestre...).', icon: <Split /> },
+            { type: 'RANK_VALUES', title: 'Ranking de Valores', description: 'Asigna un ranking a los valores basado en una métrica.', icon: <TrendingUp /> },
+            { type: 'CORRELATION_MATRIX', title: 'Matriz de Correlación', description: 'Calcula la correlación entre variables numéricas.', icon: <Sparkles /> },
+            { type: 'DETECT_OUTLIERS', title: 'Detectar Outliers', description: 'Detecta valores atípicos usando métodos estadísticos.', icon: <FilterX /> },
         ]
     },
     {
