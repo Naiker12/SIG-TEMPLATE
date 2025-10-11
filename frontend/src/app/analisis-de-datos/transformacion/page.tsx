@@ -36,6 +36,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   style: {
     strokeWidth: 2,
     strokeDasharray: '5,5',
+    stroke: 'hsl(var(--primary))'
   },
 };
 
@@ -97,7 +98,7 @@ export default function DataTransformationPage() {
                 <MiniMap />
             </ReactFlow>
             <div className="absolute top-4 left-4 z-10">
-              <Button size="lg" onClick={() => setIsModalOpen(true)}>
+              <Button size="lg" onClick={() => setIsModalOpen(true)} className="rounded-full shadow-lg">
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Agregar Nodo
               </Button>
