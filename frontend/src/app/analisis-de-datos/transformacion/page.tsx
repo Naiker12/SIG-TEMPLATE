@@ -6,6 +6,7 @@ import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { AddNodeModal } from '@/components/transformacion/AddNodeModal';
+import { BottomPanel } from '@/components/transformacion/BottomPanel';
 import {
   ReactFlow,
   Background,
@@ -103,6 +104,7 @@ export default function DataTransformationPage() {
                 Agregar Nodo
               </Button>
             </div>
+            <BottomPanel />
         </main>
         <AddNodeModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} onNodeSelect={handleNodeSelect} />
     </div>
