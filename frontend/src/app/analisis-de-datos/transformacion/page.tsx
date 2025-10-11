@@ -8,9 +8,9 @@ import ReactFlow, {
   BackgroundVariant,
   Controls,
   MiniMap,
-} from 'reactflow';
+} from '@xyflow/react';
 
-import 'reactflow/dist/style.css';
+import '@xyflow/react/dist/style.css';
 
 export default function DataTransformationPage() {
   return (
