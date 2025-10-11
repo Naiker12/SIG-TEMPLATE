@@ -30,7 +30,7 @@ export function NodeWrapper({ nodeDef, children }: NodeWrapperProps) {
         style={handleStyle}
         className="nodrag"
       />
-      <Card className="w-64 border-2 border-primary/40 shadow-lg bg-card">
+      <Card className="w-72 border-2 border-primary/40 shadow-lg bg-card">
         <CardHeader className="p-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base flex items-center gap-3">
             <span className="text-primary">{nodeDef?.icon}</span>

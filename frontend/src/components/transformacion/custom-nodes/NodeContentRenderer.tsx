@@ -1,7 +1,6 @@
 
 'use client';
 
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, Link as LinkIcon, Database, Cog } from 'lucide-react';
@@ -18,7 +17,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Checkbox } from '@/components/ui/checkbox';
-
+import { Bar, BarChart, ResponsiveContainer } from 'recharts';
 
 const ApiHeaderSheet = () => (
   <Sheet>
@@ -50,8 +49,12 @@ const ApiHeaderSheet = () => (
   </Sheet>
 );
 
+const chartPreviewData = [
+  { value: 10 }, { value: 25 }, { value: 15 }, { value: 30 }, { value: 20 }, { value: 40 },
+];
+
 const ChartNodeContent = () => (
-    <div className='space-y-2 text-left'>
+    <div className='space-y-3 text-left'>
         <div className="grid grid-cols-[auto_1fr] items-center gap-2">
             <Label htmlFor='x-axis' className='text-xs'>x-axis</Label>
             <Select><SelectTrigger className="h-8 text-xs"><SelectValue placeholder="population" /></SelectTrigger><SelectContent><SelectItem value="pop">population</SelectItem></SelectContent></Select>
@@ -60,12 +63,16 @@ const ChartNodeContent = () => (
             <Label htmlFor='y-axis' className='text-xs'>y-axis</Label>
             <Select><SelectTrigger className="h-8 text-xs"><SelectValue placeholder="population" /></SelectTrigger><SelectContent><SelectItem value="pop">population</SelectItem></SelectContent></Select>
         </div>
-        <div className="flex items-center space-x-2 pt-2">
+        <div className="flex items-center space-x-2 pt-1">
             <Checkbox id="horizontal"/>
             <Label htmlFor='horizontal' className='text-xs font-normal'>horizontal</Label>
         </div>
-        <div className='relative mt-2 h-24 w-full bg-muted/50 rounded-md overflow-hidden'>
-             <Image src="/barchart-placeholder.png" alt="Chart placeholder" layout="fill" objectFit="cover" />
+        <div className='relative mt-2 h-32 w-full bg-muted/30 rounded-md p-2'>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartPreviewData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={2} />
+                </BarChart>
+            </ResponsiveContainer>
         </div>
     </div>
 );
