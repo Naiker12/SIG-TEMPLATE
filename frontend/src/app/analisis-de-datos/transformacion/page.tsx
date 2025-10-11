@@ -1,9 +1,9 @@
-
 'use client';
 
 import { TopBar } from "@/components/dashboard/topbar";
 import React, { useCallback } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   BackgroundVariant,
   Controls,
