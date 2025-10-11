@@ -4,7 +4,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, PanelBottom } from 'lucide-react';
 import { AddNodeModal } from '@/components/transformacion/AddNodeModal';
 import { BottomPanel } from '@/components/transformacion/BottomPanel';
 import {
@@ -98,7 +98,7 @@ export default function DataTransformationPage() {
                 <Controls />
                 <MiniMap />
             </ReactFlow>
-            <div className="absolute top-4 right-4 z-10">
+            <div className="absolute top-4 right-16 z-10">
               <Button size="lg" onClick={() => setIsModalOpen(true)} className="rounded-full shadow-lg">
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Agregar Nodo

@@ -1,5 +1,5 @@
 
-import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow } from 'lucide-react';
+import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow, Split, GitMerge } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export type NodeDefinition = {
@@ -34,8 +34,11 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         title: 'Transformación',
         icon: '🟨',
         nodes: [
-            { type: 'changeType', title: 'Cambiar Tipo de Dato', description: 'Modifica el tipo de una columna (ej. texto a número).', icon: <Type /> },
-            { type: 'renameColumn', title: 'Renombrar Columna', description: 'Cambia el nombre de una o más columnas.', icon: <Rows /> },
+            { type: 'RENAME_COLUMNS', title: 'Renombrar Columnas', description: 'Cambia el nombre de una o más columnas.', icon: <Rows /> },
+            { type: 'CONVERT_DATATYPE', title: 'Cambiar Tipo de Dato', description: 'Modifica el tipo de una columna (texto, número, fecha...).', icon: <Type /> },
+            { type: 'MERGE_COLUMNS', title: 'Unir Columnas', description: 'Combina varias columnas en una sola.', icon: <GitMerge /> },
+            { type: 'SPLIT_COLUMN', title: 'Dividir Columna', description: 'Divide una columna en varias según un delimitador.', icon: <Split /> },
+            { type: 'CALCULATE_COLUMN', title: 'Calcular Columna', description: 'Crea una nueva columna aplicando fórmulas o expresiones.', icon: <Calculator /> },
         ]
     },
     {
@@ -52,7 +55,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         title: 'Análisis y Cálculos',
         icon: '🟧',
         nodes: [
-            { type: 'calculateColumn', title: 'Columna Calculada', description: 'Crea una nueva columna a partir de una fórmula.', icon: <Calculator /> },
             { type: 'aggregateData', title: 'Agrupar y Agregar', description: 'Realiza cálculos como suma, promedio, etc.', icon: <Sigma /> },
         ]
     },
