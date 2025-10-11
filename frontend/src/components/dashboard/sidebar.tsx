@@ -127,7 +127,7 @@ export function DashboardSidebar() {
         <div className="flex h-16 items-center px-4 shrink-0 justify-between">
           <Link href="/" className={cn("flex items-center gap-2.5", !isOpen && "w-10 justify-center")}>
             <Image
-              src="/png/logo-256.png"
+              src="/logo-256.png"
               alt="SIG Logo"
               width={32}
               height={32}
