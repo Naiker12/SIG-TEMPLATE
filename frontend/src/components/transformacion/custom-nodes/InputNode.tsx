@@ -5,7 +5,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Link as LinkIcon, Database, Cog, Type, Rows, GitMerge, Split, Calculator, Filter, Eraser } from 'lucide-react';
+import { Upload, Link as LinkIcon, Database, Cog } from 'lucide-react';
 import { NODE_CATEGORIES } from '../node-types';
 import {
   Sheet,
@@ -101,7 +101,7 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
                 <div className="space-y-2 text-left">
                     <div className="flex items-center gap-2">
                         <Input placeholder="Nombre Antiguo" className="h-8 text-xs"/>
-                        <Rows className="h-4 w-4 text-muted-foreground"/>
+                        <span className='font-bold text-muted-foreground'>→</span>
                         <Input placeholder="Nombre Nuevo" className="h-8 text-xs"/>
                     </div>
                 </div>
@@ -123,13 +123,6 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
                     </Select>
                 </div>
             );
-        case 'MERGE_COLUMNS':
-            return (
-                <Button variant="outline" size="sm" className="w-full">
-                    <GitMerge className="mr-2 h-4 w-4" />
-                    Seleccionar Columnas
-                </Button>
-            );
         case 'SPLIT_COLUMN':
             return (
                  <div className="flex items-center gap-2">
@@ -146,13 +139,33 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
                 </div>
             );
         
-        // --- CLEANING NODES ---
-        case 'FILTER_ROWS':
-             return (
-                 <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground"/>
-                    <Input id={`filter-input-${id}`} placeholder="Ej: columna_1 > 100" className="h-8 text-xs font-mono"/>
-                </div>
+        // --- CLEANING & GENERIC NODES ---
+        case 'MERGE_COLUMNS':
+        case 'REMOVE_DUPLICATES':
+        case 'REMOVE_NULLS':
+        case 'SELECT_COLUMNS':
+        case 'SORT_DATA':
+        case 'NORMALIZE_TEXT':
+        case 'VALIDATE_SCHEMA':
+        case 'AGGREGATE_STATS':
+        case 'SUMMARIZE_DATA':
+        case 'DATE_EXTRACT':
+        case 'RANK_VALUES':
+        case 'CORRELATION_MATRIX':
+        case 'DETECT_OUTLIERS':
+        case 'BAR_CHART':
+        case 'LINE_CHART':
+        case 'PIE_CHART':
+        case 'SCATTER_PLOT':
+        case 'HEATMAP':
+        case 'TABLE_VIEW':
+        case 'SUMMARY_CARD':
+        case 'DATA_LIMITER':
+            return (
+                <Button variant="outline" size="sm" className="w-full">
+                    <Cog className="mr-2 h-4 w-4" />
+                    Configurar Nodo
+                </Button>
             );
         case 'FILL_NULLS':
             return (
@@ -171,28 +184,12 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
                     </Select>
                 </div>
             );
-        
-        // --- GENERIC CONFIG NODES ---
-        case 'REMOVE_DUPLICATES':
-        case 'REMOVE_NULLS':
-        case 'SELECT_COLUMNS':
-        case 'SORT_DATA':
-        case 'NORMALIZE_TEXT':
-        case 'VALIDATE_SCHEMA':
-        case 'AGGREGATE_STATS':
-        case 'SUMMARIZE_DATA':
-        case 'DATE_EXTRACT':
-        case 'RANK_VALUES':
-        case 'CORRELATION_MATRIX':
-        case 'DETECT_OUTLIERS':
-            return (
-                <Button variant="outline" size="sm" className="w-full">
-                    <Cog className="mr-2 h-4 w-4" />
-                    Configurar Regla
-                </Button>
+        case 'FILTER_ROWS':
+             return (
+                 <div className="flex items-center gap-2">
+                    <Input id={`filter-input-${id}`} placeholder="Ej: columna_1 > 100" className="h-8 text-xs font-mono"/>
+                </div>
             );
-
-
         default:
             return <p className='text-xs text-muted-foreground'>Nodo no configurado.</p>;
     }

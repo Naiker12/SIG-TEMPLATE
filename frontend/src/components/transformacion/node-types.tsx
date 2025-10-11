@@ -1,5 +1,5 @@
 
-import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow, Split, GitMerge, FileX2, FilterX, Eraser, Columns, SortAsc, CaseSensitive, CheckSquare, TrendingUp, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow, Split, GitMerge, FileX2, FilterX, Eraser, Columns, SortAsc, CaseSensitive, CheckSquare, TrendingUp, Sparkles, SlidersHorizontal, Table2, Grid, ScatterChart, Rows3 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export type NodeDefinition = {
@@ -75,9 +75,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         title: 'Visualización',
         icon: '🟪',
         nodes: [
-            { type: 'barChart', title: 'Gráfico de Barras', description: 'Muestra los datos en un gráfico de barras.', icon: <BarChart /> },
-            { type: 'lineChart', title: 'Gráfico de Líneas', description: 'Visualiza tendencias a lo largo del tiempo.', icon: <LineChart /> },
-            { type: 'pieChart', title: 'Gráfico de Pastel', description: 'Muestra la proporción de categorías.', icon: <PieChart /> },
+            { type: 'BAR_CHART', title: 'Gráfico de Barras', description: 'Compara valores entre diferentes categorías.', icon: <BarChart /> },
+            { type: 'LINE_CHART', title: 'Gráfico de Líneas', description: 'Muestra tendencias a lo largo de un período de tiempo.', icon: <LineChart /> },
+            { type: 'PIE_CHART', title: 'Gráfico de Pastel', description: 'Muestra la proporción de cada categoría sobre un total.', icon: <PieChart /> },
+            { type: 'SCATTER_PLOT', title: 'Gráfico de Dispersión', description: 'Visualiza la relación entre dos variables numéricas.', icon: <ScatterChart /> },
+            { type: 'HEATMAP', title: 'Mapa de Calor', description: 'Representa la magnitud de un fenómeno en colores.', icon: <Grid /> },
+            { type: 'TABLE_VIEW', title: 'Vista de Tabla', description: 'Muestra los datos en una tabla interactiva.', icon: <Table2 /> },
+            { type: 'SUMMARY_CARD', title: 'Tarjeta de Resumen (KPI)', description: 'Muestra un indicador clave de rendimiento.', icon: <Calculator /> },
+            { type: 'DATA_LIMITER', title: 'Limitador de Datos', description: 'Controla el número de filas que pasan a la visualización.', icon: <Rows3 /> },
         ]
     },
     {
