@@ -97,7 +97,7 @@ export default function DataTransformationPage() {
                 <Controls />
                 <MiniMap />
             </ReactFlow>
-            <div className="absolute top-4 left-4 z-10">
+            <div className="absolute top-4 right-4 z-10">
               <Button size="lg" onClick={() => setIsModalOpen(true)} className="rounded-full shadow-lg">
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Agregar Nodo
