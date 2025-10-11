@@ -93,3 +93,7 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.react-flow__panel {
+    @apply bg-card text-foreground border border-border rounded-lg p-2 shadow-lg;
+}
