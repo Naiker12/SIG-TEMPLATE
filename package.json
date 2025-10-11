@@ -3,14 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "frontend",
-    "backend"
+    "frontend"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
     "build": "npm run build --workspace=frontend",
     "start": "npm run start --workspace=frontend",
-    "lint": "npm run lint --workspace=frontend",
-    "postinstall": "npm install --workspace=frontend"
+    "lint": "npm run lint --workspace=frontend"
   }
 }
