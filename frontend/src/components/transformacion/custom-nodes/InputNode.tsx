@@ -22,9 +22,9 @@ import { Textarea } from '@/components/ui/textarea';
 const handleStyle = {
   width: '12px',
   height: '100%',
-  borderRadius: '3px',
   background: 'hsl(var(--primary))',
   border: '2px solid hsl(var(--card))',
+  borderRadius: '3px'
 };
 
 const ApiHeaderSheet = () => (
@@ -97,14 +97,13 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
   }
 
   return (
-    // node__<id> class is used to prevent dragging from inside elements
-    <div className={`node__${id} group`}>
+    <div className="relative">
       <Handle
         type="target"
         position={Position.Left}
         id="a"
         style={handleStyle}
-        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        className="nodrag" // This class prevents the handle from blocking drag events on the node
       />
       <Card className="w-64 border-2 border-primary/40 shadow-lg bg-card">
         <CardHeader className="p-3">
@@ -122,7 +121,7 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
         position={Position.Right}
         id="b"
         style={handleStyle}
-        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        className="nodrag"
       />
     </div>
   );
