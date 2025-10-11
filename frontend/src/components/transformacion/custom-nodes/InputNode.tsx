@@ -5,7 +5,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Link as LinkIcon, Database, Cog, Type, Rows, GitMerge, Split, Calculator } from 'lucide-react';
+import { Upload, Link as LinkIcon, Database, Cog, Type, Rows, GitMerge, Split, Calculator, Filter, Eraser } from 'lucide-react';
 import { NODE_CATEGORIES } from '../node-types';
 import {
   Sheet,
@@ -144,6 +144,45 @@ export function InputNode({ data, id }: NodeProps<{ nodeType: string }>) {
                     <Input id={`calc-input-${id}`} placeholder="(col1 * col2)" className="h-8 text-xs font-mono"/>
                 </div>
             );
+        
+        // --- CLEANING NODES ---
+        case 'FILTER_ROWS':
+             return (
+                 <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground"/>
+                    <Input id={`filter-input-${id}`} placeholder="Ej: columna_1 > 100" className="h-8 text-xs font-mono"/>
+                </div>
+            );
+        case 'FILL_NULLS':
+            return (
+                <div className="space-y-2 text-left">
+                     <Select>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Rellenar en..." /></SelectTrigger>
+                        <SelectContent><SelectItem value="col1">Todas las columnas</SelectItem></SelectContent>
+                    </Select>
+                    <Select>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="con estrategia..." /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="mean">Promedio</SelectItem>
+                            <SelectItem value="median">Mediana</SelectItem>
+                            <SelectItem value="zero">Cero (0)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            );
+        case 'REMOVE_DUPLICATES':
+        case 'REMOVE_NULLS':
+        case 'SELECT_COLUMNS':
+        case 'SORT_DATA':
+        case 'NORMALIZE_TEXT':
+        case 'VALIDATE_SCHEMA':
+            return (
+                <Button variant="outline" size="sm" className="w-full">
+                    <Cog className="mr-2 h-4 w-4" />
+                    Configurar Regla
+                </Button>
+            );
+
 
         default:
             return <p className='text-xs text-muted-foreground'>Nodo no configurado.</p>;

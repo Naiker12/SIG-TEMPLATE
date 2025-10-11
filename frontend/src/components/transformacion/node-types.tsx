@@ -1,5 +1,5 @@
 
-import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow, Split, GitMerge } from 'lucide-react';
+import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow, Split, GitMerge, FileX2, FilterX, Eraser, Columns, SortAsc, CaseSensitive, CheckSquare } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export type NodeDefinition = {
@@ -46,8 +46,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         title: 'Limpieza y Filtrado',
         icon: '🟩',
         nodes: [
-            { type: 'filterRows', title: 'Filtrar Filas', description: 'Elimina filas basadas en una condición.', icon: <Filter /> },
-            { type: 'removeDuplicates', title: 'Eliminar Duplicados', description: 'Quita filas que son idénticas.', icon: <Trash2 /> },
+            { type: 'REMOVE_DUPLICATES', title: 'Eliminar Duplicados', description: 'Quita filas que son idénticas en columnas clave.', icon: <Trash2 /> },
+            { type: 'REMOVE_NULLS', title: 'Eliminar Nulos', description: 'Elimina filas o columnas que contengan valores vacíos.', icon: <FileX2 /> },
+            { type: 'FILL_NULLS', title: 'Rellenar Nulos', description: 'Rellena valores nulos con una estrategia definida (media, valor fijo, etc.).', icon: <Eraser /> },
+            { type: 'FILTER_ROWS', title: 'Filtrar Filas', description: 'Elimina filas basadas en una o más condiciones lógicas.', icon: <Filter /> },
+            { type: 'SELECT_COLUMNS', title: 'Seleccionar Columnas', description: 'Mantiene únicamente las columnas relevantes del dataset.', icon: <Columns /> },
+            { type: 'SORT_DATA', title: 'Ordenar Datos', description: 'Ordena el dataset por una o más columnas.', icon: <SortAsc /> },
+            { type: 'NORMALIZE_TEXT', title: 'Normalizar Texto', description: 'Limpia y estandariza columnas de texto (minúsculas, sin acentos...).', icon: <CaseSensitive /> },
+            { type: 'VALIDATE_SCHEMA', title: 'Validar Esquema', description: 'Comprueba que los datos cumplan con un formato y tipo definidos.', icon: <CheckSquare /> },
         ]
     },
     {
