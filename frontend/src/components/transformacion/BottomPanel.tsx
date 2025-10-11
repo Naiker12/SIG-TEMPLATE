@@ -15,9 +15,6 @@ const mockData = [
   { country: "Algeria", population: 42000000, "life expectancy": 77.9, income: 13700 },
   { country: "Andorra", population: 77000, "life expectancy": null, income: 51500 },
   { country: "Angola", population: 30800000, "life expectancy": 65.2, income: 5850 },
-  { country: "Antigua and Barbuda", population: 103000, "life expectancy": 77.6, income: 21000 },
-  { country: "Argentina", population: 44700000, "life expectancy": 77.0, income: 18900 },
-  { country: "Armenia", population: 2930000, "life expectancy": 76.0, income: 8660 },
 ];
 const mockColumns = [
   { accessorKey: "country", header: "Country" },
@@ -50,12 +47,12 @@ export function BottomPanel() {
       </SheetTrigger>
       <SheetContent
         side="bottom"
-        className="h-[40vh] p-0 flex flex-col"
+        className="h-[40vh] p-0 flex flex-col bg-card"
         onInteractOutside={(e) => e.preventDefault()}
       >
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-auto">
             {/* Data Output Section */}
-            <div className="flex flex-col h-full bg-muted/30 rounded-lg p-4">
+            <div className="flex flex-col h-full bg-background rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="font-semibold text-lg flex items-center gap-2 text-muted-foreground"><Table /> OUTPUT</h3>
                     <Button variant="outline" size="sm">
@@ -70,12 +67,12 @@ export function BottomPanel() {
             </div>
             
             {/* Logs Section */}
-            <div className="flex flex-col h-full bg-muted/30 rounded-lg p-4">
+            <div className="flex flex-col h-full bg-background rounded-lg p-4">
                 <h3 className="font-semibold text-lg mb-2 flex items-center gap-2 text-muted-foreground"><TerminalSquare /> LOGS</h3>
                 <Textarea
                     readOnly
                     value={mockLogs}
-                    className="h-full bg-background font-mono text-xs resize-none"
+                    className="h-full bg-muted/50 font-mono text-xs resize-none"
                 />
             </div>
         </div>
