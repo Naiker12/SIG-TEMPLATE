@@ -1,4 +1,5 @@
 
+
 import { Database, FileInput, UploadCloud, Type, Filter, Trash2, Rows, Calculator, Sigma, BarChart, LineChart, PieChart, FileOutput, Download, Workflow, Split, GitMerge, FileX2, FilterX, Eraser, Columns, SortAsc, CaseSensitive, CheckSquare, TrendingUp, Sparkles, SlidersHorizontal, Table2, Grid, ScatterChart, Rows3 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -37,7 +38,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
             { type: 'RENAME_COLUMNS', title: 'Renombrar Columnas', description: 'Cambia el nombre de una o más columnas.', icon: <Rows /> },
             { type: 'CONVERT_DATATYPE', title: 'Cambiar Tipo de Dato', description: 'Modifica el tipo de una columna (texto, número, fecha...).', icon: <Type /> },
             { type: 'MERGE_COLUMNS', title: 'Unir Columnas', description: 'Combina varias columnas en una sola.', icon: <GitMerge /> },
-            { type: 'SPLIT_COLUMN', title: 'Dividir Columna', description: 'Divide una columna en varias según un delimitador.', icon: <Split /> },
+            { type: 'SPLIT_COLUMN', title: 'Dividir Columna', description: 'Divide una columna en varias partes según un delimitador.', icon: <Split /> },
             { type: 'CALCULATE_COLUMN', title: 'Calcular Columna', description: 'Crea una nueva columna aplicando fórmulas o expresiones.', icon: <Calculator /> },
         ]
     },
