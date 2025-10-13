@@ -58,6 +58,7 @@ export default function FormatValidationPage() {
         setTimeout(() => {
             clearInterval(progressInterval);
             setValidationProgress(100);
+            setIsValidating(false);
             setValidationResult({
                 summary: { totalRows: 100, validRows: 92, invalidRows: 8 },
                 errors: [
@@ -67,19 +68,10 @@ export default function FormatValidationPage() {
                     { row: 73, column: "email", value: "luis.g@", error: "No es un email válido" },
                 ]
             });
-            setIsValidating(false);
         }, 2500);
     }
 
-    const renderContent = () => {
-        if (isValidating) {
-            return (
-                <motion.div key="progress" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                    <CircularProgressBar progress={validationProgress} message="Validando archivo..." />
-                </motion.div>
-            );
-        }
-
+    const renderResultContent = () => {
         if (!validationResult) {
             return (
                 <motion.div
@@ -168,6 +160,19 @@ export default function FormatValidationPage() {
         <>
             <TopBar />
             <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto pb-8">
+                 <AnimatePresence>
+                    {isValidating && (
+                        <motion.div
+                            key="loader"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                        >
+                            <CircularProgressBar progress={validationProgress} message="Validando archivo..." />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <div className="max-w-7xl mx-auto w-full">
                     <header className="mb-8">
                         <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Validación de Formato</h1>
@@ -268,7 +273,7 @@ export default function FormatValidationPage() {
                                 </CardHeader>
                                 <CardContent className="flex items-center justify-center min-h-[400px]">
                                     <AnimatePresence mode="wait">
-                                        {renderContent()}
+                                        {renderResultContent()}
                                     </AnimatePresence>
                                 </CardContent>
                             </Card>

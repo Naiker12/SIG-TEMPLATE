@@ -53,6 +53,7 @@ export default function ConvertToDatasetPage() {
         setTimeout(() => {
             clearInterval(progressInterval);
             setConversionProgress(100);
+            setIsConverting(false);
             setDataset({
                 name: `Dataset de ${file.name.split('.')[0]}`,
                 description: 'Dataset consolidado de las ventas trimestrales del año 2023.',
@@ -69,7 +70,6 @@ export default function ConvertToDatasetPage() {
                     { field: 'Region', type: 'string' },
                 ]
             });
-            setIsConverting(false);
         }, 2500);
     }
     
@@ -176,7 +176,13 @@ export default function ConvertToDatasetPage() {
                     </CardContent>
                 </Card>
 
+                <AnimatePresence>
                 {file && (
+                    <motion.div
+                         initial={{ opacity: 0, y: -20 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         exit={{ opacity: 0, y: -20 }}
+                    >
                     <Card className="shadow-lg border-2 border-accent">
                         <CardHeader>
                             <CardTitle>Paso 2: Configurar Dataset</CardTitle>
@@ -219,7 +225,9 @@ export default function ConvertToDatasetPage() {
                             </div>
                         </CardContent>
                     </Card>
+                    </motion.div>
                 )}
+                </AnimatePresence>
             </div>
 
             {/* Columna de Vista Previa y Acción */}

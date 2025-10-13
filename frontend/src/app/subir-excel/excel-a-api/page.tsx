@@ -58,9 +58,9 @@ export default function ExcelToApiPage() {
             setTimeout(() => {
                 clearInterval(progressInterval);
                 setProgress(100);
+                setIsProcessing(false);
                 setData(mockExcelData);
                 setApiName(`API de ${newFile.name.split('.')[0]}`);
-                setIsProcessing(false);
             }, 2500);
         }
     };
@@ -133,6 +133,19 @@ export default function ExcelToApiPage() {
         <>
             <TopBar />
             <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 pb-8">
+                <AnimatePresence>
+                    {(isProcessing || isDeploying) && (
+                        <motion.div
+                            key="loader"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                        >
+                            <CircularProgressBar progress={progress} message={isDeploying ? 'Activando API...' : 'Procesando archivo...'} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <div className="max-w-full mx-auto w-full">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <header>
@@ -151,8 +164,14 @@ export default function ExcelToApiPage() {
                     </div>
                     
                     <AnimatePresence mode="wait">
-                        {data.length === 0 && !isProcessing && !isDeploying ? (
-                             <motion.div key="upload" className="w-full">
+                        {data.length === 0 ? (
+                             <motion.div 
+                                key="upload" 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="w-full"
+                            >
                                 <Card className="shadow-lg max-w-4xl mx-auto border-2 border-accent min-h-[450px]">
                                     <CardContent className="h-full flex flex-col justify-center items-center p-6">
                                         <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center flex-1 w-full">
@@ -171,18 +190,22 @@ export default function ExcelToApiPage() {
                                 </Card>
                             </motion.div>
                         ) : (
-                            <motion.div key="data" className="w-full">
+                            <motion.div 
+                                key="data" 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="w-full"
+                            >
                                 <Card className="border-2 border-accent shadow-lg min-h-[450px]">
                                     <CardHeader>
                                         <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4'>
                                             <div>
                                                 <CardTitle className="flex items-center gap-2">
-                                                    <FileSpreadsheet /> {isProcessing || isDeploying ? 'Procesando...' : 'Vista Previa de Datos'}
+                                                    <FileSpreadsheet /> Vista Previa de Datos
                                                 </CardTitle>
                                                 <CardDescription>
-                                                    {isProcessing ? `Procesando el archivo ${file?.name}...` 
-                                                    : isDeploying ? `Activando API: ${apiName}`
-                                                    : `Los datos de tu archivo ${file?.name} están listos.`}
+                                                    Los datos de tu archivo {file?.name} están listos.
                                                 </CardDescription>
                                             </div>
                                             <Button size="lg" disabled={data.length === 0 || isDeploying} onClick={() => setIsConfigModalOpen(true)}>
@@ -192,28 +215,22 @@ export default function ExcelToApiPage() {
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        {isProcessing || isDeploying ? (
-                                            <div className="flex items-center justify-center min-h-[500px]">
-                                                <CircularProgressBar progress={progress} message={isDeploying ? 'Activando API...' : 'Procesando archivo...'} />
-                                            </div>
-                                        ) : (
-                                            <Tabs defaultValue="table" className="w-full">
-                                                <TabsList>
-                                                    <TabsTrigger value="table"><TableIcon className="mr-2" />Tabla</TabsTrigger>
-                                                    <TabsTrigger value="json"><Code className="mr-2" />JSON</TabsTrigger>
-                                                </TabsList>
-                                                <TabsContent value="table" className="mt-4">
-                                                    <DataTable columns={columns} data={data} />
-                                                </TabsContent>
-                                                <TabsContent value="json" className="mt-4 flex min-h-[500px]">
-                                                    <Textarea
-                                                        readOnly
-                                                        value={JSON.stringify(data, null, 2)}
-                                                        className="flex-1 bg-muted/50 font-mono text-xs"
-                                                    />
-                                                </TabsContent>
-                                            </Tabs>
-                                        )}
+                                        <Tabs defaultValue="table" className="w-full">
+                                            <TabsList>
+                                                <TabsTrigger value="table"><TableIcon className="mr-2" />Tabla</TabsTrigger>
+                                                <TabsTrigger value="json"><Code className="mr-2" />JSON</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="table" className="mt-4">
+                                                <DataTable columns={columns} data={data} />
+                                            </TabsContent>
+                                            <TabsContent value="json" className="mt-4 flex min-h-[500px]">
+                                                <Textarea
+                                                    readOnly
+                                                    value={JSON.stringify(data, null, 2)}
+                                                    className="flex-1 bg-muted/50 font-mono text-xs"
+                                                />
+                                            </TabsContent>
+                                        </Tabs>
                                     </CardContent>
                                 </Card>
                             </motion.div>
