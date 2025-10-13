@@ -5,25 +5,23 @@ set -e
 PORT=${PORT:-8000}
 
 echo "=== Iniciando FastAPI Backend ==="
-cd backend
+cd /app/backend
 
-# Instalamos dependencias (ya están en Docker, pero por seguridad)
+# Por seguridad, nos aseguramos de tener las dependencias listas
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Verificamos uvicorn
-if ! command -v uvicorn &> /dev/null; then
-  echo "Instalando uvicorn..."
-  pip install uvicorn
-fi
-
-# Levantamos FastAPI en background
+# Iniciamos el servidor FastAPI en background
 echo "Levantando servidor FastAPI en puerto $PORT..."
 python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT &
 
-cd ../frontend
+# Regresamos a frontend
+cd /app/frontend
 echo "=== Iniciando Next.js Frontend ==="
+
+# Instalamos dependencias (si no existen)
 npm install
-# Modo producción en Docker
-npm run build
+
+# Construimos e iniciamos en modo producción
+npm run builds
 npm start

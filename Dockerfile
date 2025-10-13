@@ -1,30 +1,50 @@
 # Dockerfile para monolito FastAPI + Next.js
 
-# Backend con Python 3.10
+# ---------------------------
+# Etapa 1: Backend (FastAPI)
+# ---------------------------
 FROM python:3.10-slim AS backend
 WORKDIR /app/backend
+
+# Copiamos e instalamos dependencias
 COPY backend/requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Copiamos el código del backend
 COPY backend/ ./
 
-# Frontend con Node 20
+# ---------------------------
+# Etapa 2: Frontend (Next.js)
+# ---------------------------
 FROM node:20 AS frontend
 WORKDIR /app/frontend
+
+# Copiamos dependencias y código del frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
 
-# Copiamos backend desde la etapa anterior
-COPY --from=backend /app/backend /app/backend
+# ---------------------------
+# Etapa 3: Contenedor final (Monolito)
+# ---------------------------
+FROM node:20
 
-# Puerto asignado por Render
+# Copiamos backend y frontend desde las etapas anteriores
+COPY --from=backend /app/backend /app/backend
+COPY --from=frontend /app/frontend /app/frontend
+
+# Definimos el puerto de Render
 ENV PORT=10000
 
-# Copiamos el script que levanta ambos servicios
-COPY start-all.sh /start-all.sh
-RUN chmod +x /start-all.sh
+# Establecemos directorio de trabajo
+WORKDIR /app
 
+# Copiamos el script que inicia ambos servicios
+COPY start-all.sh /app/start-all.sh
+RUN chmod +x /app/start-all.sh
+
+# Exponemos el puerto (Render usa este valor)
 EXPOSE $PORT
 
-# Comando para levantar el monolito
-CMD ["/start-all.sh"]
+# Comando principal
+CMD ["/app/start-all.sh"]

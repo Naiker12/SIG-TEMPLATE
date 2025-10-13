@@ -1,14 +1,19 @@
 services:
   - type: web
     name: sig-monolito
-    env: python
+    env: docker
     plan: free
-    # Build: instalar dependencias desde la carpeta correcta
-    buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt && cd frontend && npm install"
-    startCommand: "./start-all.sh"
+
+    # Render construirá la imagen usando el Dockerfile de la raíz
+    dockerfilePath: ./Dockerfile
+
+    # Puedes definir variables de entorno necesarias
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.11.9"
+      - key: PORT
+        value: "10000"
       - key: NODE_ENV
-        value: "development"
+        value: "production"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
     autoDeploy: true
