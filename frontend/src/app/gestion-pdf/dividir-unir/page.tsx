@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { TopBar } from "@/components/dashboard/topbar";
-import { Card, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Button } from "@/components/ui/button";
