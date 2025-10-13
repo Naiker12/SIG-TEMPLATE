@@ -166,19 +166,6 @@ export default function SplitMergePdfPage() {
   const isMergeButtonDisabled = mergeFiles.length < 2;
 
   const renderContent = () => {
-    if (isProcessing) {
-      return (
-         <motion.div
-            key="progress"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="w-full flex flex-col items-center justify-center text-center min-h-[400px]"
-        >
-            <CircularProgressBar progress={processingProgress} message={activeTab === 'split' ? 'Dividiendo PDF...' : 'Uniendo PDFs...'}/>
-        </motion.div>
-      );
-    }
     if (processResult) {
         return (
              <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8 w-full">
@@ -292,6 +279,19 @@ export default function SplitMergePdfPage() {
     <>
       <TopBar />
       <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 pb-8">
+        <AnimatePresence>
+            {isProcessing && (
+                <motion.div
+                    key="loader"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                >
+                    <CircularProgressBar progress={processingProgress} message={activeTab === 'split' ? 'Dividiendo PDF...' : 'Uniendo PDFs...'}/>
+                </motion.div>
+            )}
+        </AnimatePresence>
           <div className="max-w-4xl mx-auto w-full">
             <header className="mb-8 text-center">
               <h1 className="text-4xl font-bold tracking-tight">Dividir y Unir PDF</h1>
@@ -307,7 +307,7 @@ export default function SplitMergePdfPage() {
                 </TabsList>
                 
                 <Card className="shadow-lg mt-6 border-2 border-accent">
-                    <CardContent className="p-6 flex items-center justify-center">
+                    <CardContent className="p-6 flex items-center justify-center min-h-[400px]">
                         <AnimatePresence mode="wait">
                             {renderContent()}
                         </AnimatePresence>

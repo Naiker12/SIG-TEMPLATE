@@ -115,6 +115,19 @@ export default function ConvertWordToPdfPage() {
     <>
       <TopBar />
       <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 pb-8">
+        <AnimatePresence>
+            {isConverting && (
+                <motion.div
+                    key="loader"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                >
+                    <CircularProgressBar progress={conversionProgress} message="Convirtiendo a PDF..." />
+                </motion.div>
+            )}
+        </AnimatePresence>
         <div className="max-w-4xl mx-auto w-full">
           <header className="mb-8 text-center">
             <h1 className="text-4xl font-bold tracking-tight">Convertir Word a PDF</h1>
@@ -126,17 +139,7 @@ export default function ConvertWordToPdfPage() {
           <Card className='shadow-lg border-2 border-accent min-h-[400px]'>
             <CardContent className='p-6 flex items-center justify-center'>
                <AnimatePresence mode="wait">
-                  {isConverting ? (
-                      <motion.div
-                          key="progress"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          className="w-full flex flex-col items-center justify-center text-center"
-                      >
-                          <CircularProgressBar progress={conversionProgress} message="Convirtiendo a PDF..."/>
-                      </motion.div>
-                  ) : files.length === 0 && !convertedInfo ? (
+                  {files.length === 0 && !convertedInfo ? (
                       <motion.div key="upload" className="w-full">
                         <FileUploadForm 
                           onFilesSelected={handleFilesSelected}
