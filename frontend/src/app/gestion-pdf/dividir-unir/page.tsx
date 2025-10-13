@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DraggableFileItem } from "@/components/gestion-pdf/draggable-file-item";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, X, HardDriveDownload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { splitPdf, mergePdfs } from "@/services/pdfManipulationService";
@@ -24,6 +23,13 @@ type ProcessResult = {
   blob: Blob;
   size: number;
   fileName: string;
+};
+
+type MergeFile = {
+    file: File;
+    id: string;
+    previewUrl?: string;
+    isLoadingPreview: boolean;
 };
 
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
@@ -48,16 +54,16 @@ export default function SplitMergePdfPage() {
   const [pageRanges, setPageRanges] = useState("");
 
   // State for Merge
-  const [mergeFiles, setMergeFiles] = useState<File[]>([]);
+  const [mergeFiles, setMergeFiles] = useState<MergeFile[]>([]);
   
   // Shared state for processing result
   const [processResult, setProcessResult] = useState<ProcessResult | null>(null);
 
-  const handleFileRemove = (fileToRemove: File, type: 'split' | 'merge') => {
+  const handleFileRemove = (fileIdToRemove: string, type: 'split' | 'merge') => {
     if (type === 'split') {
         setSplitFile([]);
     } else {
-        setMergeFiles(files => files.filter(f => f.name !== fileToRemove.name));
+        setMergeFiles(files => files.filter(f => f.id !== fileIdToRemove));
     }
   }
 
@@ -78,8 +84,14 @@ export default function SplitMergePdfPage() {
       if (type === 'split') {
         setSplitFile(newFiles.slice(0, 1));
       } else {
-         const combined = [...mergeFiles, ...newFiles];
-         const unique = Array.from(new Map(combined.map(f => [f.name, f])).values());
+         const newMergeFiles: MergeFile[] = newFiles.map(file => ({
+            file,
+            id: `${file.name}-${file.lastModified}`,
+            isLoadingPreview: true
+         }));
+         
+         const combined = [...mergeFiles, ...newMergeFiles];
+         const unique = Array.from(new Map(combined.map(f => [f.id, f])).values());
          setMergeFiles(unique);
       }
       if (newFiles.length > 0) {
@@ -87,7 +99,7 @@ export default function SplitMergePdfPage() {
       }
   }
 
-  const handleDragEnd = (result: File[]) => {
+  const handleDragEnd = (result: MergeFile[]) => {
     setMergeFiles(result);
   };
   
@@ -120,7 +132,7 @@ export default function SplitMergePdfPage() {
             if (mergeFiles.length < 2) {
                 throw new Error("Por favor, sube al menos dos archivos para unir.");
             }
-            blob = await mergePdfs(mergeFiles);
+            blob = await mergePdfs(mergeFiles.map(mf => mf.file));
             fileName = "pdf_unido.pdf";
         }
         
@@ -224,7 +236,7 @@ export default function SplitMergePdfPage() {
                                 <p className="text-sm text-muted-foreground">{formatBytes(splitFile[0].size)}</p>
                             </div>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleFileRemove(splitFile[0], 'split')}>
+                        <Button variant="ghost" size="icon" onClick={() => handleFileRemove(splitFile[0].name, 'split')}>
                             <X className="w-5 h-5 text-destructive" /><span className="sr-only">Quitar</span>
                         </Button>
                     </div>
@@ -261,14 +273,15 @@ export default function SplitMergePdfPage() {
                         <p className="text-muted-foreground">Arrastra los archivos para establecer el orden final de unión.</p>
                       </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {mergeFiles.map((file, index) => (
+                      {mergeFiles.map((mergeFile, index) => (
                         <DraggableFileItem 
-                          key={file.name}
-                          file={file}
+                          key={mergeFile.id}
+                          mergeFile={mergeFile}
                           index={index}
                           files={mergeFiles}
-                          onRemove={(f) => handleFileRemove(f, 'merge')}
+                          onRemove={(fileId) => handleFileRemove(fileId, 'merge')}
                           onDragEnd={handleDragEnd}
+                          setMergeFiles={setMergeFiles}
                         />
                       ))}
                     </div>

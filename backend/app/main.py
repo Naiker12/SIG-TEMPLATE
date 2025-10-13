@@ -24,6 +24,7 @@ from app.routers.convert_to_pdf_router import convert_to_pdf_router
 from app.routers.split_pdf_router import split_pdf_router
 from app.routers.merge_pdf_router import merge_pdf_router
 from app.routers.pdf_to_word_router import pdf_to_word_router
+from app.routers.preview_router import preview_router
 from app.routers.auth_router import auth_router
 from app.routers.file_router import file_router
 from app.routers.excel_router import excel_router
@@ -91,3 +92,4 @@ app.include_router(split_pdf_router)
 app.include_router(merge_pdf_router)
 app.include_router(pdf_to_word_router)
 app.include_router(excel_router)
+app.include_router(preview_router)

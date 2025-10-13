@@ -54,3 +54,36 @@ export async function mergePdfs(files: File[]): Promise<Blob> {
     throw new Error("Ocurrió un error desconocido al unir los PDFs.");
   }
 }
+
+/**
+ * Generates a base64 preview of the first page of a PDF file.
+ * @param file The PDF file to preview.
+ * @returns A base64 encoded string of the preview image.
+ */
+export async function generatePdfPreview(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const endpoint = `${API_BASE_URL}/files/pdf-preview`;
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorBody = await res.json();
+      throw new Error(errorBody.detail || `API Error: ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.preview;
+  } catch (error) {
+    console.error("Failed to generate PDF preview:", error);
+    if (error instanceof Error) {
+       throw new Error(`Error al generar la previsualización: ${error.message}`);
+    }
+    throw new Error("Ocurrió un error desconocido al generar la previsualización.");
+  }
+}
