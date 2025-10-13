@@ -74,14 +74,6 @@ export default function ConvertToDatasetPage() {
     }
     
     const renderResultContent = () => {
-        if (isConverting) {
-            return (
-                 <motion.div key="progress" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                    <CircularProgressBar progress={conversionProgress} message="Convirtiendo a Dataset..." />
-                 </motion.div>
-            )
-        }
-
         if (dataset) {
             return (
                  <motion.div key="dataset-info" initial={{opacity: 0}} animate={{opacity: 1}} className="space-y-4 w-full">
@@ -127,6 +119,19 @@ export default function ConvertToDatasetPage() {
     <>
       <TopBar />
       <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto pb-8">
+        <AnimatePresence>
+            {isConverting && (
+                 <motion.div
+                    key="loader"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                >
+                    <CircularProgressBar progress={conversionProgress} message="Convirtiendo a Dataset..." />
+                 </motion.div>
+            )}
+        </AnimatePresence>
         <div className="max-w-7xl mx-auto w-full">
           <header className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Conversión a Dataset</h1>
