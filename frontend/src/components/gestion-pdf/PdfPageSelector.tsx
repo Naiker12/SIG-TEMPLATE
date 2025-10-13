@@ -76,11 +76,13 @@ export function PdfPageSelector({ file, pageCount, selectedPages, onSelectedPage
 
   return (
     <div className="flex flex-col h-full">
-        <div className="flex-shrink-0 mb-4 flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">Seleccionadas {selectedPages.length} de {pageCount} páginas.</p>
+        <div className="flex-shrink-0 mb-4 flex flex-col sm:flex-row justify-between items-center gap-4 p-2 border-b">
+            <p className="text-sm font-medium text-muted-foreground">
+              Seleccionadas {selectedPages.length} de {pageCount} páginas.
+            </p>
             <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleSelectAll}>Seleccionar Todo</Button>
-                <Button variant="outline" size="sm" onClick={handleClearAll}>Limpiar</Button>
+                <Button variant="ghost" size="sm" onClick={handleClearAll}>Limpiar</Button>
             </div>
         </div>
       <ScrollArea className="flex-1 -mr-4 pr-4">
@@ -92,23 +94,20 @@ export function PdfPageSelector({ file, pageCount, selectedPages, onSelectedPage
               <Card
                 key={pageNumber}
                 className={cn(
-                  'cursor-pointer transition-all border-2',
-                  isSelected ? 'border-primary' : 'border-transparent hover:border-primary/50'
+                  'cursor-pointer transition-all border-2 overflow-hidden',
+                  isSelected ? 'border-primary shadow-lg' : 'border-transparent hover:border-primary/50'
                 )}
                 onClick={() => handlePageToggle(pageNumber)}
               >
-                <CardContent className="p-1 relative aspect-[3/4] flex flex-col items-center justify-center">
-                  <div className="absolute top-2 right-2 z-10 bg-background/50 rounded-sm">
-                     <Checkbox checked={isSelected} className="h-5 w-5" />
-                  </div>
+                <CardContent className="p-0 relative aspect-[3/4] flex flex-col items-center justify-center bg-muted/30">
                   {preview ? (
-                    <img src={preview.previewUrl} alt={`Page ${pageNumber}`} className="object-contain h-full w-full rounded" />
+                    <img src={preview.previewUrl} alt={`Page ${pageNumber}`} className="object-contain h-full w-full" />
                   ) : (
-                    <div className="flex items-center justify-center h-full w-full bg-muted rounded">
+                    <div className="flex items-center justify-center h-full w-full bg-muted rounded-t-lg">
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
                   )}
-                   <div className="absolute bottom-1 left-1 right-1 text-center bg-black/50 text-white text-xs font-bold py-0.5 rounded-b-sm">
+                   <div className="absolute bottom-1 text-center bg-black/50 text-white text-xs font-bold py-0.5 px-2 rounded-full">
                       {pageNumber}
                     </div>
                 </CardContent>
