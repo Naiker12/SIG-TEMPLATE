@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { TopBar } from "@/components/dashboard/topbar";
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { splitPdf, mergePdfs, generatePdfPreview, getPdfPageCount } from "@/serv
 import { saveAs } from "file-saver";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useAuthModal } from "@/hooks/use-auth-modal";
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, Reorder } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PdfPageSelector } from "@/components/gestion-pdf/PdfPageSelector";
@@ -152,10 +152,6 @@ export default function SplitMergePdfPage() {
       }
   }
 
-  const handleDragEnd = (result: MergeFile[]) => {
-    setMergeFiles(result);
-  };
-  
   const handleProcess = async () => {
     setProcessResult(null);
     setIsProcessing(true);
@@ -351,19 +347,16 @@ export default function SplitMergePdfPage() {
                         <h3 className="text-xl font-semibold">Ordenar Archivos</h3>
                         <p className="text-muted-foreground">Arrastra los archivos para establecer el orden final de unión.</p>
                       </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {mergeFiles.map((mergeFile, index) => (
+                    <Reorder.Group axis="y" values={mergeFiles} onReorder={setMergeFiles} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {mergeFiles.map((mergeFile) => (
                         <DraggableFileItem 
                           key={mergeFile.id}
                           mergeFile={mergeFile}
-                          index={index}
-                          files={mergeFiles}
                           onRemove={(fileId) => handleFileRemove(fileId, 'merge')}
-                          onDragEnd={handleDragEnd}
                           setMergeFiles={setMergeFiles}
                         />
                       ))}
-                    </div>
+                    </Reorder.Group>
                     <div className="flex justify-center pt-8 border-t">
                        <Button size="lg" className="w-full md:w-auto" onClick={handleProcess} disabled={isMergeButtonDisabled}>Unir {mergeFiles.length} PDFs</Button>
                     </div>

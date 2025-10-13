@@ -2,12 +2,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Reorder } from 'framer-motion';
 import { Button } from "@/components/ui/button";
-import { FileText, GripVertical, Trash2, Loader2 } from "lucide-react";
-import { cn } from '@/lib/utils';
+import { FileText, Trash2, Loader2 } from "lucide-react";
 import { Card, CardContent } from '../ui/card';
 import { generatePdfPreview } from '@/services/pdfManipulationService';
-import Image from 'next/image';
 
 type MergeFile = {
     file: File;
@@ -18,16 +17,11 @@ type MergeFile = {
 
 type DraggableFileItemProps = {
   mergeFile: MergeFile;
-  index: number;
-  files: MergeFile[];
   onRemove: (fileId: string) => void;
-  onDragEnd: (files: MergeFile[]) => void;
   setMergeFiles: React.Dispatch<React.SetStateAction<MergeFile[]>>;
 };
 
-export function DraggableFileItem({ mergeFile, index, files, onRemove, onDragEnd, setMergeFiles }: DraggableFileItemProps) {
-  const [isDragging, setIsDragging] = useState(false);
-
+export function DraggableFileItem({ mergeFile, onRemove, setMergeFiles }: DraggableFileItemProps) {
   useEffect(() => {
     let isMounted = true;
     if (mergeFile.isLoadingPreview && !mergeFile.previewUrl) {
@@ -51,48 +45,20 @@ export function DraggableFileItem({ mergeFile, index, files, onRemove, onDragEnd
     return () => { isMounted = false; };
   }, [mergeFile, setMergeFiles]);
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', index.toString());
-    setTimeout(() => setIsDragging(true), 0);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    const newFiles = [...files];
-    const [removed] = newFiles.splice(draggedIndex, 1);
-    newFiles.splice(index, 0, removed);
-    onDragEnd(newFiles);
-    setIsDragging(false);
-  };
-  
-  const handleDragEndInternal = () => {
-    setIsDragging(false);
-  };
-
   return (
-    <div
-      draggable
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onDragEnd={handleDragEndInternal}
-      className={cn(
-        "group relative cursor-grab transition-all duration-300",
-        isDragging && "opacity-50 scale-95 shadow-2xl z-10"
-      )}
+    <Reorder.Item
+      value={mergeFile}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      whileDrag={{ scale: 1.05, boxShadow: "0px 10px 20px hsla(var(--primary), 0.2)" }}
+      className="group relative cursor-grab"
     >
-        <Card className="bg-muted/40 hover:bg-muted/70 hover:border-primary/50 transition-all hover:scale-105 hover:shadow-lg aspect-[3/4]">
+        <Card className="bg-muted/40 hover:bg-muted/70 hover:border-primary/50 transition-all aspect-[3/4] overflow-hidden">
             <CardContent className="p-2 flex flex-col items-center justify-between text-center h-full">
                 <div className="w-full flex-1 relative mb-2 flex items-center justify-center bg-background rounded-md overflow-hidden">
                     {mergeFile.isLoadingPreview && <Loader2 className="w-8 h-8 text-primary animate-spin" />}
                     {mergeFile.previewUrl && !mergeFile.isLoadingPreview && (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={mergeFile.previewUrl} alt={`Preview of ${mergeFile.file.name}`} className="object-contain h-full w-full" />
                     )}
                     {!mergeFile.isLoadingPreview && !mergeFile.previewUrl && (
@@ -111,13 +77,16 @@ export function DraggableFileItem({ mergeFile, index, files, onRemove, onDragEnd
             <Button 
               variant="destructive" 
               size="icon" 
-              className="absolute -top-2 -right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => onRemove(mergeFile.id)}
+              className="absolute -top-2 -right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              onClick={(e) => {
+                e.stopPropagation(); // Evita que el drag se active al hacer clic en el botón
+                onRemove(mergeFile.id);
+              }}
              >
                 <Trash2 className="w-4 h-4" />
                 <span className="sr-only">Remove file</span>
             </Button>
         </Card>
-    </div>
+    </Reorder.Item>
   );
 }
