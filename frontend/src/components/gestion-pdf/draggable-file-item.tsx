@@ -91,8 +91,9 @@ export function DraggableFileItem({ mergeFile, index, files, onRemove, onDragEnd
             <CardContent className="p-2 flex flex-col items-center justify-between text-center h-full">
                 <div className="w-full flex-1 relative mb-2 flex items-center justify-center bg-background rounded-md overflow-hidden">
                     {mergeFile.isLoadingPreview && <Loader2 className="w-8 h-8 text-primary animate-spin" />}
-                    {mergeFile.previewUrl && (
-                        <Image src={mergeFile.previewUrl} alt={`Preview of ${mergeFile.file.name}`} layout="fill" objectFit="contain" />
+                    {mergeFile.previewUrl && !mergeFile.isLoadingPreview && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={mergeFile.previewUrl} alt={`Preview of ${mergeFile.file.name}`} className="object-contain h-full w-full" />
                     )}
                     {!mergeFile.isLoadingPreview && !mergeFile.previewUrl && (
                         <FileText className="w-12 h-12 text-muted-foreground" />
