@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DraggableFileItem } from "@/components/gestion-pdf/draggable-file-item";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, X, Download, HardDriveDownload } from "lucide-react";
+import { FileText, X, HardDriveDownload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { splitPdf, mergePdfs } from "@/services/pdfManipulationService";
 import { saveAs } from "file-saver";
@@ -256,29 +256,23 @@ export default function SplitMergePdfPage() {
                  />
                {mergeFiles.length > 0 && (
                  <div className='space-y-8 mt-8'>
-                   <Card className="bg-transparent">
-                      <CardHeader>
+                    <div className="text-center">
                         <h3 className="text-xl font-semibold">Ordenar Archivos</h3>
                         <p className="text-muted-foreground">Arrastra los archivos para establecer el orden final de unión.</p>
-                      </CardHeader>
-                      <CardContent>
-                         <ScrollArea className="h-72">
-                            <div className="space-y-3 pr-4">
-                              {mergeFiles.map((file, index) => (
-                                <DraggableFileItem 
-                                  key={file.name}
-                                  file={file}
-                                  index={index}
-                                  files={mergeFiles}
-                                  onRemove={(f) => handleFileRemove(f, 'merge')}
-                                  onDragEnd={handleDragEnd}
-                                />
-                              ))}
-                            </div>
-                          </ScrollArea>
-                      </CardContent>
-                    </Card>
-                    <div className="flex justify-center md:justify-end pt-8 border-t">
+                      </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {mergeFiles.map((file, index) => (
+                        <DraggableFileItem 
+                          key={file.name}
+                          file={file}
+                          index={index}
+                          files={mergeFiles}
+                          onRemove={(f) => handleFileRemove(f, 'merge')}
+                          onDragEnd={handleDragEnd}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex justify-center pt-8 border-t">
                        <Button size="lg" className="w-full md:w-auto" onClick={handleProcess} disabled={isMergeButtonDisabled}>Unir {mergeFiles.length} PDFs</Button>
                     </div>
                  </div>
@@ -306,7 +300,11 @@ export default function SplitMergePdfPage() {
                 </motion.div>
             )}
         </AnimatePresence>
-          <div className="max-w-5xl mx-auto w-full">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-5xl mx-auto w-full">
             <header className="mb-12 text-center">
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Dividir y Unir PDF</h1>
               <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
@@ -330,7 +328,7 @@ export default function SplitMergePdfPage() {
                     </CardContent>
                 </Card>
               </Tabs>
-          </div>
+          </motion.div>
       </main>
     </>
   );

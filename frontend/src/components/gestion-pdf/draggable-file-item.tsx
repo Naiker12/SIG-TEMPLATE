@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { FileText, GripVertical, Trash2 } from "lucide-react";
 import { cn } from '@/lib/utils';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 
 type DraggableFileItemProps = {
   file: File;
@@ -49,24 +50,30 @@ export function DraggableFileItem({ file, index, files, onRemove, onDragEnd }: D
       onDrop={handleDrop}
       onDragEnd={handleDragEnd}
       className={cn(
-        "flex items-center justify-between p-3 border rounded-lg bg-card transition-all",
-        isDragging ? "opacity-50 border-primary shadow-lg" : "bg-muted/20"
+        "group relative cursor-grab transition-all duration-300",
+        isDragging && "opacity-50 scale-95 shadow-2xl z-10"
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-        <FileText className="w-6 h-6 text-primary flex-shrink-0" />
-        <div className="min-w-0">
-            <p className="font-semibold truncate">{file.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {(file.size / 1024 / 1024).toFixed(2)} MB
-            </p>
-        </div>
-      </div>
-      <Button variant="ghost" size="icon" onClick={() => onRemove(file)}>
-        <Trash2 className="w-5 h-5 text-destructive" />
-        <span className="sr-only">Remove file</span>
-      </Button>
+        <Card className="bg-muted/40 hover:bg-muted/70 hover:border-primary/50 transition-all hover:scale-105 hover:shadow-lg">
+            <CardContent className="p-4 flex flex-col items-center justify-center text-center h-48">
+                <FileText className="w-12 h-12 text-primary mb-3" />
+                <p className="font-semibold text-sm truncate w-full" title={file.name}>
+                    {file.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+            </CardContent>
+            <Button 
+              variant="destructive" 
+              size="icon" 
+              className="absolute -top-2 -right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => onRemove(file)}
+             >
+                <Trash2 className="w-4 h-4" />
+                <span className="sr-only">Remove file</span>
+            </Button>
+        </Card>
     </div>
   );
 }
