@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react';
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, X, Download, Image as ImageIcon, FileType } from 'lucide-react';
+import { FileText, X, Download, Image as ImageIcon, FileType, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { compressFiles } from '@/services/compressionService';
 import { uploadFileMetadata } from '@/services/fileService';
+import { generatePdfPreview } from '@/services/pdfManipulationService';
 import { saveAs } from 'file-saver';
 import { useToast } from '@/hooks/use-toast';
 import { Slider } from '@/components/ui/slider';
@@ -24,6 +25,13 @@ type CompressedInfo = {
   originalSize: number;
 };
 
+type FileWithPreview = {
+  id: string;
+  file: File;
+  previewUrl?: string;
+  isLoadingPreview: boolean;
+};
+
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
 
 const getFileIcon = (fileType: string) => {
@@ -33,7 +41,7 @@ const getFileIcon = (fileType: string) => {
 }
 
 export default function OptimizeFilePage() {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [compressionLevel, setCompressionLevel] = useState([1]);
   const [compressedInfo, setCompressedInfo] = useState<CompressedInfo | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -65,10 +73,15 @@ export default function OptimizeFilePage() {
         return;
     }
 
-    const combinedFiles = [...files, ...newFiles];
-    const uniqueFiles = Array.from(new Set(combinedFiles.map(f => f.name))).map(name => {
-        return combinedFiles.find(f => f.name === name)!
-    });
+    const filesWithMeta: FileWithPreview[] = newFiles.map(file => ({
+      id: `${file.name}-${file.lastModified}`,
+      file,
+      isLoadingPreview: file.type === 'application/pdf',
+      previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+    }));
+
+    const combinedFiles = [...files, ...filesWithMeta];
+    const uniqueFiles = Array.from(new Map(combinedFiles.map(f => [f.id, f])).values());
 
     setFiles(uniqueFiles);
     setCompressedInfo(null);
@@ -79,9 +92,32 @@ export default function OptimizeFilePage() {
       });
     }
   };
+
+  useEffect(() => {
+    files.forEach(f => {
+      if (f.file.type === 'application/pdf' && !f.previewUrl && f.isLoadingPreview) {
+        generatePdfPreview(f.file)
+          .then(previewUrl => {
+            setFiles(prevFiles =>
+              prevFiles.map(prevFile =>
+                prevFile.id === f.id ? { ...prevFile, previewUrl, isLoadingPreview: false } : prevFile
+              )
+            );
+          })
+          .catch(err => {
+            console.error("Failed to generate PDF preview:", err);
+            setFiles(prevFiles =>
+              prevFiles.map(prevFile =>
+                prevFile.id === f.id ? { ...prevFile, isLoadingPreview: false } : prevFile
+              )
+            );
+          });
+      }
+    });
+  }, [files]);
   
-  const handleRemoveFile = (fileToRemove: File) => {
-    setFiles(files.filter(f => f !== fileToRemove));
+  const handleRemoveFile = (fileIdToRemove: string) => {
+    setFiles(files.filter(f => f.id !== fileIdToRemove));
     if (files.length === 1) {
         setCompressedInfo(null);
     }
@@ -93,7 +129,6 @@ export default function OptimizeFilePage() {
     setIsOptimizing(true);
     setOptimizationProgress(0);
 
-    // Simulate progress
     const progressInterval = setInterval(() => {
         setOptimizationProgress(prev => {
             if (prev >= 95) {
@@ -105,17 +140,17 @@ export default function OptimizeFilePage() {
     }, 200);
 
     try {
-      const originalSize = files.reduce((acc, file) => acc + file.size, 0);
-      const zipBlob = await compressFiles(files, compressionLevel[0]);
+      const originalSize = files.reduce((acc, f) => acc + f.file.size, 0);
+      const rawFiles = files.map(f => f.file);
+      const zipBlob = await compressFiles(rawFiles, compressionLevel[0]);
       
       clearInterval(progressInterval);
       setOptimizationProgress(100);
 
-      // Log metadata after successful compression
       try {
           await uploadFileMetadata({
-              filename: files.length > 1 ? "archivos_comprimidos.zip" : files[0].name,
-              fileType: files.length > 1 ? 'application/zip' : files[0].type,
+              filename: rawFiles.length > 1 ? "archivos_comprimidos.zip" : rawFiles[0].name,
+              fileType: rawFiles.length > 1 ? 'application/zip' : rawFiles[0].type,
               size: zipBlob.size,
               status: "COMPLETED",
           });
@@ -266,20 +301,22 @@ export default function OptimizeFilePage() {
                       <div className="space-y-3 pt-6 border-t">
                           <h3 className='text-lg font-medium text-muted-foreground'>Archivos para optimizar:</h3>
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                           {files.map((file, index) => (
-                            <Card key={index} className="group relative overflow-hidden bg-muted/20 hover:shadow-md transition-shadow">
-                                <CardContent className="p-3 flex flex-col items-center justify-center text-center gap-2">
-                                  {file.type.startsWith('image/') ? (
-                                    <img src={URL.createObjectURL(file)} alt={file.name} className="h-16 w-16 object-cover rounded-md"/>
-                                  ) : (
-                                    getFileIcon(file.type)
-                                  )}
-                                  <p className="font-semibold text-xs truncate w-full" title={file.name}>{file.name}</p>
+                           {files.map((f) => (
+                            <Card key={f.id} className="group relative overflow-hidden bg-muted/20 hover:shadow-md transition-shadow">
+                                <CardContent className="p-3 flex flex-col items-center justify-center text-center gap-2 aspect-[3/4]">
+                                  <div className="w-full flex-1 relative flex items-center justify-center bg-background rounded-md overflow-hidden">
+                                    {f.isLoadingPreview && <Loader2 className="h-6 w-6 animate-spin text-primary" />}
+                                    {f.previewUrl && !f.isLoadingPreview && (
+                                        <img src={f.previewUrl} alt={`Preview of ${f.file.name}`} className="object-contain h-full w-full" />
+                                    )}
+                                    {!f.previewUrl && !f.isLoadingPreview && getFileIcon(f.file.type)}
+                                  </div>
+                                  <p className="font-semibold text-xs truncate w-full" title={f.file.name}>{f.file.name}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    {formatBytes(file.size)}
+                                    {formatBytes(f.file.size)}
                                   </p>
                                 </CardContent>
-                                <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveFile(file)}>
+                                <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveFile(f.id)}>
                                     <X className="w-4 h-4" />
                                     <span className="sr-only">Remove file</span>
                                 </Button>
