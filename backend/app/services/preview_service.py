@@ -2,18 +2,20 @@
 import base64
 from io import BytesIO
 from fastapi import UploadFile
-from pdf2image import convert_from_bytes
+import pypdfium2 as pdfium
 
 async def create_pdf_preview(file: UploadFile) -> str:
     """
     Convierte la primera página de un archivo PDF a una imagen PNG y la codifica en base64.
+    Utiliza pypdfium2 que no tiene dependencias externas.
     """
     pdf_bytes = await file.read()
     
     try:
-        # Convertir la primera página del PDF a una imagen
-        # dpi=72 reduce la calidad para una previsualización más rápida y ligera
-        images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, fmt='png', dpi=72)
+        # Cargar el PDF desde los bytes y renderizar la primera página
+        # El índice de página es base 0, así que la primera página es [0]
+        # scale=0.3 reduce la calidad para una previsualización más rápida y ligera (30% del tamaño original)
+        images = pdfium.render_pdf_to_pil(pdf_bytes, page_indices=[0], scale=0.3)
         
         if not images:
             raise ValueError("No se pudo extraer ninguna página del PDF.")
@@ -31,4 +33,3 @@ async def create_pdf_preview(file: UploadFile) -> str:
     except Exception as e:
         print(f"Error al generar la previsualización del PDF: {e}")
         raise e
-
