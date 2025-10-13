@@ -1,9 +1,7 @@
 # Dockerfile para monolito FastAPI + Next.js
 
-# Backend con Python 3.10 para compatibilidad de librerías
+# Backend con Python 3.10
 FROM python:3.10-slim AS backend
-
-# Backend
 WORKDIR /app/backend
 COPY backend/requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt

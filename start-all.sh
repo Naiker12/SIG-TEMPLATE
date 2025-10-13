@@ -1,30 +1,29 @@
 #!/usr/bin/env bash
 set -e
 
+# Puerto asignado por Render o por defecto 8000
+PORT=${PORT:-8000}
+
 echo "=== Iniciando FastAPI Backend ==="
 cd backend
 
-# Verificamos si existe el entorno virtual
-if [ -d ".venv" ]; then
-  echo "Activando entorno virtual..."
-  # Intentamos activarlo tanto para Linux/Mac como Windows Git Bash
-  source .venv/bin/activate 2>/dev/null || source .venv/Scripts/activate 2>/dev/null || true
-else
-  echo "No se encontró entorno virtual (.venv). Instalando dependencias globalmente..."
-  pip install -r requirements.txt
-fi
+# Instalamos dependencias (ya están en Docker, pero por seguridad)
+pip install --upgrade pip
+pip install -r requirements.txt
 
-# Verificamos si uvicorn está disponible
+# Verificamos uvicorn
 if ! command -v uvicorn &> /dev/null; then
   echo "Instalando uvicorn..."
   pip install uvicorn
 fi
 
-# Iniciamos el servidor FastAPI
-echo "Levantando servidor FastAPI en puerto 8000..."
-nohup python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+# Levantamos FastAPI en background
+echo "Levantando servidor FastAPI en puerto $PORT..."
+python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT &
 
 cd ../frontend
 echo "=== Iniciando Next.js Frontend ==="
 npm install
-npm run dev
+# Modo producción en Docker
+npm run build
+npm start
