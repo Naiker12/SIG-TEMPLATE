@@ -3,7 +3,11 @@ services:
     name: sig-monolito
     env: python
     plan: free
-    buildCommand: "cd backend && pip install -r requirements.txt && cd ../frontend && npm install"
+    # Build: instala Python y Node dependencies
+    buildCommand: |
+      cd backend && pip install --upgrade pip && pip install -r requirements.txt
+      cd ../frontend && npm install
+    # Start: ejecuta el script que levanta backend y frontend
     startCommand: "./start-all.sh"
     envVars:
       - key: PYTHON_VERSION
