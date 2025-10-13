@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileSpreadsheet, Rows, Download } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, Rows, Download, Trash2 } from "lucide-react";
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import { type ColumnDef, type Row, type PaginationState } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
@@ -223,47 +224,82 @@ export default function ProcessExcelPage() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
+      <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 overflow-auto pb-8">
+        <AnimatePresence>
+            {isProcessing && (
+                <motion.div
+                    key="loader"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                >
+                    <CircularProgressBar progress={progress} message="Procesando archivo..." />
+                </motion.div>
+            )}
+        </AnimatePresence>
         <div className="max-w-full mx-auto w-full">
-          <header className="mb-8">
+          <header className="mb-8 text-center md:text-left">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Procesar Documento Excel</h1>
-            <p className="text-muted-foreground mt-2 max-w-3xl">
+            <p className="text-muted-foreground mt-2 max-w-3xl mx-auto md:mx-0">
               Sube tu archivo, visualiza los datos y realiza transformaciones de forma sencilla.
             </p>
           </header>
 
-          {!tableData && !isProcessing ? (
-            <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent">
-                <CardHeader>
-                    <CardTitle>Cargar Archivo</CardTitle>
-                    <CardDescription>Selecciona un archivo .xlsx o .xls para empezar.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center">
-                        <UploadCloud className="w-16 h-16 text-muted-foreground mb-4" />
-                        <Button asChild variant="outline">
-                            <Label htmlFor="file-upload" className="cursor-pointer">
-                              {file ? "Cambiar Archivo" : "Seleccionar Archivo"}
-                            </Label>
+          <AnimatePresence mode="wait">
+            {!tableData ? (
+              <motion.div
+                key="upload-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent">
+                    <CardHeader>
+                        <CardTitle>Cargar Archivo</CardTitle>
+                        <CardDescription>Selecciona un archivo .xlsx o .xls para empezar.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {!file ? (
+                          <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl text-center">
+                              <UploadCloud className="w-16 h-16 text-muted-foreground mb-4" />
+                              <Button asChild variant="outline">
+                                  <Label htmlFor="file-upload" className="cursor-pointer">
+                                    Seleccionar Archivo
+                                  </Label>
+                              </Button>
+                              <Input id="file-upload" type="file" onChange={handleFileChange} accept=".xlsx, .xls" className="hidden" />
+                              <p className="text-muted-foreground text-sm mt-3">Formatos soportados: .xlsx, .xls</p>
+                          </div>
+                        ) : (
+                           <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                              <div className="flex items-center gap-4 min-w-0">
+                                  <FileSpreadsheet className="w-8 h-8 text-primary flex-shrink-0" />
+                                  <div className="min-w-0">
+                                      <p className="font-semibold truncate">{file.name}</p>
+                                      <p className="text-sm text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
+                                  </div>
+                              </div>
+                              <Button variant="ghost" size="icon" onClick={() => setFile(null)}>
+                                  <Trash2 className="w-5 h-5 text-destructive" /><span className="sr-only">Quitar Archivo</span>
+                              </Button>
+                          </div>
+                        )}
+                        <Button onClick={handleProcess} disabled={!file} className="w-full" size="lg">
+                            Procesar Archivo
                         </Button>
-                        <Input id="file-upload" type="file" onChange={handleFileChange} accept=".xlsx, .xls" className="hidden" />
-                        <p className="text-muted-foreground text-sm mt-3">
-                          {file ? file.name : "Formatos soportados: .xlsx, .xls"}
-                        </p>
-                    </div>
-                    <Button onClick={handleProcess} disabled={!file} className="w-full" size="lg">
-                        Procesar Archivo
-                    </Button>
-                </CardContent>
-            </Card>
-          ) : isProcessing ? (
-            <Card className="shadow-lg max-w-2xl mx-auto border-2 border-accent min-h-[400px]">
-                <CardContent className="flex items-center justify-center h-full p-6">
-                    <CircularProgressBar progress={progress} message="Procesando archivo..." />
-                </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
+                    </CardContent>
+                </Card>
+              </motion.div>
+            ) : (
+            <motion.div 
+                key="data-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-4"
+            >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex items-center gap-2 text-lg font-semibold">
                         <FileSpreadsheet className="text-primary" />
@@ -285,8 +321,9 @@ export default function ProcessExcelPage() {
                     toolbarContent={tableToolbar}
                     onRowSelectionChange={(rows) => setSelectedRows(rows)}
                 />
-            </div>
+            </motion.div>
           )}
+        </AnimatePresence>
         </div>
       </main>
       <DuplicateRowModal 
