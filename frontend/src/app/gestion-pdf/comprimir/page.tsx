@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, X, Download } from 'lucide-react';
+import { FileText, X, Download, Image as ImageIcon, FileType } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { compressFiles } from '@/services/compressionService';
 import { uploadFileMetadata } from '@/services/fileService';
@@ -25,6 +25,12 @@ type CompressedInfo = {
 };
 
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
+
+const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) return <ImageIcon className="w-6 h-6 text-primary flex-shrink-0" />;
+    if (fileType === 'application/pdf') return <FileText className="w-6 h-6 text-primary flex-shrink-0" />;
+    return <FileType className="w-6 h-6 text-primary flex-shrink-0" />;
+}
 
 export default function OptimizeFilePage() {
   const [files, setFiles] = useState<File[]>([]);
@@ -208,7 +214,7 @@ export default function OptimizeFilePage() {
             <CardContent className='p-6 flex items-center justify-center'>
               <AnimatePresence mode="wait">
                   {files.length === 0 && !compressedInfo ? (
-                     <motion.div key="upload" className="w-full">
+                     <motion.div key="upload" className="w-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <FileUploadForm 
                           onFilesSelected={handleFilesSelected}
                           allowMultiple={true}
@@ -259,23 +265,27 @@ export default function OptimizeFilePage() {
 
                       <div className="space-y-3 pt-6 border-t">
                           <h3 className='text-lg font-medium text-muted-foreground'>Archivos para optimizar:</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                            {files.map((file, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
-                              <div className="flex items-center gap-4 min-w-0">
-                                <FileText className="w-6 h-6 text-primary flex-shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="font-semibold truncate">{file.name}</p>
-                                  <p className="text-sm text-muted-foreground">
+                            <Card key={index} className="group relative overflow-hidden bg-muted/20 hover:shadow-md transition-shadow">
+                                <CardContent className="p-3 flex flex-col items-center justify-center text-center gap-2">
+                                  {file.type.startsWith('image/') ? (
+                                    <img src={URL.createObjectURL(file)} alt={file.name} className="h-16 w-16 object-cover rounded-md"/>
+                                  ) : (
+                                    getFileIcon(file.type)
+                                  )}
+                                  <p className="font-semibold text-xs truncate w-full" title={file.name}>{file.name}</p>
+                                  <p className="text-xs text-muted-foreground">
                                     {formatBytes(file.size)}
                                   </p>
-                                </div>
-                              </div>
-                              <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
-                                <X className="w-5 h-5 text-destructive" />
-                                <span className="sr-only">Remove file</span>
-                              </Button>
-                            </div>
+                                </CardContent>
+                                <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveFile(file)}>
+                                    <X className="w-4 h-4" />
+                                    <span className="sr-only">Remove file</span>
+                                </Button>
+                            </Card>
                           ))}
+                          </div>
                       </div>
 
                        <div className="flex justify-end pt-6 border-t">
