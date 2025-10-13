@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
-# Puerto asignado por Render o por defecto 8000
-PORT=${PORT:-8000}
-
 echo "=== Iniciando FastAPI Backend ==="
 cd /app/backend
-
-# Verificamos que pip esté disponible e instalamos dependencias
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Iniciamos FastAPI en segundo plano
-python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT &
+# Inicia el backend en background en el puerto 8000
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
 
-# Iniciamos el frontend
-cd /app/frontend
 echo "=== Iniciando Next.js Frontend ==="
+cd /app/frontend
 npm run build
-npm start
+
+# Render usa el puerto asignado por la variable $PORT
+PORT=${PORT:-3000}
+npm start -- -p $PORT
