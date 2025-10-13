@@ -96,10 +96,8 @@ export const toolsItems: MenuItem[] = [
         title: "Visualización",
         href: "/visualizacion/visor-de-archivos",
         icon: BarChart3,
-        isCollapsible: true,
         items: [
             { title: "Visor de Archivos", href: "/visualizacion/visor-de-archivos" },
-            { title: "Vista Comparativa", href: "/visualizacion/vista-comparativa" },
         ]
     },
 ];
