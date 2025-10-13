@@ -3,17 +3,10 @@ services:
     name: sig-monolito
     env: docker
     plan: free
-
-    # Render construirá la imagen usando el Dockerfile de la raíz
     dockerfilePath: ./Dockerfile
-
-    # Puedes definir variables de entorno necesarias
     envVars:
       - key: PORT
         value: "10000"
       - key: NODE_ENV
         value: "production"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
     autoDeploy: true

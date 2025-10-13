@@ -7,21 +7,15 @@ PORT=${PORT:-8000}
 echo "=== Iniciando FastAPI Backend ==="
 cd /app/backend
 
-# Por seguridad, nos aseguramos de tener las dependencias listas
+# Verificamos que pip esté disponible e instalamos dependencias
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Iniciamos el servidor FastAPI en background
-echo "Levantando servidor FastAPI en puerto $PORT..."
+# Iniciamos FastAPI en segundo plano
 python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT &
 
-# Regresamos a frontend
+# Iniciamos el frontend
 cd /app/frontend
 echo "=== Iniciando Next.js Frontend ==="
-
-# Instalamos dependencias (si no existen)
-npm install
-
-# Construimos e iniciamos en modo producción
-npm run builds
+npm run build
 npm start
