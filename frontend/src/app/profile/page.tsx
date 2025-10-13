@@ -17,6 +17,7 @@ import { Camera, Loader2, LogOut } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useToast } from "@/hooks/use-toast";
 import { updateUserProfile, updateUserPassword } from "@/services/userService";
+import { AnimatePresence, motion } from 'framer-motion';
 
 const profileSchema = z.object({
   name: z.string().min(1, "El nombre no puede estar vacío."),
@@ -122,47 +123,55 @@ export default function ProfilePage() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
-         <header className="mb-8">
+      <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto pb-8">
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Mi Perfil</h1>
-        </header>
+        </motion.header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
-          <div className="lg:col-span-1 lg:sticky lg:top-24 space-y-6">
-             <Card className="shadow-lg border-2 border-accent">
-              <CardContent className="pt-6">
-                  <div className="flex flex-col items-center text-center">
-                      <div className="relative mb-4">
-                          <Avatar className="h-28 w-28 border-4 border-card shadow-md">
-                              <AvatarImage src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={`Avatar de ${user.name}`} />
-                              <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <Button size="icon" variant="outline" className="absolute -bottom-2 -right-2 rounded-full h-8 w-8">
-                              <Camera className="h-4 w-4"/>
-                          </Button>
-                      </div>
-                      <h2 className="text-2xl font-bold">{user.name}</h2>
-                      <p className="text-muted-foreground">{user.email}</p>
-                      <p className="text-xs text-muted-foreground mt-2">Rol: {user.role.name}</p>
-                  </div>
-              </CardContent>
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="lg:col-span-1 lg:sticky lg:top-24 space-y-6"
+          >
+             <Card className="shadow-lg border-2 border-accent overflow-hidden">
+                <CardContent className="pt-8 flex flex-col items-center text-center">
+                    <div className="relative mb-4 group">
+                        <Avatar className="h-32 w-32 border-4 border-background shadow-md">
+                            <AvatarImage src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={`Avatar de ${user.name}`} />
+                            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <Button size="icon" variant="outline" className="absolute bottom-1 right-1 rounded-full h-9 w-9 opacity-0 group-hover:opacity-100 transition-opacity bg-background/50 hover:bg-background">
+                            <Camera className="h-5 w-5"/>
+                        </Button>
+                    </div>
+                    <h2 className="text-2xl font-bold">{user.name}</h2>
+                    <p className="text-muted-foreground">{user.email}</p>
+                    <p className="text-xs text-muted-foreground mt-2 bg-muted px-2 py-0.5 rounded-full">Rol: {user.role.name}</p>
+                </CardContent>
+                <CardFooter className="p-4 bg-muted/50 border-t">
+                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
+                    </Button>
+                </CardFooter>
             </Card>
-             <Card className="shadow-lg border-2 border-accent">
-                  <CardHeader>
-                      <CardTitle>Zona de Peligro</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                     <Button variant="destructive" className="w-full" onClick={handleLogout}>
-                       <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
-                     </Button>
-                  </CardContent>
-             </Card>
-          </div>
+          </motion.div>
 
-          <div className="lg:col-span-2 space-y-8">
+          <motion.div 
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.5, delay: 0.2 }}
+             className="lg:col-span-2 space-y-8"
+          >
              <form onSubmit={handleProfileSubmit(onProfileSubmit)}>
-                 <Card className="shadow-lg border-2 border-accent mb-8">
+                 <Card className="shadow-lg border-2 border-accent">
                    <CardHeader>
                       <CardTitle>Datos Personales</CardTitle>
                       <CardDescription>Actualiza tu foto y tus datos personales aquí.</CardDescription>
@@ -182,7 +191,7 @@ export default function ProfilePage() {
                           <Textarea id="bio" placeholder="Cuéntanos un poco sobre ti." {...registerProfile("bio")} />
                       </div>
                   </CardContent>
-                  <CardFooter className="flex justify-end">
+                  <CardFooter className="flex justify-end border-t pt-6">
                       <Button type="submit" disabled={isLoading}>
                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>} Guardar Datos
                       </Button>
@@ -208,14 +217,14 @@ export default function ProfilePage() {
                          {passwordErrors.newPassword && <p className="text-sm text-destructive">{passwordErrors.newPassword.message}</p>}
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-end">
+                    <CardFooter className="flex justify-end border-t pt-6">
                        <Button type="submit" disabled={isLoading}>
                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>} Cambiar Contraseña
                       </Button>
                     </CardFooter>
                 </Card>
             </form>
-          </div>
+          </motion.div>
         </div>
       </main>
     </>
