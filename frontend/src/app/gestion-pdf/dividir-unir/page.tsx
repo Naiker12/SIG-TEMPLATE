@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TopBar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,14 +10,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DraggableFileItem } from "@/components/gestion-pdf/draggable-file-item";
-import { FileText, X, HardDriveDownload } from "lucide-react";
+import { FileText, X, HardDriveDownload, Rows3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { splitPdf, mergePdfs } from "@/services/pdfManipulationService";
+import { splitPdf, mergePdfs, generatePdfPreview, getPdfPageCount } from "@/services/pdfManipulationService";
 import { saveAs } from "file-saver";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { AnimatePresence, motion } from 'framer-motion';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { PdfPageSelector } from "@/components/gestion-pdf/PdfPageSelector";
+
 
 type ProcessResult = {
   blob: Blob;
@@ -30,6 +33,13 @@ type MergeFile = {
     id: string;
     previewUrl?: string;
     isLoadingPreview: boolean;
+};
+
+type SplitFileInfo = {
+    file: File;
+    previewUrl?: string;
+    pageCount: number;
+    isLoading: boolean;
 };
 
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
@@ -50,8 +60,9 @@ export default function SplitMergePdfPage() {
   const [processingProgress, setProcessingProgress] = useState(0);
 
   // State for Split
-  const [splitFile, setSplitFile] = useState<File[]>([]);
+  const [splitFileInfo, setSplitFileInfo] = useState<SplitFileInfo | null>(null);
   const [pageRanges, setPageRanges] = useState("");
+  const [selectedPages, setSelectedPages] = useState<number[]>([]);
 
   // State for Merge
   const [mergeFiles, setMergeFiles] = useState<MergeFile[]>([]);
@@ -59,15 +70,45 @@ export default function SplitMergePdfPage() {
   // Shared state for processing result
   const [processResult, setProcessResult] = useState<ProcessResult | null>(null);
 
+  useEffect(() => {
+    // Generate range string from selected pages
+    if (selectedPages.length > 0) {
+      const sorted = [...selectedPages].sort((a, b) => a - b);
+      const ranges: (string | number)[] = [];
+      let start = sorted[0];
+
+      for (let i = 0; i < sorted.length; i++) {
+        const current = sorted[i];
+        const next = sorted[i + 1];
+
+        if (next !== current + 1) {
+          if (start === current) {
+            ranges.push(current);
+          } else {
+            ranges.push(`${start}-${current}`);
+          }
+          if (next) {
+            start = next;
+          }
+        }
+      }
+      setPageRanges(ranges.join(','));
+    } else {
+      setPageRanges('');
+    }
+  }, [selectedPages]);
+
   const handleFileRemove = (fileIdToRemove: string, type: 'split' | 'merge') => {
     if (type === 'split') {
-        setSplitFile([]);
+        setSplitFileInfo(null);
+        setPageRanges('');
+        setSelectedPages([]);
     } else {
         setMergeFiles(files => files.filter(f => f.id !== fileIdToRemove));
     }
   }
 
-  const handleFilesSelected = (newFiles: File[], type: 'split' | 'merge') => {
+  const handleFilesSelected = async (newFiles: File[], type: 'split' | 'merge') => {
       const totalSize = newFiles.reduce((acc, file) => acc + file.size, 0);
 
       if (!isLoggedIn && totalSize > FILE_SIZE_LIMIT) {
@@ -82,7 +123,19 @@ export default function SplitMergePdfPage() {
       
       setProcessResult(null);
       if (type === 'split') {
-        setSplitFile(newFiles.slice(0, 1));
+        const file = newFiles[0];
+        setSplitFileInfo({ file, isLoading: true, pageCount: 0 });
+        try {
+            const [previewUrl, pageCount] = await Promise.all([
+                generatePdfPreview(file),
+                getPdfPageCount(file)
+            ]);
+            setSplitFileInfo({ file, previewUrl, pageCount, isLoading: false });
+        } catch (err) {
+            console.error(err);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo procesar el PDF.' });
+            setSplitFileInfo(null);
+        }
       } else {
          const newMergeFiles: MergeFile[] = newFiles.map(file => ({
             file,
@@ -123,10 +176,10 @@ export default function SplitMergePdfPage() {
         let fileName: string;
 
         if (activeTab === 'split') {
-            if (splitFile.length === 0 || !pageRanges) {
+            if (!splitFileInfo || !pageRanges) {
                 throw new Error("Por favor, sube un archivo y especifica los rangos de páginas.");
             }
-            blob = await splitPdf(splitFile[0], pageRanges);
+            blob = await splitPdf(splitFileInfo.file, pageRanges);
             fileName = "pdf_dividido.pdf";
         } else {
             if (mergeFiles.length < 2) {
@@ -166,9 +219,10 @@ export default function SplitMergePdfPage() {
   };
 
   const resetState = () => {
-    setSplitFile([]);
+    setSplitFileInfo(null);
     setMergeFiles([]);
     setPageRanges("");
+    setSelectedPages([]);
     setProcessResult(null);
   }
   
@@ -181,7 +235,7 @@ export default function SplitMergePdfPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   };
 
-  const isSplitButtonDisabled = splitFile.length === 0 || !pageRanges.trim();
+  const isSplitButtonDisabled = !splitFileInfo || !pageRanges.trim();
   const isMergeButtonDisabled = mergeFiles.length < 2;
 
   const renderContent = () => {
@@ -220,7 +274,7 @@ export default function SplitMergePdfPage() {
     if (activeTab === 'split') {
         return (
              <motion.div key="split-form" variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="w-full">
-                {splitFile.length === 0 ? (
+                {!splitFileInfo ? (
                    <FileUploadForm 
                       onFilesSelected={(files) => handleFilesSelected(files, 'split')}
                       acceptedFileTypes={{'application/pdf': ['.pdf']}}
@@ -228,23 +282,48 @@ export default function SplitMergePdfPage() {
                     />
                 ) : (
                   <div className='space-y-8 max-w-lg mx-auto'>
-                    <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
-                        <div className="flex items-center gap-4 min-w-0">
-                            <FileText className="w-6 h-6 text-primary flex-shrink-0" />
-                            <div className="min-w-0">
-                                <p className="font-semibold truncate">{splitFile[0].name}</p>
-                                <p className="text-sm text-muted-foreground">{formatBytes(splitFile[0].size)}</p>
+                    <Card className="bg-muted/40 hover:bg-muted/70 hover:border-primary/50 transition-all shadow-md">
+                        <CardContent className="p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4 min-w-0">
+                                {splitFileInfo.previewUrl && (
+                                     <img src={splitFileInfo.previewUrl} alt={`Preview of ${splitFileInfo.file.name}`} className="object-contain h-20 w-16 rounded-md bg-background" />
+                                )}
+                                <div className="min-w-0">
+                                    <p className="font-semibold truncate">{splitFileInfo.file.name}</p>
+                                    <p className="text-sm text-muted-foreground">{formatBytes(splitFileInfo.file.size)}</p>
+                                    <p className="text-sm text-muted-foreground">{splitFileInfo.pageCount} páginas</p>
+                                </div>
                             </div>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleFileRemove(splitFile[0].name, 'split')}>
-                            <X className="w-5 h-5 text-destructive" /><span className="sr-only">Quitar</span>
-                        </Button>
-                    </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleFileRemove(splitFileInfo.file.name, 'split')}>
+                                <X className="w-5 h-5 text-destructive" /><span className="sr-only">Quitar</span>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
                    <div className="space-y-3 pt-8 border-t">
                       <Label htmlFor="ranges" className="text-lg font-medium">Rangos de Páginas</Label>
-                      <Input id="ranges" placeholder="Ej: 1-3, 5, 8-10" value={pageRanges} onChange={(e) => setPageRanges(e.target.value)} />
+                        <div className="flex gap-2">
+                          <Input id="ranges" placeholder="Ej: 1-3, 5, 8-10" value={pageRanges} onChange={(e) => setPageRanges(e.target.value)} />
+                           <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline"><Rows3 className="mr-2 h-4 w-4"/>Seleccionar</Button>
+                            </DialogTrigger>
+                             <DialogContent className="max-w-4xl h-[80vh]">
+                                <DialogHeader>
+                                  <DialogTitle>Seleccionar Páginas</DialogTitle>
+                                  <DialogDescription>Haz clic en las páginas que quieres extraer. Las seleccionadas se añadirán al campo de rangos.</DialogDescription>
+                                </DialogHeader>
+                                 <PdfPageSelector 
+                                    file={splitFileInfo.file} 
+                                    pageCount={splitFileInfo.pageCount} 
+                                    selectedPages={selectedPages} 
+                                    onSelectedPagesChange={setSelectedPages} 
+                                 />
+                              </DialogContent>
+                          </Dialog>
+                        </div>
                       <p className="text-sm text-muted-foreground">
-                        Define las páginas o rangos a extraer. Sepáralos con comas.
+                        Define las páginas o rangos a extraer, o selecciónalas visualmente.
                       </p>
                     </div>
                     <div className="flex justify-center md:justify-end pt-8 border-t">
