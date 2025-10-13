@@ -1,13 +1,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TopBar } from "@/components/dashboard/topbar";
 import { FileUploadForm } from "@/components/gestion-pdf/file-upload-form";
 import { Card, CardContent, CardDescription } from '@/components/ui/card';
-import { FileText, X, Download } from 'lucide-react';
+import { FileText, X, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { convertPdfToWord, type ConversionResult } from '@/services/conversionService';
+import { generatePdfPreview } from '@/services/pdfManipulationService';
 import { useToast } from '@/hooks/use-toast';
 import { saveAs } from 'file-saver';
 import { useAuthStore } from '@/hooks/useAuthStore';
@@ -17,8 +18,15 @@ import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
 
+type FileWithPreview = {
+  id: string;
+  file: File;
+  previewUrl?: string;
+  isLoadingPreview: boolean;
+};
+
 export default function ConvertPdfToWordPage() {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [convertedInfo, setConvertedInfo] = useState<ConversionResult | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [conversionProgress, setConversionProgress] = useState(0);
@@ -47,10 +55,14 @@ export default function ConvertPdfToWordPage() {
         return;
     }
 
-    const combinedFiles = [...files, ...pdfFiles];
-    const uniqueFiles = Array.from(new Set(combinedFiles.map(f => f.name))).map(name => {
-        return combinedFiles.find(f => f.name === name)!
-    });
+    const filesWithMeta: FileWithPreview[] = pdfFiles.map(file => ({
+      id: `${file.name}-${file.lastModified}`,
+      file,
+      isLoadingPreview: true,
+    }));
+
+    const combinedFiles = [...files, ...filesWithMeta];
+    const uniqueFiles = Array.from(new Map(combinedFiles.map(f => [f.id, f])).values());
 
     setFiles(uniqueFiles);
     setConvertedInfo(null);
@@ -62,8 +74,31 @@ export default function ConvertPdfToWordPage() {
     }
   };
   
-  const handleRemoveFile = (fileToRemove: File) => {
-    setFiles(files.filter(f => f !== fileToRemove));
+  useEffect(() => {
+    files.forEach(f => {
+      if (f.file.type === 'application/pdf' && !f.previewUrl && f.isLoadingPreview) {
+        generatePdfPreview(f.file)
+          .then(previewUrl => {
+            setFiles(prevFiles =>
+              prevFiles.map(prevFile =>
+                prevFile.id === f.id ? { ...prevFile, previewUrl, isLoadingPreview: false } : prevFile
+              )
+            );
+          })
+          .catch(err => {
+            console.error("Failed to generate PDF preview:", err);
+            setFiles(prevFiles =>
+              prevFiles.map(prevFile =>
+                prevFile.id === f.id ? { ...prevFile, isLoadingPreview: false } : prevFile
+              )
+            );
+          });
+      }
+    });
+  }, [files]);
+  
+  const handleRemoveFile = (fileIdToRemove: string) => {
+    setFiles(files.filter(f => f.id !== fileIdToRemove));
     if (files.length === 1) {
         setConvertedInfo(null);
     }
@@ -86,7 +121,8 @@ export default function ConvertPdfToWordPage() {
     }, 200);
 
     try {
-      const result = await convertPdfToWord(files);
+      const rawFiles = files.map(f => f.file);
+      const result = await convertPdfToWord(rawFiles);
       
       clearInterval(progressInterval);
       setConversionProgress(100);
@@ -164,7 +200,7 @@ export default function ConvertPdfToWordPage() {
             <CardContent className='p-6 flex items-center justify-center'>
                <AnimatePresence mode="wait">
                   {files.length === 0 && !convertedInfo ? (
-                      <motion.div key="upload" className="w-full">
+                      <motion.div key="upload" className="w-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <FileUploadForm 
                           onFilesSelected={handleFilesSelected}
                           allowMultiple={true}
@@ -185,23 +221,29 @@ export default function ConvertPdfToWordPage() {
                       
                       <div className="space-y-3 pt-6 border-t">
                           <h3 className='text-lg font-medium text-muted-foreground'>Archivos para convertir:</h3>
-                           {files.map((file, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
-                              <div className="flex items-center gap-4 min-w-0">
-                                <FileText className="w-6 h-6 text-primary flex-shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="font-semibold truncate">{file.name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {formatBytes(file.size)}
+                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                           {files.map((f) => (
+                            <Card key={f.id} className="group relative overflow-hidden bg-muted/20 hover:shadow-md transition-shadow">
+                                <CardContent className="p-3 flex flex-col items-center justify-center text-center gap-2 aspect-[3/4]">
+                                  <div className="w-full flex-1 relative flex items-center justify-center bg-background rounded-md overflow-hidden">
+                                    {f.isLoadingPreview && <Loader2 className="h-6 w-6 animate-spin text-primary" />}
+                                    {f.previewUrl && !f.isLoadingPreview && (
+                                        <img src={f.previewUrl} alt={`Preview of ${f.file.name}`} className="object-contain h-full w-full" />
+                                    )}
+                                    {!f.previewUrl && !f.isLoadingPreview && <FileText className="w-6 h-6 text-primary flex-shrink-0" />}
+                                  </div>
+                                  <p className="font-semibold text-xs truncate w-full" title={f.file.name}>{f.file.name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatBytes(f.file.size)}
                                   </p>
-                                </div>
-                              </div>
-                              <Button variant="ghost" size="icon" onClick={() => handleRemoveFile(file)}>
-                                <X className="w-5 h-5 text-destructive" />
-                                <span className="sr-only">Remove file</span>
-                              </Button>
-                            </div>
+                                </CardContent>
+                                <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveFile(f.id)}>
+                                    <X className="w-4 h-4" />
+                                    <span className="sr-only">Remove file</span>
+                                </Button>
+                            </Card>
                           ))}
+                          </div>
                       </div>
 
                        <div className="flex justify-end pt-6 border-t">
