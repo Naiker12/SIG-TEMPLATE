@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DraggableFileItem } from "@/components/gestion-pdf/draggable-file-item";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, X, Download } from "lucide-react";
+import { FileText, X, Download, HardDriveDownload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { splitPdf, mergePdfs } from "@/services/pdfManipulationService";
 import { saveAs } from "file-saver";
@@ -27,6 +27,13 @@ type ProcessResult = {
 };
 
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
+
+const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+};
+
 
 export default function SplitMergePdfPage() {
   const [activeTab, setActiveTab] = useState('split');
@@ -168,24 +175,31 @@ export default function SplitMergePdfPage() {
   const renderContent = () => {
     if (processResult) {
         return (
-             <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8 w-full">
-                <h2 className="text-2xl font-bold mb-2">Proceso Completado</h2>
-                <CardDescription className="mb-6">Tu archivo ha sido procesado con éxito.</CardDescription>
+             <motion.div 
+                key="result" 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="text-center py-8 w-full max-w-lg mx-auto"
+              >
+                <h2 className="text-3xl font-bold mb-2">Proceso Completado</h2>
+                <CardDescription className="mb-8">Tu archivo ha sido procesado con éxito.</CardDescription>
                 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center my-6 max-w-md mx-auto">
-                    <div className="bg-muted p-4 rounded-lg">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center my-6">
+                    <div className="bg-muted/50 p-4 rounded-lg border">
                         <p className="text-sm text-muted-foreground">Archivos Procesados</p>
-                        <p className="text-xl font-bold">{activeTab === 'split' ? 1 : mergeFiles.length}</p>
+                        <p className="text-2xl font-bold">{activeTab === 'split' ? 1 : mergeFiles.length}</p>
                     </div>
-                     <div className="bg-muted p-4 rounded-lg">
+                     <div className="bg-muted/50 p-4 rounded-lg border">
                         <p className="text-sm text-muted-foreground">Tamaño Final</p>
-                        <p className="text-xl font-bold">{formatBytes(processResult.size)}</p>
+                        <p className="text-2xl font-bold">{formatBytes(processResult.size)}</p>
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
-                   <Button size="lg" variant="outline" onClick={resetState}>Empezar de Nuevo</Button>
-                   <Button size="lg" onClick={handleDownload}><Download className="mr-2"/>Descargar Archivo</Button>
+                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-10">
+                   <Button size="lg" variant="outline" className="w-full sm:w-auto" onClick={resetState}>Empezar de Nuevo</Button>
+                   <Button size="lg" className="w-full sm:w-auto" onClick={handleDownload}><HardDriveDownload className="mr-2"/>Descargar Archivo</Button>
                 </div>
             </motion.div>
         )
@@ -193,7 +207,7 @@ export default function SplitMergePdfPage() {
 
     if (activeTab === 'split') {
         return (
-             <motion.div key="split-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+             <motion.div key="split-form" variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="w-full">
                 {splitFile.length === 0 ? (
                    <FileUploadForm 
                       onFilesSelected={(files) => handleFilesSelected(files, 'split')}
@@ -201,8 +215,8 @@ export default function SplitMergePdfPage() {
                       uploadHelpText="Sube un archivo PDF para dividir. Límite de 50MB para invitados."
                     />
                 ) : (
-                  <div className='space-y-6'>
-                    <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                  <div className='space-y-8 max-w-lg mx-auto'>
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
                         <div className="flex items-center gap-4 min-w-0">
                             <FileText className="w-6 h-6 text-primary flex-shrink-0" />
                             <div className="min-w-0">
@@ -214,15 +228,15 @@ export default function SplitMergePdfPage() {
                             <X className="w-5 h-5 text-destructive" /><span className="sr-only">Quitar</span>
                         </Button>
                     </div>
-                   <div className="space-y-2 pt-6 border-t">
+                   <div className="space-y-3 pt-8 border-t">
                       <Label htmlFor="ranges" className="text-lg font-medium">Rangos de Páginas</Label>
                       <Input id="ranges" placeholder="Ej: 1-3, 5, 8-10" value={pageRanges} onChange={(e) => setPageRanges(e.target.value)} />
                       <p className="text-sm text-muted-foreground">
                         Define las páginas o rangos a extraer. Sepáralos con comas.
                       </p>
                     </div>
-                    <div className="flex justify-end pt-6 border-t">
-                      <Button size="lg" onClick={handleProcess} disabled={isSplitButtonDisabled}>Dividir PDF</Button>
+                    <div className="flex justify-center md:justify-end pt-8 border-t">
+                      <Button size="lg" className="w-full md:w-auto" onClick={handleProcess} disabled={isSplitButtonDisabled}>Dividir PDF</Button>
                     </div>
                   </div>
                 )}
@@ -232,7 +246,7 @@ export default function SplitMergePdfPage() {
 
      if (activeTab === 'merge') {
         return (
-             <motion.div key="merge-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+             <motion.div key="merge-form" variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="w-full">
                  <FileUploadForm 
                    allowMultiple
                    onFilesSelected={(files) => handleFilesSelected(files, 'merge')}
@@ -241,11 +255,11 @@ export default function SplitMergePdfPage() {
                    isButton={mergeFiles.length > 0}
                  />
                {mergeFiles.length > 0 && (
-                 <div className='space-y-6 mt-6'>
-                   <Card>
+                 <div className='space-y-8 mt-8'>
+                   <Card className="bg-transparent">
                       <CardHeader>
                         <h3 className="text-xl font-semibold">Ordenar Archivos</h3>
-                        <p className="text-muted-foreground">Arrastra los archivos para establecer el orden final.</p>
+                        <p className="text-muted-foreground">Arrastra los archivos para establecer el orden final de unión.</p>
                       </CardHeader>
                       <CardContent>
                          <ScrollArea className="h-72">
@@ -264,8 +278,8 @@ export default function SplitMergePdfPage() {
                           </ScrollArea>
                       </CardContent>
                     </Card>
-                    <div className="flex justify-end pt-6 border-t">
-                       <Button size="lg" onClick={handleProcess} disabled={isMergeButtonDisabled}>Unir {mergeFiles.length} PDFs</Button>
+                    <div className="flex justify-center md:justify-end pt-8 border-t">
+                       <Button size="lg" className="w-full md:w-auto" onClick={handleProcess} disabled={isMergeButtonDisabled}>Unir {mergeFiles.length} PDFs</Button>
                     </div>
                  </div>
                )}
@@ -278,7 +292,7 @@ export default function SplitMergePdfPage() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 pb-8">
+      <main className="flex-1 gap-4 p-4 sm:px-6 md:gap-8 pb-16">
         <AnimatePresence>
             {isProcessing && (
                 <motion.div
@@ -292,22 +306,24 @@ export default function SplitMergePdfPage() {
                 </motion.div>
             )}
         </AnimatePresence>
-          <div className="max-w-4xl mx-auto w-full">
-            <header className="mb-8 text-center">
-              <h1 className="text-4xl font-bold tracking-tight">Dividir y Unir PDF</h1>
-              <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
+          <div className="max-w-5xl mx-auto w-full">
+            <header className="mb-12 text-center">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Dividir y Unir PDF</h1>
+              <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
                 Organiza tus documentos PDF dividiendo archivos grandes o uniendo varios archivos en uno solo.
               </p>
             </header>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="split">Dividir PDF</TabsTrigger>
-                  <TabsTrigger value="merge">Unir PDF</TabsTrigger>
-                </TabsList>
+                <div className="flex justify-center mb-8">
+                    <TabsList className="grid grid-cols-2 w-full max-w-md">
+                    <TabsTrigger value="split">Dividir PDF</TabsTrigger>
+                    <TabsTrigger value="merge">Unir PDF</TabsTrigger>
+                    </TabsList>
+                </div>
                 
-                <Card className="shadow-lg mt-6 border-2 border-accent">
-                    <CardContent className="p-6 flex items-center justify-center min-h-[400px]">
+                <Card className="shadow-lg mt-6 border-2 border-accent rounded-2xl">
+                    <CardContent className="p-6 md:p-10 flex items-center justify-center min-h-[500px]">
                         <AnimatePresence mode="wait">
                             {renderContent()}
                         </AnimatePresence>
