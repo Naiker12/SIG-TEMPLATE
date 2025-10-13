@@ -10,11 +10,15 @@ async def pdf_preview_endpoint(
     page: int = Query(1, description="The 1-based page number to preview.")
 ):
     """
-    Genera una previsualización de una página específica de un archivo PDF.
+    Genera una previsualización de una página específica de un archivo PDF o DOCX.
     Devuelve una imagen PNG en formato base64.
     """
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="El archivo debe ser un PDF.")
+    supported_types = [
+        "application/pdf", 
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ]
+    if file.content_type not in supported_types:
+        raise HTTPException(status_code=400, detail="El archivo debe ser un PDF o un DOCX.")
     
     try:
         base64_image = await create_pdf_preview(file, page)
