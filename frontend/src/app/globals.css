@@ -97,3 +97,14 @@ body {
 .react-flow__panel {
     @apply bg-card text-foreground border border-border rounded-lg p-2 shadow-lg;
 }
+
+.react-flow__handle {
+    @apply w-[10px] h-[10px] bg-primary border-2 border-card rounded-full;
+    box-shadow: 0 0 0 1px hsl(var(--border));
+    transition: all 0.2s ease;
+}
+
+.react-flow__handle:hover {
+    transform: scale(1.5);
+    box-shadow: 0 0 10px 2px hsla(var(--primary), 0.5);
+}
