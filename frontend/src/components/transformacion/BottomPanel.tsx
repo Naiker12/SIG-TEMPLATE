@@ -47,7 +47,7 @@ export function BottomPanel() {
       </SheetTrigger>
       <SheetContent
         side="bottom"
-        className="h-[40vh] p-0 flex flex-col bg-card"
+        className="h-[60vh] max-h-[800px] p-0 flex flex-col bg-card"
         onInteractOutside={(e) => e.preventDefault()}
       >
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-auto">
