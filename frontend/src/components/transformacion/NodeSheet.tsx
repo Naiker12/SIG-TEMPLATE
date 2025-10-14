@@ -9,7 +9,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Node } from '@xyflow/react';
-import { NODE_CATEGORIES } from './node-types';
+import { NODE_DEFINITIONS } from './node-types';
 import { LoadCsvSheet } from './sheets/input/LoadCsvSheet';
 
 interface NodeSheetProps {
@@ -19,22 +19,22 @@ interface NodeSheetProps {
 
 export function NodeSheet({ node, onOpenChange }: NodeSheetProps) {
 
-  const nodeDefinition = node ? NODE_CATEGORIES
-    .flatMap(cat => cat.nodes)
-    .find(n => n.type === node.type) : null;
+  const nodeDefinition = node ? NODE_DEFINITIONS[node.type] : null;
 
   const renderSheetContent = () => {
     if (!nodeDefinition) return null;
 
-    // Here we can map node types to their specific sheet components
     switch (nodeDefinition.category) {
         case 'input':
-            return <LoadCsvSheet />;
-        // Add other categories and their sheets here
+            if (nodeDefinition.type === 'LOAD_CSV') {
+              return <LoadCsvSheet />;
+            }
+            // Add other input sheets here...
+            return <div className='p-6'>Configuración para {nodeDefinition.title}</div>
         default:
             return (
-                <div className='p-4'>
-                    <p>No configuration available for this node type yet.</p>
+                <div className='p-6'>
+                    <p>No hay configuración disponible para este tipo de nodo todavía.</p>
                 </div>
             );
     }
