@@ -17,6 +17,7 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   useReactFlow,
+  ReactFlowProvider, // Import the provider
   type Node,
   type Edge,
   type OnNodesChange,
@@ -26,7 +27,7 @@ import {
   type NodeTypes,
   type FitViewOptions,
 } from '@xyflow/react';
-import { NODE_CATEGORIES } from '@/components/transformacion/node-types.tsx';
+import { NODE_CATEGORIES } from '@/components/transformacion/node-types';
 
 import '@xyflow/react/dist/style.css';
 import { NodeSheet } from '@/components/transformacion/NodeSheet';
@@ -49,14 +50,14 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
 
 let nodeId = 0;
 
-export default function DataTransformationPage() {
+// All the logic and JSX is now in this child component
+const DataTransformationFlow = () => {
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { setCenter } = useReactFlow();
 
-  // Dynamically create nodeTypes mapping from NODE_CATEGORIES
   const nodeTypes: NodeTypes = useMemo(() => {
     const types: NodeTypes = {};
     NODE_CATEGORIES.forEach(category => {
@@ -117,38 +118,48 @@ export default function DataTransformationPage() {
     return () => document.removeEventListener('click', unselectNode);
   }, []);
 
+  return (
+    <>
+      <main className="flex-1 relative">
+          <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              nodeTypes={nodeTypes}
+              defaultEdgeOptions={defaultEdgeOptions}
+              fitView
+              fitViewOptions={fitViewOptions}
+              selectionOnDrag
+          >
+              <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+              <Controls />
+              <MiniMap />
+          </ReactFlow>
+          <div className="absolute top-4 right-16 z-10">
+            <Button size="lg" onClick={() => setIsModalOpen(true)} className="rounded-full shadow-lg">
+              <PlusCircle className="mr-2 h-5 w-5" />
+              Agregar Nodo
+            </Button>
+          </div>
+          <BottomPanel />
+      </main>
+      <AddNodeModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} onNodeSelect={handleNodeSelectFromModal} />
+      <NodeSheet node={selectedNode} onOpenChange={() => setSelectedNode(null)} />
+    </>
+  );
+}
 
+// The main page component now just provides the context
+export default function DataTransformationPage() {
   return (
     <div className='h-screen flex flex-col'>
-        <TopBar />
-        <main className="flex-1 relative">
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                onNodeClick={onNodeClick}
-                nodeTypes={nodeTypes}
-                defaultEdgeOptions={defaultEdgeOptions}
-                fitView
-                fitViewOptions={fitViewOptions}
-                selectionOnDrag
-            >
-                <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-                <Controls />
-                <MiniMap />
-            </ReactFlow>
-            <div className="absolute top-4 right-16 z-10">
-              <Button size="lg" onClick={() => setIsModalOpen(true)} className="rounded-full shadow-lg">
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Agregar Nodo
-              </Button>
-            </div>
-            <BottomPanel />
-        </main>
-        <AddNodeModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} onNodeSelect={handleNodeSelectFromModal} />
-        <NodeSheet node={selectedNode} onOpenChange={() => setSelectedNode(null)} />
+      <TopBar />
+      <ReactFlowProvider>
+        <DataTransformationFlow />
+      </ReactFlowProvider>
     </div>
   );
 }
