@@ -6,6 +6,7 @@ import { NODE_CATEGORIES, type NodeDefinition } from './node-types';
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { PanelLeftClose } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const DraggableNode = ({ nodeDef }: { nodeDef: NodeDefinition }) => {
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -39,14 +40,13 @@ interface NodesPanelProps {
 
 export const NodesPanel = ({ isOpen, onToggle }: NodesPanelProps) => {
   return (
-    <aside className="border-r bg-background flex flex-col h-full overflow-hidden">
-      <AnimatePresence>
+    <AnimatePresence>
         {isOpen && (
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1, transition: { delay: 0.2 } }}
-                exit={{ opacity: 0 }}
-                className="flex-1 flex flex-col"
+            <motion.aside 
+                className="absolute top-20 bottom-4 left-4 z-10 w-72 bg-card/95 backdrop-blur-sm border rounded-2xl flex flex-col h-auto"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0, transition: { duration: 0.3, ease: "easeOut" } }}
+                exit={{ opacity: 0, x: -50, transition: { duration: 0.2, ease: "easeIn" } }}
             >
                 <div className="p-4 border-b flex justify-between items-center shrink-0">
                     <div>
@@ -60,8 +60,8 @@ export const NodesPanel = ({ isOpen, onToggle }: NodesPanelProps) => {
                 <ScrollArea className="flex-1">
                     <div className="p-4">
                         {NODE_CATEGORIES.map((category) => (
-                            <div key={category.id} className="mb-6">
-                                <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2 flex items-center gap-2">
+                            <div key={category.id} className="mb-4">
+                                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2 flex items-center gap-2">
                                     {category.icon} {category.title}
                                 </h3>
                                 <div>
@@ -73,9 +73,8 @@ export const NodesPanel = ({ isOpen, onToggle }: NodesPanelProps) => {
                         ))}
                     </div>
                 </ScrollArea>
-            </motion.div>
+            </motion.aside>
         )}
-      </AnimatePresence>
-    </aside>
+    </AnimatePresence>
   );
 };
