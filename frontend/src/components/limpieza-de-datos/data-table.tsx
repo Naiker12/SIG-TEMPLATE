@@ -69,34 +69,38 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = useState({})
 
   const isServerPaginated = controlledPageCount !== undefined && onPaginationChange !== undefined && controlledPagination !== undefined;
+  
+  const tableColumns = [
+    // Add the select column definition
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    ...columns,
+  ];
+
 
   const table = useReactTable({
     data,
-    columns: columns.find(c => c.id === 'select') ? columns : [
-        {
-          id: "select",
-          header: ({ table }) => (
-            <Checkbox
-              checked={
-                table.getIsAllPageRowsSelected() ||
-                (table.getIsSomePageRowsSelected() && "indeterminate")
-              }
-              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-              aria-label="Select all"
-            />
-          ),
-          cell: ({ row }) => (
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Select row"
-            />
-          ),
-          enableSorting: false,
-          enableHiding: false,
-        },
-        ...columns
-    ],
+    columns: tableColumns,
     manualPagination: isServerPaginated,
     pageCount: controlledPageCount ?? -1,
     
@@ -288,3 +292,5 @@ export function DataTable<TData, TValue>({
     </div>
   )
 }
+
+    
