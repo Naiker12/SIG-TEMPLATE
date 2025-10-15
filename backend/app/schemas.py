@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, Field
-from typing import Optional, List, Any, Dict
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, HttpUrl
+from typing import Optional, List, Any, Dict, Literal
 from datetime import datetime
 
 # --- Esquemas Base ---
@@ -102,3 +102,14 @@ class DuplicateRowPayload(BaseModel):
     file_id: str
     row_id: int
     count: int
+
+# --- Esquemas para API Personalizada ---
+class CustomApiRequest(BaseModel):
+    url: HttpUrl = Field(..., description="La URL del endpoint de la API externa a la que se va a llamar.")
+    method: Literal['GET', 'POST', 'PUT', 'DELETE'] = Field(..., description="El método HTTP a utilizar para la petición.")
+    headers: Optional[Dict[str, str]] = Field(None, description="Cabeceras opcionales para la petición (ej. 'Authorization').")
+    body: Optional[Dict[str, Any]] = Field(None, description="Cuerpo opcional de la petición en formato JSON (para POST, PUT).")
+
+class CustomApiResponse(BaseModel):
+    status_code: int = Field(..., description="El código de estado HTTP de la respuesta de la API externa.")
+    data: Any = Field(..., description="Los datos de la respuesta de la API externa, parseados como JSON.")

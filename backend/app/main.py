@@ -30,6 +30,7 @@ from app.routers.file_router import file_router
 from app.routers.excel_router import excel_router
 from app.routers.analysis_router import analysis_router
 from app.routers.project_router import project_router
+from app.routers.custom_api_router import custom_api_router
 
 # Añadir el root del proyecto al path de Python
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -84,6 +85,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(file_router, prefix="/api")
 app.include_router(analysis_router, prefix="/api")
 app.include_router(project_router, prefix="/api")
+app.include_router(custom_api_router, prefix="/api")
 
 # Herramientas legadas (mantener sin prefijo /api si el frontend las llama así directamente)
 app.include_router(compress_router)
