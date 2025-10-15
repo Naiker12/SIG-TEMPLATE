@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
