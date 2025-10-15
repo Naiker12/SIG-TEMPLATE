@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code, TableIcon, View, HardDriveDownload, Settings, Loader2, File, FileJson, FileSpreadsheet, ChevronDown, Network, X } from "lucide-react";
+import { Code, TableIcon, View, HardDriveDownload, Settings, Loader2, FileJson, FileSpreadsheet, ChevronDown, Network, KeyRound } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
@@ -19,6 +19,8 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { fetchCustomApi } from '@/services/apiService';
 import type { CustomApiRequest, CustomApiResponse } from '@/services/apiService';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -45,7 +47,7 @@ export default function CustomApiPage() {
            toast({
               variant: "destructive",
               title: `Error ${result.status_code}`,
-              description: `La API ha respondido con un error.`,
+              description: `La API ha respondido con un error. Revisa la consola para más detalles.`,
             });
         } else {
             toast({
@@ -66,17 +68,28 @@ export default function CustomApiPage() {
 
   const responseDataArray = useMemo(() => {
     if (!response || !response.data) return [];
-    return Array.isArray(response.data) ? response.data : [response.data];
+    if (Array.isArray(response.data)) {
+        return response.data;
+    }
+    if (typeof response.data === 'object' && response.data !== null) {
+        // Handle APIs that return a result object with a data array inside, e.g. { "results": [...] }
+        const dataKey = Object.keys(response.data).find(key => Array.isArray((response.data as any)[key]));
+        if (dataKey) {
+            return (response.data as any)[dataKey];
+        }
+        return [response.data]; // It's a single object, wrap it in an array
+    }
+    return [];
   }, [response]);
 
   const columns = useMemo<ColumnDef<any>[]>(() => {
     if (responseDataArray.length === 0) return [];
     
-    const dataKeys = Object.keys(responseDataArray[0]);
+    const dataKeys = Array.from(new Set(responseDataArray.flatMap(item => Object.keys(item))));
 
     return dataKeys.map(key => ({
       accessorKey: key,
-      header: key.charAt(0).toUpperCase() + key.slice(1),
+      header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
     }));
   }, [responseDataArray]);
   
@@ -85,20 +98,45 @@ export default function CustomApiPage() {
     const [request, setRequest] = useState<Partial<CustomApiRequest>>({
         method: 'GET',
         url: 'https://jsonplaceholder.typicode.com/users',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {},
         body: {}
     });
+    const [useAuth, setUseAuth] = useState(false);
+
+    useEffect(() => {
+        const newHeaders = { ...request.headers };
+        if (useAuth) {
+            newHeaders['Authorization'] = 'Bearer TU_TOKEN_AQUÍ';
+        } else {
+            delete newHeaders['Authorization'];
+        }
+        // Set a default content-type for methods that usually have a body
+        if(request.method === 'POST' || request.method === 'PUT') {
+            if (!newHeaders['Content-Type']) {
+                newHeaders['Content-Type'] = 'application/json';
+            }
+        }
+        setRequest(prev => ({ ...prev, headers: newHeaders }));
+    }, [useAuth, request.method]);
 
     const handleFieldChange = <K extends keyof CustomApiRequest>(field: K, value: CustomApiRequest[K]) => {
         setRequest(prev => ({...prev, [field]: value }));
     }
 
     const handleSubmit = () => {
-        if (!request.url) {
-            toast({ variant: 'destructive', title: 'URL requerida', description: 'Por favor, ingresa la URL del endpoint.' });
+        if (!request.url || !URL.canParse(request.url)) {
+            toast({ variant: 'destructive', title: 'URL inválida', description: 'Por favor, ingresa una URL válida.' });
             return;
         }
-        handleExtract(request as CustomApiRequest);
+
+        const finalRequest: CustomApiRequest = {
+            method: request.method || 'GET',
+            url: request.url,
+            headers: Object.keys(request.headers || {}).length > 0 ? request.headers : undefined,
+            body: (request.method === 'POST' || request.method === 'PUT') && Object.keys(request.body || {}).length > 0 ? request.body : undefined,
+        };
+        
+        handleExtract(finalRequest);
     }
     
     return (
@@ -131,16 +169,31 @@ export default function CustomApiPage() {
                           </SelectContent>
                         </Select>
                     </div>
+                    
+                    <div className="space-y-3 rounded-lg border p-4">
+                         <div className="flex items-center justify-between">
+                            <Label htmlFor="auth-switch" className="flex items-center gap-2 font-semibold">
+                                <KeyRound className="h-5 w-5 text-primary"/>
+                                Autenticación
+                            </Label>
+                            <Switch id="auth-switch" checked={useAuth} onCheckedChange={setUseAuth} />
+                         </div>
+                         <p className="text-sm text-muted-foreground">Activa para añadir una cabecera de autorización "Bearer Token".</p>
+                    </div>
+
                     <div className="space-y-2">
                        <Label htmlFor="api-headers">Cabeceras (JSON)</Label>
                        <Textarea 
                           id="api-headers" 
-                          placeholder={`{\n  "Authorization": "Bearer YOUR_API_KEY"\n}`} 
+                          placeholder={`{\n  "Content-Type": "application/json"\n}`} 
                           rows={4}
                           value={JSON.stringify(request.headers, null, 2)}
                           onChange={(e) => {
                              try {
-                                handleFieldChange('headers', JSON.parse(e.target.value));
+                                const parsedHeaders = JSON.parse(e.target.value);
+                                setRequest(prev => ({ ...prev, headers: parsedHeaders }));
+                                // check if auth header is now present/absent
+                                setUseAuth('Authorization' in parsedHeaders);
                              } catch (err) {/* Ignore JSON parse errors while typing */}
                           }}
                        />
@@ -192,7 +245,7 @@ export default function CustomApiPage() {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem><FileSpreadsheet className="mr-2"/>Descargar como Excel</DropdownMenuItem>
-          <DropdownMenuItem><File className="mr-2"/>Descargar como CSV</DropdownMenuItem>
+          <DropdownMenuItem><FileJson className="mr-2"/>Descargar como CSV</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     )
@@ -282,9 +335,6 @@ export default function CustomApiPage() {
                                         value={JSON.stringify(response, null, 2)}
                                         className="min-h-[400px] bg-muted/50 font-mono text-xs"
                                     />
-                                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7">
-                                        <FileJson />
-                                    </Button>
                                 </div>
                             </TabsContent>
                         </Tabs>
