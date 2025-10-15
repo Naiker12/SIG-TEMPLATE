@@ -69,19 +69,22 @@ export default function CustomApiPage() {
   const responseDataArray = useMemo(() => {
     if (!response?.data) return [];
     
+    // Si la respuesta es directamente un array, lo devolvemos.
     if (Array.isArray(response.data)) {
         return response.data;
     }
     
+    // Si es un objeto, buscamos una propiedad que contenga un array.
     if (typeof response.data === 'object' && response.data !== null) {
-        // Handle APIs that return a result object with a data array inside, e.g. { "results": [...] } or { "data": [...] }
         const dataKey = Object.keys(response.data).find(key => Array.isArray((response.data as any)[key]));
         if (dataKey) {
             return (response.data as any)[dataKey];
         }
-        return [response.data]; // It's a single object, wrap it in an array
+        // Si no se encuentra un array, pero es un objeto, lo devolvemos como un array de un solo elemento.
+        return [response.data];
     }
     
+    // Si no es ninguna de las anteriores, devolvemos un array vacío.
     return [];
   }, [response]);
 
@@ -145,9 +148,8 @@ export default function CustomApiPage() {
         const finalRequest: CustomApiRequest = {
             method: request.method || 'GET',
             url: request.url,
-            // Only include headers/body if they are not empty objects
             headers: (request.headers && Object.keys(request.headers).length > 0) ? request.headers : undefined,
-            body: (request.method === 'POST' || request.method === 'PUT') && (request.body && Object.keys(request.body).length > 0) ? request.body : undefined,
+            body: (request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0 ? request.body : undefined,
         };
         
         handleExtract(finalRequest);
@@ -239,9 +241,15 @@ export default function CustomApiPage() {
   const DownloadButton = () => {
     if (!response) return null;
 
+    const handleDownload = (format: 'json' | 'csv' | 'excel') => {
+        // Implement download logic here based on format
+        toast({ title: `Descarga (${format})`, description: 'Funcionalidad de descarga pendiente.' });
+    };
+
+
     if (activeTab === 'json') {
       return (
-        <Button variant="outline">
+        <Button variant="outline" onClick={() => handleDownload('json')}>
           <FileJson className="mr-2"/> Descargar JSON
         </Button>
       )
@@ -257,8 +265,8 @@ export default function CustomApiPage() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem><FileSpreadsheet className="mr-2"/>Descargar como Excel</DropdownMenuItem>
-          <DropdownMenuItem><FileJson className="mr-2"/>Descargar como CSV</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleDownload('excel')}><FileSpreadsheet className="mr-2"/>Descargar como Excel</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleDownload('csv')}><FileJson className="mr-2"/>Descargar como CSV</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     )
@@ -325,7 +333,7 @@ export default function CustomApiPage() {
                                     <Card key={item.id || index} className="hover:border-primary/50 transition-colors">
                                     <CardHeader>
                                         <CardTitle className="text-lg truncate">{item.name || item.title || `Item ${index + 1}`}</CardTitle>
-                                        <CardDescription>{item.category || item.email || Object.values(item)[1]}</CardDescription>
+                                        <CardDescription>{item.category || item.email || Object.values(item)[1]?.toString()}</CardDescription>
                                     </CardHeader>
                                     <CardContent className="grid grid-cols-2 gap-2 text-sm">
                                         {Object.entries(item).slice(0, 4).map(([key, value]) => (
