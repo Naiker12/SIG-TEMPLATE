@@ -27,7 +27,6 @@ import { NODE_DEFINITIONS } from '@/components/transformacion/node-types';
 import '@xyflow/react/dist/style.css';
 import { NodeSheet } from '@/components/transformacion/NodeSheet';
 import { NodesPanel } from '@/components/transformacion/NodesPanel';
-import { TopBar } from '@/components/dashboard/topbar';
 import { Button } from '@/components/ui/button';
 import { PanelLeftClose, PanelRightOpen, Play, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -126,23 +125,17 @@ const DataTransformationFlow = () => {
   );
 
   return (
-    <div className='flex-1 flex flex-col overflow-hidden'>
-       <header className="h-16 flex items-center justify-between px-6 border-b shrink-0 bg-background">
-          <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => setIsPanelOpen(!isPanelOpen)} className={cn(!isPanelOpen ? "flex" : "hidden")}>
-                  <PanelRightOpen />
-              </Button>
-              <h2 className="text-xl font-bold">Editor de Transformación</h2>
-          </div>
+    <div className='flex-1 flex flex-col overflow-hidden relative'>
+       <header className="h-16 flex items-center justify-between px-6 shrink-0 bg-transparent absolute top-0 left-0 right-0 z-10">
+          <h2 className="text-xl font-bold">Editor de Transformación</h2>
           <div className="flex items-center gap-2">
               <Button variant="outline"><Download className="mr-2 h-4 w-4"/> Guardar</Button>
               <Button><Play className="mr-2 h-4 w-4"/> Ejecutar Flujo</Button>
           </div>
        </header>
+       
        <main className="flex-1 flex overflow-hidden">
-          <div className={cn("transition-all duration-300 ease-in-out", isPanelOpen ? "w-72" : "w-0")}>
-            <NodesPanel isOpen={isPanelOpen} onToggle={() => setIsPanelOpen(false)} />
-          </div>
+          <NodesPanel isOpen={isPanelOpen} onToggle={() => setIsPanelOpen(!isPanelOpen)} />
           <div className="flex-1 h-full" ref={reactFlowWrapper}>
               <ReactFlow
                   nodes={nodes}
@@ -163,6 +156,11 @@ const DataTransformationFlow = () => {
                   <Controls />
                   <MiniMap />
                   <BottomPanel />
+                   {!isPanelOpen && (
+                      <Button variant="ghost" size="icon" onClick={() => setIsPanelOpen(true)} className="absolute top-20 left-4 z-10">
+                        <PanelRightOpen />
+                      </Button>
+                   )}
               </ReactFlow>
           </div>
       </main>
@@ -173,8 +171,7 @@ const DataTransformationFlow = () => {
 
 export default function DataTransformationPage() {
   return (
-    <div className='h-screen flex flex-col'>
-      <TopBar />
+    <div className='h-screen flex flex-col bg-background'>
       <ReactFlowProvider>
         <DataTransformationFlow />
       </ReactFlowProvider>

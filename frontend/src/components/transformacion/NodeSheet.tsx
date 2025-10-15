@@ -42,7 +42,17 @@ export function NodeSheet({ node, onOpenChange }: NodeSheetProps) {
 
   return (
     <Sheet open={!!node} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[400px] sm:w-[540px] p-0 flex flex-col">
+      <SheetContent 
+        className="w-[400px] sm:w-[540px] p-0 flex flex-col bg-card/95 backdrop-blur-sm border-l"
+        // Custom positioning for floating effect
+        style={{
+            top: '1rem',
+            right: '1rem',
+            bottom: '1rem',
+            height: 'auto',
+            transform: 'none',
+        }}
+      >
         {nodeDefinition && (
             <>
                 <SheetHeader className="p-6 border-b">
