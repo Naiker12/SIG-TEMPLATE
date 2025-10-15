@@ -67,27 +67,35 @@ export default function CustomApiPage() {
   };
 
   const responseDataArray = useMemo(() => {
-    if (!response || !response.data) return [];
+    if (!response?.data) return [];
+    
     if (Array.isArray(response.data)) {
         return response.data;
     }
+    
     if (typeof response.data === 'object' && response.data !== null) {
-        // Handle APIs that return a result object with a data array inside, e.g. { "results": [...] }
+        // Handle APIs that return a result object with a data array inside, e.g. { "results": [...] } or { "data": [...] }
         const dataKey = Object.keys(response.data).find(key => Array.isArray((response.data as any)[key]));
         if (dataKey) {
             return (response.data as any)[dataKey];
         }
         return [response.data]; // It's a single object, wrap it in an array
     }
+    
     return [];
   }, [response]);
 
-  const columns = useMemo<ColumnDef<any>[]>(() => {
+  const columns: ColumnDef<any>[] = useMemo(() => {
     if (responseDataArray.length === 0) return [];
     
-    const dataKeys = Array.from(new Set(responseDataArray.flatMap(item => Object.keys(item))));
+    const allKeys = responseDataArray.reduce<Set<string>>((keys, item) => {
+        if (item && typeof item === 'object') {
+            Object.keys(item).forEach(key => keys.add(key));
+        }
+        return keys;
+    }, new Set());
 
-    return dataKeys.map(key => ({
+    return Array.from(allKeys).map(key => ({
       accessorKey: key,
       header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
     }));
@@ -104,7 +112,7 @@ export default function CustomApiPage() {
     const [useAuth, setUseAuth] = useState(false);
 
     useEffect(() => {
-        const newHeaders = { ...request.headers };
+        const newHeaders = { ...(request.headers || {}) };
         if (useAuth) {
             newHeaders['Authorization'] = 'Bearer TU_TOKEN_AQUÍ';
         } else {
@@ -190,9 +198,8 @@ export default function CustomApiPage() {
                           value={JSON.stringify(request.headers, null, 2)}
                           onChange={(e) => {
                              try {
-                                const parsedHeaders = JSON.parse(e.target.value);
+                                const parsedHeaders = e.target.value ? JSON.parse(e.target.value) : {};
                                 setRequest(prev => ({ ...prev, headers: parsedHeaders }));
-                                // check if auth header is now present/absent
                                 setUseAuth('Authorization' in parsedHeaders);
                              } catch (err) {/* Ignore JSON parse errors while typing */}
                           }}
@@ -208,7 +215,7 @@ export default function CustomApiPage() {
                            value={JSON.stringify(request.body, null, 2)}
                            onChange={(e) => {
                              try {
-                               handleFieldChange('body', JSON.parse(e.target.value));
+                               handleFieldChange('body', e.target.value ? JSON.parse(e.target.value) : {});
                              } catch (err) {/* Ignore JSON parse errors while typing */}
                            }}
                          />
@@ -279,7 +286,7 @@ export default function CustomApiPage() {
                     <CardDescription>Visualiza los datos extraídos de la API.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                    {response && <DownloadButton />}
+                    {response && responseDataArray.length > 0 && <DownloadButton />}
                 </div>
             </CardHeader>
             <CardContent>
@@ -291,7 +298,7 @@ export default function CustomApiPage() {
                             <p className="text-lg font-semibold">Extrayendo datos...</p>
                         </div>
                      </motion.div>
-                  ) : !response ? (
+                  ) : !response || responseDataArray.length === 0 ? (
                      <motion.div key="placeholder" {...containerVariants} className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
                         <div className="text-center text-muted-foreground p-4">
                             <Network className="h-16 w-16 mx-auto mb-4" />
