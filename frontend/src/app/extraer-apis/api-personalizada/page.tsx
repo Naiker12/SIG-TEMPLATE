@@ -123,6 +123,11 @@ export default function CustomApiPage() {
             if (!newHeaders['Content-Type']) {
                 newHeaders['Content-Type'] = 'application/json';
             }
+        } else {
+             // Remove content-type for GET/DELETE if it's the default one
+             if (newHeaders['Content-Type'] === 'application/json') {
+                delete newHeaders['Content-Type'];
+             }
         }
         setRequest(prev => ({ ...prev, headers: newHeaders }));
     }, [useAuth, request.method]);
@@ -140,8 +145,9 @@ export default function CustomApiPage() {
         const finalRequest: CustomApiRequest = {
             method: request.method || 'GET',
             url: request.url,
-            headers: Object.keys(request.headers || {}).length > 0 ? request.headers : undefined,
-            body: (request.method === 'POST' || request.method === 'PUT') && Object.keys(request.body || {}).length > 0 ? request.body : undefined,
+            // Only include headers/body if they are not empty objects
+            headers: (request.headers && Object.keys(request.headers).length > 0) ? request.headers : undefined,
+            body: (request.method === 'POST' || request.method === 'PUT') && (request.body && Object.keys(request.body).length > 0) ? request.body : undefined,
         };
         
         handleExtract(finalRequest);
