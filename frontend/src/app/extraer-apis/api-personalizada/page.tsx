@@ -42,6 +42,7 @@ export default function CustomApiPage() {
 
     try {
         const result = await fetchCustomApi(requestData);
+        console.log("Respuesta recibida del backend:", result);
         setResponse(result);
         if (result.status_code >= 400) {
            toast({
@@ -71,20 +72,26 @@ export default function CustomApiPage() {
     
     // Si la respuesta es directamente un array, lo devolvemos.
     if (Array.isArray(response.data)) {
+        console.log("Datos detectados: Array en la raíz.");
         return response.data;
     }
     
-    // Si es un objeto, buscamos una propiedad que contenga un array.
+    // Si es un objeto, buscamos una propiedad común que contenga un array.
     if (typeof response.data === 'object' && response.data !== null) {
-        const dataKey = Object.keys(response.data).find(key => Array.isArray((response.data as any)[key]));
+        const commonKeys = ['results', 'data', 'docs', 'items', 'records'];
+        const dataKey = commonKeys.find(key => Array.isArray((response.data as any)[key]));
+
         if (dataKey) {
+            console.log(`Datos detectados: Array en la propiedad '${dataKey}'.`);
             return (response.data as any)[dataKey];
         }
+        
         // Si no se encuentra un array, pero es un objeto, lo devolvemos como un array de un solo elemento.
+        console.log("Datos detectados: Objeto único, envolviendo en un array.");
         return [response.data];
     }
     
-    // Si no es ninguna de las anteriores, devolvemos un array vacío.
+    console.log("No se pudo determinar un array de datos. Devolviendo array vacío.");
     return [];
   }, [response]);
 
@@ -148,8 +155,10 @@ export default function CustomApiPage() {
         const finalRequest: CustomApiRequest = {
             method: request.method || 'GET',
             url: request.url,
-            headers: (request.headers && Object.keys(request.headers).length > 0) ? request.headers : undefined,
-            body: (request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0 ? request.body : undefined,
+            // Solo enviar headers si el objeto no está vacío
+            ...(request.headers && Object.keys(request.headers).length > 0 && { headers: request.headers }),
+            // Solo enviar body si el método es POST o PUT y el body no está vacío
+            ...((request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0 && { body: request.body }),
         };
         
         handleExtract(finalRequest);
@@ -330,7 +339,7 @@ export default function CustomApiPage() {
                             </TabsList>
                             <TabsContent value="cards" className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {responseDataArray.map((item: any, index: number) => (
-                                    <Card key={item.id || index} className="hover:border-primary/50 transition-colors">
+                                    <Card key={item.id || item._id || index} className="hover:border-primary/50 transition-colors">
                                     <CardHeader>
                                         <CardTitle className="text-lg truncate">{item.name || item.title || `Item ${index + 1}`}</CardTitle>
                                         <CardDescription>{item.category || item.email || Object.values(item)[1]?.toString()}</CardDescription>
