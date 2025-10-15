@@ -28,6 +28,38 @@ const containerVariants = {
   exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
 };
 
+/**
+ * Searches for the first array found within a given object, useful for
+ * extracting the main data list from various API response structures.
+ * @param obj The object to search within.
+ * @returns The first array found, or an array containing the object itself if it's not an array but is an object.
+ */
+function findNestedArray(obj: any): any[] {
+  if (Array.isArray(obj)) {
+    return obj;
+  }
+  if (typeof obj === 'object' && obj !== null) {
+    const commonKeys = ['results', 'data', 'docs', 'items', 'records'];
+    for (const key of commonKeys) {
+      if (Array.isArray(obj[key])) {
+        console.log(`Datos detectados: Array en la propiedad '${key}'.`);
+        return obj[key];
+      }
+    }
+    // Fallback for other keys
+    for (const key in obj) {
+      if (Array.isArray(obj[key])) {
+        return obj[key];
+      }
+    }
+    // If no array is found but it's a valid object, wrap it in an array
+    return [obj];
+  }
+  // Return empty array if it's not an object or array
+  return [];
+}
+
+
 export default function CustomApiPage() {
   const [response, setResponse] = useState<CustomApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,30 +101,7 @@ export default function CustomApiPage() {
 
   const responseDataArray = useMemo(() => {
     if (!response?.data) return [];
-    
-    // Si la respuesta es directamente un array, lo devolvemos.
-    if (Array.isArray(response.data)) {
-        console.log("Datos detectados: Array en la raíz.");
-        return response.data;
-    }
-    
-    // Si es un objeto, buscamos una propiedad común que contenga un array.
-    if (typeof response.data === 'object' && response.data !== null) {
-        const commonKeys = ['results', 'data', 'docs', 'items', 'records'];
-        const dataKey = commonKeys.find(key => Array.isArray((response.data as any)[key]));
-
-        if (dataKey) {
-            console.log(`Datos detectados: Array en la propiedad '${dataKey}'.`);
-            return (response.data as any)[dataKey];
-        }
-        
-        // Si no se encuentra un array, pero es un objeto, lo devolvemos como un array de un solo elemento.
-        console.log("Datos detectados: Objeto único, envolviendo en un array.");
-        return [response.data];
-    }
-    
-    console.log("No se pudo determinar un array de datos. Devolviendo array vacío.");
-    return [];
+    return findNestedArray(response.data);
   }, [response]);
 
   const columns: ColumnDef<any>[] = useMemo(() => {
@@ -155,10 +164,10 @@ export default function CustomApiPage() {
         const finalRequest: CustomApiRequest = {
             method: request.method || 'GET',
             url: request.url,
-            // Solo enviar headers si el objeto no está vacío
-            ...(request.headers && Object.keys(request.headers).length > 0 && { headers: request.headers }),
-            // Solo enviar body si el método es POST o PUT y el body no está vacío
-            ...((request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0 && { body: request.body }),
+            // Only send headers if the object is not empty
+            ...(request.headers && Object.keys(request.headers).length > 0 ? { headers: request.headers } : {}),
+            // Only send body for POST/PUT if it's not empty
+            ...((request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0 ? { body: request.body } : {}),
         };
         
         handleExtract(finalRequest);
@@ -378,3 +387,5 @@ export default function CustomApiPage() {
     </>
   );
 }
+
+    
