@@ -3,6 +3,9 @@
 import httpx
 from fastapi import HTTPException, status
 from typing import Any, Dict, Optional, Literal
+from datetime import datetime, timedelta
+from db.database import prisma
+from app import schemas
 
 # Usar un cliente asíncrono para mejor rendimiento con FastAPI
 async_client = httpx.AsyncClient(timeout=15.0)
@@ -15,64 +18,68 @@ async def make_request(
 ) -> Any:
     """
     Realiza una petición HTTP a una URL externa usando httpx.
-
-    Args:
-        url (str): La URL a la que se hará la petición.
-        method (str): El método HTTP (GET, POST, PUT, DELETE).
-        headers (dict, optional): Cabeceras de la petición.
-        json_body (dict, optional): Cuerpo de la petición en formato JSON.
-
-    Returns:
-        Los datos de la respuesta de la API externa, parseados como JSON.
-
-    Raises:
-        HTTPException: Si la petición falla o la respuesta no es un JSON válido.
+    Devuelve directamente los datos de la respuesta JSON o lanza una excepción.
     """
     try:
-        # Prepara los argumentos de la petición
-        request_args = {
-            "method": method,
-            "url": url,
-            "headers": headers,
-        }
-        # Incluye el cuerpo solo para los métodos que lo admiten
+        request_args = {"method": method, "url": url, "headers": headers}
         if method in ['POST', 'PUT'] and json_body:
             request_args["json"] = json_body
         
         response = await async_client.request(**request_args)
-
-        # Lanza una excepción para códigos de error (4xx o 5xx)
         response.raise_for_status()
 
-        # Intenta parsear la respuesta como JSON
-        # Si la respuesta está vacía (ej. 204 No Content), devuelve None.
         if not response.content:
             return None
             
         return response.json()
 
     except httpx.HTTPStatusError as exc:
-        # El servidor respondió con un código de error (4xx, 5xx)
-        # Intentamos devolver el detalle del error que proporciona la API externa.
         try:
             error_details = exc.response.json()
         except Exception:
             error_details = {"detail": exc.response.text or "Error sin detalles."}
-        
-        raise HTTPException(
-            status_code=exc.response.status_code,
-            detail=error_details,
-        )
+        raise HTTPException(status_code=exc.response.status_code, detail=error_details)
     except httpx.RequestError as exc:
-        # Errores de red, DNS, timeouts, etc.
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Error de red al intentar contactar la API: {exc}",
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Error de red al contactar la API: {exc}")
     except Exception as exc:
-        # Cualquier otro error inesperado, como un JSON mal formado en la respuesta.
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ocurrió un error inesperado al procesar la respuesta: {exc}"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error inesperado al procesar la respuesta: {exc}")
 
+async def save_temp_api_data(user_id: str, api_url: str, response_data: Any) -> schemas.TempApiData:
+    """
+    Guarda la respuesta de la API en la tabla temporal `TempApiData`.
+    """
+    # Define la expiración para 30 minutos a partir de ahora
+    expires_at = datetime.utcnow() + timedelta(minutes=30)
+    
+    # Primero, limpia los datos viejos para este usuario para mantener solo el último resultado.
+    await prisma.tempapidata.delete_many(where={"userId": user_id})
+
+    new_temp_data = await prisma.tempapidata.create(
+        data={
+            "userId": user_id,
+            "apiUrl": api_url,
+            "responseData": response_data,
+            "expiresAt": expires_at
+        }
+    )
+    return schemas.TempApiData.model_validate(new_temp_data)
+
+async def get_latest_temp_api_data(user_id: str) -> Optional[schemas.TempApiData]:
+    """
+    Obtiene el último registro de datos temporales para un usuario.
+    """
+
+    latest_data = await prisma.tempapidata.find_first(
+        where={"userId": user_id},
+        order={"createdAt": "desc"}
+    )
+    if not latest_data:
+        return None
+    
+    return schemas.TempApiData.model_validate(latest_data)
+
+async def clear_temp_api_data(user_id: str):
+    """
+    Elimina todos los datos temporales para un usuario.
+    """
+    await prisma.tempapidata.delete_many(where={"userId": user_id})

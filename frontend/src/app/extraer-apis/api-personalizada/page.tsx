@@ -11,22 +11,50 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code, TableIcon, View, HardDriveDownload, Settings, Loader2, FileJson, FileSpreadsheet, ChevronDown, Network, KeyRound } from "lucide-react";
+import { Code, TableIcon, View, HardDriveDownload, Settings, Loader2, FileJson, FileSpreadsheet, ChevronDown, Network, KeyRound, Download } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
-import { fetchCustomApi } from '@/services/apiService';
+import { fetchCustomApi, getLatestApiData, clearTempApiData } from '@/services/apiService';
 import type { CustomApiRequest } from '@/services/apiService';
 import { Switch } from '@/components/ui/switch';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
 };
+
+// Función auxiliar para encontrar el primer array anidado en un objeto
+const findNestedArray = (data: any): any[] => {
+    if (Array.isArray(data)) {
+        return data;
+    }
+    if (typeof data === 'object' && data !== null) {
+        // Claves comunes que suelen contener el array de datos principal
+        const commonKeys = ['results', 'data', 'docs', 'items', 'records', 'users', 'payload', 'rows', 'list'];
+        for (const key of commonKeys) {
+            if (Array.isArray(data[key])) {
+                return data[key];
+            }
+        }
+        // Si no se encuentra una clave común, buscar la primera propiedad que sea un array
+        for (const key in data) {
+            if (Array.isArray(data[key])) {
+                return data[key];
+            }
+        }
+        // Si no hay ningún array, pero es un objeto, devolverlo como un array de un elemento
+        return [data];
+    }
+    return [];
+};
+
 
 export default function CustomApiPage() {
   const [response, setResponse] = useState<any | null>(null);
@@ -53,7 +81,9 @@ export default function CustomApiPage() {
     }, 200);
 
     try {
+        console.log("Enviando petición al backend:", requestData);
         const result = await fetchCustomApi(requestData);
+        console.log("Respuesta recibida del backend:", result);
         setResponse(result);
         toast({
           title: "Petición Exitosa",
@@ -74,30 +104,7 @@ export default function CustomApiPage() {
 
   const responseDataArray = useMemo(() => {
     if (!response) return [];
-    if (Array.isArray(response)) return response;
-    
-    if (typeof response === 'object' && response !== null) {
-      // Claves comunes que suelen contener listas de datos en APIs
-      const commonKeys = ['results', 'data', 'docs', 'items', 'records', 'users', 'payload', 'rows', 'list'];
-      
-      for (const key of commonKeys) {
-        if (Array.isArray(response[key])) {
-          return response[key];
-        }
-      }
-
-      // Si no se encuentra una clave común, buscar la primera propiedad que sea un array
-      for (const key in response) {
-        if (Array.isArray(response[key])) {
-          return response[key];
-        }
-      }
-      
-      // Si no hay ningún array, pero es un objeto, devolverlo como un array de un elemento
-      return [response];
-    }
-    
-    return [];
+    return findNestedArray(response);
   }, [response]);
 
   const columns: ColumnDef<any>[] = useMemo(() => {
@@ -115,6 +122,43 @@ export default function CustomApiPage() {
       header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
     }));
   }, [responseDataArray]);
+
+  const downloadData = async (format: 'json' | 'csv' | 'excel') => {
+      toast({ title: `Preparando descarga como ${format.toUpperCase()}` });
+      try {
+          const temp_data = await getLatestApiData();
+          const dataToExport = findNestedArray(temp_data.responseData);
+
+          if (!dataToExport || dataToExport.length === 0) {
+              toast({ variant: 'destructive', title: 'Sin datos', description: 'No hay datos para exportar.' });
+              return;
+          }
+
+          if (format === 'json') {
+              const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+              saveAs(blob, 'datos_api.json');
+          } else if (format === 'csv') {
+              const headers = Object.keys(dataToExport[0]);
+              const csv = [
+                  headers.join(','),
+                  ...dataToExport.map(row => headers.map(field => JSON.stringify(row[field] ?? '')).join(','))
+              ].join('\n');
+              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+              saveAs(blob, 'datos_api.csv');
+          } else if (format === 'excel') {
+              const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+              const workbook = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(workbook, worksheet, 'Datos');
+              XLSX.writeFile(workbook, 'datos_api.xlsx');
+          }
+
+          await clearTempApiData();
+          toast({ title: 'Descarga Completa', description: 'Los datos temporales han sido limpiados.' });
+
+      } catch (error) {
+          toast({ variant: 'destructive', title: 'Error al descargar', description: error instanceof Error ? error.message : "No se pudieron obtener los datos para la descarga."});
+      }
+  }
   
 
   const RequestSheet = () => {
@@ -134,13 +178,11 @@ export default function CustomApiPage() {
         delete newHeaders['Authorization'];
       }
       
-      // Añadir Content-Type solo para POST/PUT si no está presente
       if (request.method === 'POST' || request.method === 'PUT') {
         if (!newHeaders['Content-Type']) {
           newHeaders['Content-Type'] = 'application/json';
         }
       } else {
-        // Eliminar Content-Type para otros métodos si existe
          if (newHeaders['Content-Type'] === 'application/json') {
           delete newHeaders['Content-Type'];
         }
@@ -154,7 +196,7 @@ export default function CustomApiPage() {
     }
 
     const handleSubmit = () => {
-        if (!request.url || !URL.canParse(request.url)) {
+        if (!request.url) {
             toast({ variant: 'destructive', title: 'URL inválida', description: 'Por favor, ingresa una URL válida.' });
             return;
         }
@@ -162,9 +204,12 @@ export default function CustomApiPage() {
         const finalRequest: CustomApiRequest = {
             method: request.method || 'GET',
             url: request.url,
-            ...((request.headers && Object.keys(request.headers).length > 0) ? { headers: request.headers } : {}),
-            ...((request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0 ? { body: request.body } : {}),
+            ...(request.headers && Object.keys(request.headers).length > 0 ? { headers: request.headers } : {}),
         };
+        
+        if ((request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0) {
+            finalRequest.body = request.body;
+        }
         
         handleExtract(finalRequest);
     }
@@ -255,32 +300,19 @@ export default function CustomApiPage() {
   const DownloadButton = () => {
     if (!response) return null;
 
-    const handleDownload = (format: 'json' | 'csv' | 'excel') => {
-        // Implement download logic here based on format
-        toast({ title: `Descarga (${format})`, description: 'Funcionalidad de descarga pendiente.' });
-    };
-
-
-    if (activeTab === 'json') {
-      return (
-        <Button variant="outline" onClick={() => handleDownload('json')}>
-          <FileJson className="mr-2"/> Descargar JSON
-        </Button>
-      )
-    }
-
     return (
        <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline">
-            <HardDriveDownload className="mr-2" />
+            <Download className="mr-2" />
             Descargar
             <ChevronDown className="ml-2 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => handleDownload('excel')}><FileSpreadsheet className="mr-2"/>Descargar como Excel</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleDownload('csv')}><FileJson className="mr-2"/>Descargar como CSV</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => downloadData('json')}><FileJson className="mr-2"/>Descargar como JSON</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => downloadData('csv')}><FileJson className="mr-2"/>Descargar como CSV</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => downloadData('excel')}><FileSpreadsheet className="mr-2"/>Descargar como Excel</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     )
@@ -357,7 +389,7 @@ export default function CustomApiPage() {
                                     <Card key={item.id || item._id || index} className="hover:border-primary/50 transition-colors">
                                     <CardHeader>
                                         <CardTitle className="text-lg truncate">{String(item.name || item.title || `Item ${index + 1}`)}</CardTitle>
-                                        <CardDescription>{String(item.category || item.email || Object.values(item)[1]?.toString())}</CardDescription>
+                                        <CardDescription>{String(item.category || item.email || Object.values(item)[1]?.toString() || '')}</CardDescription>
                                     </CardHeader>
                                     <CardContent className="grid grid-cols-2 gap-2 text-sm">
                                         {Object.entries(item).slice(0, 4).map(([key, value]) => (

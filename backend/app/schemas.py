@@ -113,3 +113,13 @@ class CustomApiRequest(BaseModel):
 class CustomApiResponse(BaseModel):
     status_code: int = Field(..., description="El código de estado HTTP de la respuesta de la API externa.")
     data: Any = Field(..., description="Los datos de la respuesta de la API externa, parseados como JSON.")
+
+# Esquema para la tabla de datos temporales de la API
+class TempApiData(BaseModel):
+    id: str
+    userId: str
+    apiUrl: str
+    responseData: Any
+    createdAt: datetime
+    expiresAt: datetime
+    model_config = ConfigDict(from_attributes=True)
