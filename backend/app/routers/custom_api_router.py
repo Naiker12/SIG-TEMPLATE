@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.services.auth_service import get_current_user
 from app.services import custom_api_service
 from app import schemas
+from typing import Any
 
 custom_api_router = APIRouter(
     prefix="/custom-api",
@@ -12,13 +13,12 @@ custom_api_router = APIRouter(
 
 @custom_api_router.post(
     "/proxy",
-    response_model=schemas.CustomApiResponse,
     summary="Realiza una petición a una API externa de forma segura"
 )
 async def proxy_external_api_request(
     request_data: schemas.CustomApiRequest,
     current_user: schemas.User = Depends(get_current_user)
-):
+) -> Any:
     """
     Este endpoint actúa como un proxy seguro para realizar peticiones a APIs externas.
     Previene problemas de CORS en el frontend y permite un futuro manejo de claves de API
@@ -29,7 +29,7 @@ async def proxy_external_api_request(
     - **headers**: Diccionario opcional de cabeceras.
     - **body**: Cuerpo opcional de la petición en formato JSON.
 
-    Requiere autenticación de usuario.
+    Requiere autenticación de usuario. Devuelve directamente la respuesta de la API externa.
     """
     try:
         response_data = await custom_api_service.make_request(

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TopBar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,9 @@ import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { fetchCustomApi } from '@/services/apiService';
-import type { CustomApiRequest, CustomApiResponse } from '@/services/apiService';
+import type { CustomApiRequest } from '@/services/apiService';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -28,40 +28,8 @@ const containerVariants = {
   exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
 };
 
-/**
- * Searches for the first array found within a given object, useful for
- * extracting the main data list from various API response structures.
- * @param obj The object to search within.
- * @returns The first array found, or an array containing the object itself if it's not an array but is an object.
- */
-function findNestedArray(obj: any): any[] {
-  if (Array.isArray(obj)) {
-    return obj;
-  }
-  if (typeof obj === 'object' && obj !== null) {
-    const commonKeys = ['results', 'data', 'docs', 'items', 'records'];
-    for (const key of commonKeys) {
-      if (Array.isArray(obj[key])) {
-        console.log(`Datos detectados: Array en la propiedad '${key}'.`);
-        return obj[key];
-      }
-    }
-    // Fallback for other keys
-    for (const key in obj) {
-      if (Array.isArray(obj[key])) {
-        return obj[key];
-      }
-    }
-    // If no array is found but it's a valid object, wrap it in an array
-    return [obj];
-  }
-  // Return empty array if it's not an object or array
-  return [];
-}
-
-
 export default function CustomApiPage() {
-  const [response, setResponse] = useState<CustomApiResponse | null>(null);
+  const [response, setResponse] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('cards');
@@ -76,18 +44,10 @@ export default function CustomApiPage() {
         const result = await fetchCustomApi(requestData);
         console.log("Respuesta recibida del backend:", result);
         setResponse(result);
-        if (result.status_code >= 400) {
-           toast({
-              variant: "destructive",
-              title: `Error ${result.status_code}`,
-              description: `La API ha respondido con un error. Revisa la consola para más detalles.`,
-            });
-        } else {
-            toast({
-              title: "Petición Exitosa",
-              description: `Datos recibidos correctamente con estado ${result.status_code}.`,
-            });
-        }
+        toast({
+          title: "Petición Exitosa",
+          description: `Datos recibidos correctamente.`,
+        });
     } catch (error) {
          toast({
             variant: "destructive",
@@ -100,8 +60,25 @@ export default function CustomApiPage() {
   };
 
   const responseDataArray = useMemo(() => {
-    if (!response?.data) return [];
-    return findNestedArray(response.data);
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if (typeof response === 'object' && response !== null) {
+      // Look for common data keys
+      const commonKeys = ['results', 'data', 'docs', 'items', 'records'];
+      for (const key of commonKeys) {
+        if (Array.isArray(response[key])) {
+          return response[key];
+        }
+      }
+      // Fallback for other keys or wrap single object
+      for (const key in response) {
+        if (Array.isArray(response[key])) {
+          return response[key];
+        }
+      }
+      return [response];
+    }
+    return [];
   }, [response]);
 
   const columns: ColumnDef<any>[] = useMemo(() => {
@@ -130,25 +107,23 @@ export default function CustomApiPage() {
     });
     const [useAuth, setUseAuth] = useState(false);
 
-    useEffect(() => {
-        const newHeaders = { ...(request.headers || {}) };
-        if (useAuth) {
-            newHeaders['Authorization'] = 'Bearer TU_TOKEN_AQUÍ';
-        } else {
-            delete newHeaders['Authorization'];
+    React.useEffect(() => {
+      const newHeaders = { ...(request.headers || {}) };
+      if (useAuth) {
+        newHeaders['Authorization'] = 'Bearer TU_TOKEN_AQUÍ';
+      } else {
+        delete newHeaders['Authorization'];
+      }
+      if (request.method === 'POST' || request.method === 'PUT') {
+        if (!newHeaders['Content-Type']) {
+          newHeaders['Content-Type'] = 'application/json';
         }
-        // Set a default content-type for methods that usually have a body
-        if(request.method === 'POST' || request.method === 'PUT') {
-            if (!newHeaders['Content-Type']) {
-                newHeaders['Content-Type'] = 'application/json';
-            }
-        } else {
-             // Remove content-type for GET/DELETE if it's the default one
-             if (newHeaders['Content-Type'] === 'application/json') {
-                delete newHeaders['Content-Type'];
-             }
+      } else {
+        if (newHeaders['Content-Type'] === 'application/json') {
+          delete newHeaders['Content-Type'];
         }
-        setRequest(prev => ({ ...prev, headers: newHeaders }));
+      }
+      setRequest(prev => ({ ...prev, headers: newHeaders }));
     }, [useAuth, request.method]);
 
     const handleFieldChange = <K extends keyof CustomApiRequest>(field: K, value: CustomApiRequest[K]) => {
@@ -164,9 +139,7 @@ export default function CustomApiPage() {
         const finalRequest: CustomApiRequest = {
             method: request.method || 'GET',
             url: request.url,
-            // Only send headers if the object is not empty
             ...(request.headers && Object.keys(request.headers).length > 0 ? { headers: request.headers } : {}),
-            // Only send body for POST/PUT if it's not empty
             ...((request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0 ? { body: request.body } : {}),
         };
         
@@ -325,10 +298,7 @@ export default function CustomApiPage() {
               <AnimatePresence mode="wait">
                   {isLoading ? (
                      <motion.div key="loader" {...containerVariants} className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
-                        <div className="text-center text-muted-foreground p-4 flex flex-col items-center gap-4">
-                            <Loader2 className="h-12 w-12 animate-spin text-primary"/>
-                            <p className="text-lg font-semibold">Extrayendo datos...</p>
-                        </div>
+                        <CircularProgressBar progress={100} message="Extrayendo datos..." />
                      </motion.div>
                   ) : !response || responseDataArray.length === 0 ? (
                      <motion.div key="placeholder" {...containerVariants} className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
@@ -387,5 +357,3 @@ export default function CustomApiPage() {
     </>
   );
 }
-
-    

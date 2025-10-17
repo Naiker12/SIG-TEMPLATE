@@ -15,22 +15,13 @@ export type CustomApiRequest = {
 }
 
 /**
- * Define el tipo de dato para la respuesta de una API personalizada.
- * Corresponde con el esquema `CustomApiResponse` en el backend.
- */
-export type CustomApiResponse = {
-    status_code: number;
-    data: any;
-}
-
-/**
  * Realiza una petición a nuestro endpoint proxy para interactuar con una API externa.
  * 
  * @param requestData Los datos de la petición a la API externa.
- * @returns La respuesta de la API externa, encapsulada por nuestro backend.
+ * @returns La respuesta de la API externa (ya parseada como JSON).
  * @throws Lanza un error si la petición al proxy falla.
  */
-export async function fetchCustomApi(requestData: CustomApiRequest): Promise<CustomApiResponse> {
+export async function fetchCustomApi(requestData: CustomApiRequest): Promise<any> {
     const endpoint = `${API_BASE_URL}/api/custom-api/proxy`;
 
     try {

@@ -3,7 +3,6 @@
 import httpx
 from fastapi import HTTPException, status
 from typing import Any, Dict, Optional, Literal
-from app import schemas
 
 # Usar un cliente asíncrono para mejor rendimiento con FastAPI
 async_client = httpx.AsyncClient(timeout=15.0)
@@ -13,7 +12,7 @@ async def make_request(
     method: Literal['GET', 'POST', 'PUT', 'DELETE'],
     headers: Optional[Dict[str, str]] = None,
     json_body: Optional[Dict[str, Any]] = None
-) -> schemas.CustomApiResponse:
+) -> Any:
     """
     Realiza una petición HTTP a una URL externa usando httpx.
 
@@ -24,7 +23,7 @@ async def make_request(
         json_body (dict, optional): Cuerpo de la petición en formato JSON.
 
     Returns:
-        schemas.CustomApiResponse: Un objeto con el status_code y los datos de la respuesta.
+        Los datos de la respuesta de la API externa, parseados como JSON.
 
     Raises:
         HTTPException: Si la petición falla o la respuesta no es un JSON válido.
@@ -37,23 +36,28 @@ async def make_request(
             json=json_body,
         )
 
-        # Intenta parsear la respuesta como JSON
-        try:
-            response_data = response.json()
-        except Exception:
-            # Si no es un JSON válido, pero la petición fue exitosa (ej. 204 No Content),
-            # devuelve un cuerpo vacío. Si fue un error, usa el texto de la respuesta.
-            if response.is_success:
-                response_data = None
-            else:
-                response_data = {"error_details": response.text}
-        
-        # Devuelve la respuesta en el formato esperado por el frontend
-        return schemas.CustomApiResponse(
-            status_code=response.status_code,
-            data=response_data,
-        )
+        # Lanza una excepción para códigos de error (4xx o 5xx)
+        response.raise_for_status()
 
+        # Intenta parsear la respuesta como JSON
+        # Si la respuesta está vacía (ej. 204 No Content), devuelve None.
+        if not response.content:
+            return None
+            
+        return response.json()
+
+    except httpx.HTTPStatusError as exc:
+        # El servidor respondió con un código de error (4xx, 5xx)
+        # Intentamos devolver el detalle del error que proporciona la API externa.
+        try:
+            error_details = exc.response.json()
+        except Exception:
+            error_details = {"detail": exc.response.text or "Error sin detalles."}
+        
+        raise HTTPException(
+            status_code=exc.response.status_code,
+            detail=error_details,
+        )
     except httpx.RequestError as exc:
         # Errores de red, DNS, timeouts, etc.
         raise HTTPException(
@@ -61,8 +65,8 @@ async def make_request(
             detail=f"Error de red al intentar contactar la API: {exc}",
         )
     except Exception as exc:
-        # Cualquier otro error inesperado.
+        # Cualquier otro error inesperado, como un JSON mal formado en la respuesta.
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ocurrió un error inesperado: {exc}"
+            detail=f"Ocurrió un error inesperado al procesar la respuesta: {exc}"
         )
