@@ -109,17 +109,3 @@ class CustomApiRequest(BaseModel):
     method: Literal['GET', 'POST', 'PUT', 'DELETE'] = Field(..., description="El método HTTP a utilizar para la petición.")
     headers: Optional[Dict[str, str]] = Field(None, description="Cabeceras opcionales para la petición (ej. 'Authorization').")
     body: Optional[Dict[str, Any]] = Field(None, description="Cuerpo opcional de la petición en formato JSON (para POST, PUT).")
-
-class CustomApiResponse(BaseModel):
-    status_code: int = Field(..., description="El código de estado HTTP de la respuesta de la API externa.")
-    data: Any = Field(..., description="Los datos de la respuesta de la API externa, parseados como JSON.")
-
-# Esquema para la tabla de datos temporales de la API
-class TempApiData(BaseModel):
-    id: str
-    userId: str
-    apiUrl: str
-    responseData: Any
-    createdAt: datetime
-    expiresAt: datetime
-    model_config = ConfigDict(from_attributes=True)

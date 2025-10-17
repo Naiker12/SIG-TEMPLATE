@@ -14,15 +14,6 @@ export type CustomApiRequest = {
     body?: Record<string, any>;
 }
 
-export type TempApiData = {
-    id: string;
-    userId: string;
-    apiUrl: string;
-    responseData: any;
-    createdAt: string;
-    expiresAt: string;
-};
-
 /**
  * Realiza una petición a nuestro endpoint proxy para interactuar con una API externa.
  * 
@@ -48,20 +39,4 @@ export async function fetchCustomApi(requestData: CustomApiRequest): Promise<any
         console.error("Error al llamar al servicio proxy de API personalizada:", error);
         throw error;
     }
-}
-
-/**
- * Recupera los últimos datos guardados temporalmente para el usuario.
- */
-export async function getLatestApiData(): Promise<TempApiData> {
-    const endpoint = `${API_BASE_URL}/api/custom-api/latest`;
-    return fetchWithAuth(endpoint, { method: 'GET' });
-}
-
-/**
- * Limpia los datos temporales del usuario en el backend.
- */
-export async function clearTempApiData(): Promise<void> {
-    const endpoint = `${API_BASE_URL}/api/custom-api/clear`;
-    await fetchWithAuth(endpoint, { method: 'DELETE' });
 }

@@ -17,17 +17,25 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { DataTable } from '@/components/limpieza-de-datos/data-table';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
-import { fetchCustomApi, getLatestApiData, clearTempApiData } from '@/services/apiService';
 import type { CustomApiRequest } from '@/services/apiService';
 import { Switch } from '@/components/ui/switch';
 import { CircularProgressBar } from '@/components/ui/circular-progress-bar';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+};
+
+// --- MOCK DATA FOR SIMULATION ---
+const mockApiResponse = {
+    "message": "Datos de ejemplo cargados.",
+    "users": [
+        { "id": 1, "name": "Leanne Graham", "email": "Sincere@april.biz", "city": "Gwenborough" },
+        { "id": 2, "name": "Ervin Howell", "email": "Shanna@melissa.tv", "city": "Wisokyburgh" },
+        { "id": 3, "name": "Clementine Bauch", "email": "Nathan@yesenia.net", "city": "McKenziehaven" },
+        { "id": 4, "name": "Patricia Lebsack", "email": "Julianne.OConner@kory.org", "city": "South Elvis" }
+    ]
 };
 
 // Función auxiliar para encontrar el primer array anidado en un objeto
@@ -36,14 +44,14 @@ const findNestedArray = (data: any): any[] => {
         return data;
     }
     if (typeof data === 'object' && data !== null) {
-        // Claves comunes que suelen contener el array de datos principal
+        // Buscar en claves comunes primero
         const commonKeys = ['results', 'data', 'docs', 'items', 'records', 'users', 'payload', 'rows', 'list'];
         for (const key of commonKeys) {
             if (Array.isArray(data[key])) {
                 return data[key];
             }
         }
-        // Si no se encuentra una clave común, buscar la primera propiedad que sea un array
+        // Si no se encuentra, buscar la primera propiedad que sea un array
         for (const key in data) {
             if (Array.isArray(data[key])) {
                 return data[key];
@@ -52,6 +60,7 @@ const findNestedArray = (data: any): any[] => {
         // Si no hay ningún array, pero es un objeto, devolverlo como un array de un elemento
         return [data];
     }
+    // Si no es un array ni un objeto, devolver un array vacío
     return [];
 };
 
@@ -80,26 +89,21 @@ export default function CustomApiPage() {
         });
     }, 200);
 
-    try {
-        console.log("Enviando petición al backend:", requestData);
-        const result = await fetchCustomApi(requestData);
-        console.log("Respuesta recibida del backend:", result);
+    // --- SIMULATION LOGIC ---
+    setTimeout(() => {
+        // const result = await fetchCustomApi(requestData);
+        const result = mockApiResponse; // Usamos los datos de simulación
+        
         setResponse(result);
         toast({
-          title: "Petición Exitosa",
-          description: `Datos recibidos correctamente.`,
+          title: "Petición Simulada Exitosa",
+          description: `Datos de ejemplo cargados correctamente.`,
         });
-    } catch (error) {
-         toast({
-            variant: "destructive",
-            title: "Error de Conexión",
-            description: error instanceof Error ? error.message : "No se pudo conectar con el servidor.",
-        });
-    } finally {
+        
         clearInterval(progressInterval);
         setProgress(100);
         setIsLoading(false);
-    }
+    }, 1500);
   };
 
   const responseDataArray = useMemo(() => {
@@ -124,43 +128,11 @@ export default function CustomApiPage() {
   }, [responseDataArray]);
 
   const downloadData = async (format: 'json' | 'csv' | 'excel') => {
-      toast({ title: `Preparando descarga como ${format.toUpperCase()}` });
-      try {
-          const temp_data = await getLatestApiData();
-          const dataToExport = findNestedArray(temp_data.responseData);
-
-          if (!dataToExport || dataToExport.length === 0) {
-              toast({ variant: 'destructive', title: 'Sin datos', description: 'No hay datos para exportar.' });
-              return;
-          }
-
-          if (format === 'json') {
-              const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
-              saveAs(blob, 'datos_api.json');
-          } else if (format === 'csv') {
-              const headers = Object.keys(dataToExport[0]);
-              const csv = [
-                  headers.join(','),
-                  ...dataToExport.map(row => headers.map(field => JSON.stringify(row[field] ?? '')).join(','))
-              ].join('\n');
-              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-              saveAs(blob, 'datos_api.csv');
-          } else if (format === 'excel') {
-              const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-              const workbook = XLSX.utils.book_new();
-              XLSX.utils.book_append_sheet(workbook, worksheet, 'Datos');
-              XLSX.writeFile(workbook, 'datos_api.xlsx');
-          }
-
-          await clearTempApiData();
-          toast({ title: 'Descarga Completa', description: 'Los datos temporales han sido limpiados.' });
-
-      } catch (error) {
-          toast({ variant: 'destructive', title: 'Error al descargar', description: error instanceof Error ? error.message : "No se pudieron obtener los datos para la descarga."});
-      }
+      toast({ title: `Simulación de descarga como ${format.toUpperCase()}` });
+      // En una implementación real, aquí se usarían los datos temporales del backend.
+      // Por ahora, solo mostramos un toast.
   }
   
-
   const RequestSheet = () => {
     const [request, setRequest] = useState<Partial<CustomApiRequest>>({
         method: 'GET',
@@ -204,8 +176,11 @@ export default function CustomApiPage() {
         const finalRequest: CustomApiRequest = {
             method: request.method || 'GET',
             url: request.url,
-            ...(request.headers && Object.keys(request.headers).length > 0 ? { headers: request.headers } : {}),
         };
+        
+        if (request.headers && Object.keys(request.headers).length > 0) {
+            finalRequest.headers = request.headers;
+        }
         
         if ((request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0) {
             finalRequest.body = request.body;
