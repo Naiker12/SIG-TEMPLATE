@@ -1,38 +1,46 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-py"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-py"
-}
+// =================================================
+// Modelo de Autenticación y Usuarios
+// =================================================
 
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String
   password  String
-  bio       String?  @db.Text
-  roleId    String
-  role      Role     @relation(fields: [roleId], references: [id])
-  files     File[]
-  FileMetadata FileMetadata[]
-  Project   Project[]
+  bio       String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  files     File[] // Un usuario puede tener muchos archivos (metadata legada)
+  projects  Project[] // Un usuario puede tener muchos proyectos de análisis
+  fileMetadatas FileMetadata[] // Un usuario puede tener muchos archivos de análisis
+
+  @@map("Usuario") // Mapea este modelo a la tabla "Usuario"
 }
 
 model Role {
-  id      String @id @default(cuid())
-  name    String @unique
-  users   User[]
+  id    String @id @default(cuid())
+  name  String @unique
+  users User[]
 }
+
+
+// =================================================
+// Modelo para la herramienta de compresión/división
+// =================================================
 
 model File {
   id        String   @id @default(cuid())
@@ -42,45 +50,36 @@ model File {
   status    String
   createdAt DateTime @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
 }
 
-// Metadata for files uploaded for analysis
+// =================================================
+// Modelos para el nuevo flujo de Análisis de Datos
+// =================================================
+
 model FileMetadata {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   filename   String
   filetype   String
-  filepath   String    @unique
-  columns    Json
+  filepath   String   @unique
+  columns    String[]
   rows_count Int
   size       Int
+  uploadedAt DateTime @default(now())
   userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id])
   projects   Project[]
-  uploadedAt DateTime  @default(now())
 }
 
 model Project {
   id          String   @id @default(cuid())
   name        String
   description String?
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fileId      String
-  file        FileMetadata @relation(fields: [fileId], references: [id], onDelete: Cascade)
   config      Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
-
-// Tabla para almacenar temporalmente los datos de una petición a una API externa
-model TempApiData {
-  id           String   @id @default(cuid())
-  userId       String   // Asociar los datos a un usuario
-  apiUrl       String   // Guardar la URL que se consultó
-  responseData Json     // Guardar la respuesta completa de la API
-  createdAt    DateTime @default(now())
-  expiresAt    DateTime // Se puede usar para un cron job que limpie datos viejos
-
-  @@index([userId])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  fileId      String
+  file        FileMetadata @relation(fields: [fileId], references: [id])
 }
