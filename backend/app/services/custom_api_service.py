@@ -29,12 +29,17 @@ async def make_request(
         HTTPException: Si la petición falla o la respuesta no es un JSON válido.
     """
     try:
-        response = await async_client.request(
-            method=method,
-            url=url,
-            headers=headers,
-            json=json_body,
-        )
+        # Prepara los argumentos de la petición
+        request_args = {
+            "method": method,
+            "url": url,
+            "headers": headers,
+        }
+        # Incluye el cuerpo solo para los métodos que lo admiten
+        if method in ['POST', 'PUT'] and json_body:
+            request_args["json"] = json_body
+        
+        response = await async_client.request(**request_args)
 
         # Lanza una excepción para códigos de error (4xx o 5xx)
         response.raise_for_status()
@@ -70,3 +75,4 @@ async def make_request(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ocurrió un error inesperado al procesar la respuesta: {exc}"
         )
+

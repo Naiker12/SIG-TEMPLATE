@@ -54,7 +54,6 @@ export default function CustomApiPage() {
 
     try {
         const result = await fetchCustomApi(requestData);
-        console.log("Respuesta recibida del backend:", result);
         setResponse(result);
         toast({
           title: "Petición Exitosa",
@@ -81,7 +80,6 @@ export default function CustomApiPage() {
       // Claves comunes que suelen contener listas de datos en APIs
       const commonKeys = ['results', 'data', 'docs', 'items', 'records', 'users', 'payload', 'rows', 'list'];
       
-      // Dar prioridad a las claves comunes
       for (const key of commonKeys) {
         if (Array.isArray(response[key])) {
           return response[key];
@@ -95,7 +93,7 @@ export default function CustomApiPage() {
         }
       }
       
-      // Si no se encuentra ningún array, pero la respuesta es un objeto, devolverlo como un array de un solo elemento
+      // Si no hay ningún array, pero es un objeto, devolverlo como un array de un elemento
       return [response];
     }
     
@@ -122,7 +120,7 @@ export default function CustomApiPage() {
   const RequestSheet = () => {
     const [request, setRequest] = useState<Partial<CustomApiRequest>>({
         method: 'GET',
-        url: 'https://jsonplaceholder.typicode.com/users',
+        url: '',
         headers: {},
         body: {}
     });
@@ -164,7 +162,7 @@ export default function CustomApiPage() {
         const finalRequest: CustomApiRequest = {
             method: request.method || 'GET',
             url: request.url,
-            ...(request.headers && Object.keys(request.headers).length > 0 ? { headers: request.headers } : {}),
+            ...((request.headers && Object.keys(request.headers).length > 0) ? { headers: request.headers } : {}),
             ...((request.method === 'POST' || request.method === 'PUT') && request.body && typeof request.body === 'object' && Object.keys(request.body).length > 0 ? { body: request.body } : {}),
         };
         

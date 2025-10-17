@@ -32,6 +32,7 @@ async def proxy_external_api_request(
     Requiere autenticación de usuario. Devuelve directamente la respuesta de la API externa.
     """
     try:
+        # El servicio ahora devuelve directamente los datos o lanza una excepción.
         response_data = await custom_api_service.make_request(
             url=str(request_data.url),
             method=request_data.method,
@@ -40,11 +41,11 @@ async def proxy_external_api_request(
         )
         return response_data
     except HTTPException as e:
-        # Re-lanzar excepciones HTTP para que FastAPI las maneje
+        # Re-lanzar las excepciones HTTP que el servicio ya ha preparado.
         raise e
     except Exception as e:
-        # Capturar errores inesperados durante la petición
+        # Capturar cualquier otro error inesperado.
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error inesperado al contactar la API externa: {e}"
+            detail=f"Error inesperado en el proxy de la API: {e}"
         )
