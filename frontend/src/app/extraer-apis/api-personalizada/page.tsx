@@ -31,14 +31,26 @@ const containerVariants = {
 export default function CustomApiPage() {
   const [response, setResponse] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('cards');
   const { toast } = useToast();
 
   const handleExtract = async (requestData: CustomApiRequest) => {
+    setIsSheetOpen(false); // Cierra el panel de configuración
     setIsLoading(true);
-    setIsSheetOpen(false);
+    setProgress(0);
     setResponse(null);
+
+    const progressInterval = setInterval(() => {
+        setProgress(prev => {
+            if (prev >= 95) {
+                clearInterval(progressInterval);
+                return 95;
+            }
+            return prev + 5;
+        });
+    }, 200);
 
     try {
         const result = await fetchCustomApi(requestData);
@@ -55,6 +67,8 @@ export default function CustomApiPage() {
             description: error instanceof Error ? error.message : "No se pudo conectar con el servidor.",
         });
     } finally {
+        clearInterval(progressInterval);
+        setProgress(100);
         setIsLoading(false);
     }
   };
@@ -62,22 +76,29 @@ export default function CustomApiPage() {
   const responseDataArray = useMemo(() => {
     if (!response) return [];
     if (Array.isArray(response)) return response;
+    
     if (typeof response === 'object' && response !== null) {
-      // Look for common data keys
-      const commonKeys = ['results', 'data', 'docs', 'items', 'records'];
+      // Claves comunes que suelen contener listas de datos en APIs
+      const commonKeys = ['results', 'data', 'docs', 'items', 'records', 'users', 'payload', 'rows', 'list'];
+      
+      // Dar prioridad a las claves comunes
       for (const key of commonKeys) {
         if (Array.isArray(response[key])) {
           return response[key];
         }
       }
-      // Fallback for other keys or wrap single object
+
+      // Si no se encuentra una clave común, buscar la primera propiedad que sea un array
       for (const key in response) {
         if (Array.isArray(response[key])) {
           return response[key];
         }
       }
+      
+      // Si no se encuentra ningún array, pero la respuesta es un objeto, devolverlo como un array de un solo elemento
       return [response];
     }
+    
     return [];
   }, [response]);
 
@@ -114,15 +135,19 @@ export default function CustomApiPage() {
       } else {
         delete newHeaders['Authorization'];
       }
+      
+      // Añadir Content-Type solo para POST/PUT si no está presente
       if (request.method === 'POST' || request.method === 'PUT') {
         if (!newHeaders['Content-Type']) {
           newHeaders['Content-Type'] = 'application/json';
         }
       } else {
-        if (newHeaders['Content-Type'] === 'application/json') {
+        // Eliminar Content-Type para otros métodos si existe
+         if (newHeaders['Content-Type'] === 'application/json') {
           delete newHeaders['Content-Type'];
         }
       }
+      
       setRequest(prev => ({ ...prev, headers: newHeaders }));
     }, [useAuth, request.method]);
 
@@ -266,6 +291,19 @@ export default function CustomApiPage() {
   return (
     <>
       <TopBar />
+       <AnimatePresence>
+        {isLoading && (
+            <motion.div
+                key="loader"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+            >
+                <CircularProgressBar progress={progress} message="Extrayendo datos..." />
+            </motion.div>
+        )}
+      </AnimatePresence>
       <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-auto">
         <motion.div 
             initial="hidden"
@@ -296,16 +334,16 @@ export default function CustomApiPage() {
             </CardHeader>
             <CardContent>
               <AnimatePresence mode="wait">
-                  {isLoading ? (
-                     <motion.div key="loader" {...containerVariants} className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
-                        <CircularProgressBar progress={100} message="Extrayendo datos..." />
-                     </motion.div>
-                  ) : !response || responseDataArray.length === 0 ? (
+                  {!response || responseDataArray.length === 0 ? (
                      <motion.div key="placeholder" {...containerVariants} className="flex items-center justify-center h-96 border-2 border-dashed rounded-xl bg-muted/50">
                         <div className="text-center text-muted-foreground p-4">
                             <Network className="h-16 w-16 mx-auto mb-4" />
                             <p className="text-lg font-semibold mb-2">Esperando petición</p>
-                            <p className="max-w-xs mx-auto">Usa el botón "Configurar Petición" para empezar a extraer datos de una API.</p>
+                            <p className="max-w-sm mx-auto text-sm leading-relaxed">
+                              Conecta tu API personalizada y observa cómo los datos cobran vida en tiempo real.
+                              <br />
+                              <span className="text-primary font-medium">Haz clic en “Configurar Petición”</span> para comenzar.
+                            </p>
                         </div>
                      </motion.div>
                   ) : (
@@ -320,8 +358,8 @@ export default function CustomApiPage() {
                                 {responseDataArray.map((item: any, index: number) => (
                                     <Card key={item.id || item._id || index} className="hover:border-primary/50 transition-colors">
                                     <CardHeader>
-                                        <CardTitle className="text-lg truncate">{item.name || item.title || `Item ${index + 1}`}</CardTitle>
-                                        <CardDescription>{item.category || item.email || Object.values(item)[1]?.toString()}</CardDescription>
+                                        <CardTitle className="text-lg truncate">{String(item.name || item.title || `Item ${index + 1}`)}</CardTitle>
+                                        <CardDescription>{String(item.category || item.email || Object.values(item)[1]?.toString())}</CardDescription>
                                     </CardHeader>
                                     <CardContent className="grid grid-cols-2 gap-2 text-sm">
                                         {Object.entries(item).slice(0, 4).map(([key, value]) => (
